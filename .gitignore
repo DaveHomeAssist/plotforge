@@ -5,3 +5,4 @@ dist
 .vite
 .cache
 .env*
+.vercel
