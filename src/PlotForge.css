@@ -30,7 +30,7 @@ input, textarea { font: inherit; color: inherit; }
 
 .app {
   display: grid;
-  grid-template-rows: 48px auto 1fr 28px;
+  grid-template-rows: 48px auto minmax(0, 1fr) 28px;
   height: 100%;
 }
 
@@ -87,7 +87,8 @@ input, textarea { font: inherit; color: inherit; }
 .workbench {
   grid-row: 3;
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-rows: minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -135,6 +136,9 @@ input, textarea { font: inherit; color: inherit; }
 .sidepanel {
   background: var(--surface);
   overflow-y: auto;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -144,6 +148,7 @@ input, textarea { font: inherit; color: inherit; }
   padding: 16px;
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   gap: 14px;
   border-bottom: 1px solid var(--line);
 }
@@ -240,7 +245,8 @@ input, textarea { font: inherit; color: inherit; }
 .inspector {
   background: var(--surface);
   padding: 16px;
-  overflow-y: auto;
+  overflow-y: visible;
+  flex: 0 0 auto;
   display: flex; flex-direction: column; gap: 12px;
 }
 .inspector--empty { color: var(--ink-mute); font-style: italic; }
@@ -325,7 +331,7 @@ input, textarea { font: inherit; color: inherit; }
 
 /* Mobile fallback — workbench collapses to single column. Inspector becomes a sheet. */
 @media (max-width: 760px) {
-  .workbench { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .workbench { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
   .sidepanel { max-height: 55vh; border-top: 1px solid var(--line); }
   .field-grid { grid-template-columns: 1fr; }
   .topbar { padding: 0 8px; gap: 8px; }
