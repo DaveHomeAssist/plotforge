@@ -383,7 +383,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
 }
-.inspector input:focus, .inspector textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .position-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
+.inspector input:focus, .inspector textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .position-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -1px;
   border-color: transparent;
@@ -394,6 +394,21 @@ input, textarea { font: inherit; color: inherit; }
 }
 .fixture-library label > span { font-size: 11px; }
 .fixture-library input, .fixture-library select {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-transform: none; letter-spacing: 0;
+}
+.print-export-panel label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
+}
+.print-export-panel label > span { font-size: 11px; }
+.print-export-panel select {
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -513,6 +528,24 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--ink-mute);
   font-style: italic;
   text-align: center;
+}
+
+/* Print export */
+.print-export-panel {
+  background: var(--surface);
+  padding: 16px;
+  overflow-y: visible;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+}
+.print-export-panel__summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--ink-mute);
 }
 
 /* Status bar */

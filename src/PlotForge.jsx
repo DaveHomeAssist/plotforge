@@ -3,6 +3,7 @@ import Inspector from "./components/Inspector.jsx";
 import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import PatchTable from "./components/PatchTable.jsx";
+import PrintExport from "./components/PrintExport.jsx";
 import DraftRecoveryBanner from "./components/DraftRecoveryBanner.jsx";
 import useShowDoc from "./hooks/useShowDoc.js";
 import { newShow, newPosition, newFixture, addPosition, addFixture } from "./domain/show.js";
@@ -78,6 +79,7 @@ export default function PlotForge() {
             onImportOpenFixtureLibraryProfile={show.onImportOpenFixtureLibraryProfile}
           />
           <PatchTable doc={show.doc} />
+          <PrintExport doc={show.doc} />
           <Inspector
             doc={show.doc}
             fixtureId={show.selectedFixtureId}
