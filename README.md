@@ -2,7 +2,8 @@
 
 Lighting plot generator. Vector-only SVG drafting surface, structured document model, IndexedDB autosave, project file save/load.
 
-This is the **Phase 0 spike** that validates the chassis ported from PixelForge.
+This started as the **Phase 0 spike** that validates the chassis ported from PixelForge.
+Notion is the canonical phase source for this project. README status was reconciled against `SFT | PlotForge` on 2026-06-21.
 
 ## What works in this spike
 
@@ -21,7 +22,8 @@ This is the **Phase 0 spike** that validates the chassis ported from PixelForge.
 
 ## What's deliberately missing
 
-Fixture library picker, GDTF / MVR import-export, PDF print export, Lightwright roundtrip, auth, sharing. See the implementation plan from the parent conversation for phasing.
+Patch table view, CSV export, PDF print export, Lightwright roundtrip, auth, sharing.
+MVR import and export remain a later strategic interop track.
 
 ## Run
 
@@ -58,7 +60,7 @@ src/
   domain/
     show.js          show / venue / position / fixture types + pure mutations
     patch.js         DMX + channel conflict detection
-    profiles.js      built-in fixture library (replaced by GDTF in Phase 2)
+    profiles.js      curated GDTF seed profiles + OFL import normalization
     units.js         mm-as-integer conversions + imperial parser
     ids.js           collision-resistant id generator
   hooks/
@@ -95,14 +97,18 @@ The chassis: build pipeline (Vite, ESLint, Vitest), `autosave.js` IndexedDB stor
 
 Everything raster (`brushes`, `floodFill`, `imageEffects`, `imageImport`, `canvasOps`, `render`, `text`, `marquee`, `clipboard`, `shapes`) was dropped — wrong architecture for vector drafting.
 
-## Next phase
+## Phase status
 
-Phase 1 deliverables (4–6 weeks of real work):
+Current canonical status, reconciled from Notion on 2026-06-21:
 
-1. Position editor — create / rename / move / delete pipes, trusses, FOH, booms, coves.
-2. Fixture library picker UI driven by the GDTF schema (replace built-in profiles).
-3. Patch table view with conflict highlighting.
-4. PDF export via headless Chromium / Playwright (server-side route).
-5. Title block + scale bar + legend on print sheets.
+- P0-1 venue and position editor: shipped.
+- P0-2 fixture library and add-fixture flow: shipped on 2026-06-18. Curated GDTF profiles and OFL JSON import are implemented.
+- P0-3 patch table plus CSV export: next.
+- P0-4 print to PDF with title block: open. Build the export path, then park physical ANSI D fidelity sign-off until plotter access is available.
 
-After that, MVR import/export is the unlock that gets professional designers to switch.
+Documented remaining plan:
+
+1. P0: patch table plus CSV export, then print to PDF.
+2. P1: metadata, named revisions, conflict panel, inspector parsing, focus beam tool.
+3. P2: fixture status, layered notes, multi-select, gel rollup, circuit schema, comment pins.
+4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.
