@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { fixtureNotesEqual, normalizeFixtureNotes } from "../domain/fixtureNotes.js";
 import { FIXTURE_STATUS_OPTIONS, normalizeFixtureStatus } from "../domain/fixtureStatus.js";
 import { getProfile } from "../domain/profiles.js";
 import { formatImperial, parseImperial } from "../domain/units.js";
@@ -6,13 +7,17 @@ import { formatImperial, parseImperial } from "../domain/units.js";
 const DEBOUNCE_MS = 450;
 
 function draftFromFixture(fx) {
+  const notes = normalizeFixtureNotes(fx.notes, fx.note);
   return {
     x: formatImperial(fx.xMm),
     channel: fx.channel == null ? "" : String(fx.channel),
     universe: fx.dmx?.universe == null ? "" : String(fx.dmx.universe),
     address: fx.dmx?.address == null ? "" : String(fx.dmx.address),
     color: fx.color ?? "",
-    note: fx.note ?? "",
+    colorNote: notes.color,
+    goboNote: notes.gobo,
+    focusNote: notes.focus,
+    note: notes.crew,
     status: normalizeFixtureStatus(fx.status),
   };
 }
@@ -55,6 +60,16 @@ function buildPendingPatch(fx, draft) {
   if (!sameDmx(nextDmx, fx.dmx)) patch.dmx = nextDmx;
   if (draft.color !== (fx.color ?? "")) patch.color = draft.color;
   if (draft.note !== (fx.note ?? "")) patch.note = draft.note;
+  const nextNotes = normalizeFixtureNotes({
+    color: draft.colorNote,
+    gobo: draft.goboNote,
+    focus: draft.focusNote,
+    crew: draft.note,
+  });
+  if (!fixtureNotesEqual(nextNotes, normalizeFixtureNotes(fx.notes, fx.note))) {
+    patch.notes = nextNotes;
+    patch.note = nextNotes.crew;
+  }
   const status = normalizeFixtureStatus(draft.status);
   if (status !== normalizeFixtureStatus(fx.status)) patch.status = status;
 
@@ -78,6 +93,7 @@ export default function Inspector({ doc, fixtureId, onChange, onDelete }) {
     fx.dmx?.universe ?? "",
     fx.dmx?.address ?? "",
     fx.color ?? "",
+    JSON.stringify(normalizeFixtureNotes(fx.notes, fx.note)),
     fx.note ?? "",
     fx.status ?? "",
   ].join(":");
@@ -203,7 +219,37 @@ function FixtureInspector({ doc, fx, onChange, onDelete }) {
       </label>
 
       <label>
-        <span>Note</span>
+        <span>Color note</span>
+        <textarea
+          rows={2}
+          value={draft.colorNote}
+          onChange={e => updateDraft("colorNote", e.target.value)}
+          onBlur={flushPending}
+        />
+      </label>
+
+      <label>
+        <span>Gobo note</span>
+        <textarea
+          rows={2}
+          value={draft.goboNote}
+          onChange={e => updateDraft("goboNote", e.target.value)}
+          onBlur={flushPending}
+        />
+      </label>
+
+      <label>
+        <span>Focus note</span>
+        <textarea
+          rows={2}
+          value={draft.focusNote}
+          onChange={e => updateDraft("focusNote", e.target.value)}
+          onBlur={flushPending}
+        />
+      </label>
+
+      <label>
+        <span>Crew note</span>
         <textarea
           rows={2}
           value={draft.note}

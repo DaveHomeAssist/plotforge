@@ -64,6 +64,44 @@ describe("serialization", () => {
     expect(parsed.fixtures.fx_3.status).toBe("planned");
   });
 
+  it("migrates older documents with layered fixture notes", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: 4,
+      name: "Legacy Notes Plot",
+      positions: {},
+      positionOrder: [],
+      fixtures: {
+        fx_1: { id: "fx_1", profileId: "s4_26", positionId: "pos_1", xMm: 0, note: "crew handoff" },
+        fx_2: {
+          id: "fx_2",
+          profileId: "s4_26",
+          positionId: "pos_1",
+          xMm: 100,
+          note: "legacy crew",
+          notes: { color: "R02 warmer", gobo: "breakup", focus: "chair", crew: "keep top hat" },
+        },
+      },
+      fixtureOrder: ["fx_1", "fx_2"],
+      venue: {},
+    }));
+
+    expect(parsed.version).toBe(DOC_VERSION);
+    expect(parsed.fixtures.fx_1.notes).toEqual({
+      color: "",
+      gobo: "",
+      focus: "",
+      crew: "crew handoff",
+    });
+    expect(parsed.fixtures.fx_1.note).toBe("crew handoff");
+    expect(parsed.fixtures.fx_2.notes).toEqual({
+      color: "R02 warmer",
+      gobo: "breakup",
+      focus: "chair",
+      crew: "keep top hat",
+    });
+    expect(parsed.fixtures.fx_2.note).toBe("keep top hat");
+  });
+
   it("roundtrips named revisions", () => {
     const revision = newRevision({ name: "Rev A", note: "Focus notes", createdAt: 1 });
     const doc = addRevision(newShow({ name: "Revision Test" }), revision);

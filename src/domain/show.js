@@ -9,10 +9,11 @@
 // The document is a plain JSON tree. Every mutation produces a new tree.
 
 import { uid } from "./ids.js";
+import { normalizeFixtureNotes } from "./fixtureNotes.js";
 import { DEFAULT_FIXTURE_STATUS, normalizeFixtureStatus } from "./fixtureStatus.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 4;
+export const DOC_VERSION = 5;
 
 export function defaultProjectMetadata() {
   return {
@@ -73,9 +74,12 @@ export function newFixture({
   channel = null,
   dmx = null,
   color = "",
+  gobo = "",
   note = "",
+  notes = null,
   status = DEFAULT_FIXTURE_STATUS,
 }) {
+  const layeredNotes = normalizeFixtureNotes(notes, note);
   return {
     id: uid("fx"),
     positionId,
@@ -87,8 +91,9 @@ export function newFixture({
     channel,                        // integer
     dmx,                            // { universe: int, address: int }
     color,                          // gel string, e.g. "R02"
-    gobo: "",
-    note,
+    gobo,
+    note: layeredNotes.crew,
+    notes: layeredNotes,
     status: normalizeFixtureStatus(status),
   };
 }
@@ -134,10 +139,15 @@ export function addFixtureProfile(doc, profile) {
 export function updateFixture(doc, fixtureId, patch) {
   const fx = doc.fixtures[fixtureId];
   if (!fx) return doc;
+  let nextFixture = { ...fx, ...patch };
+  if (Object.hasOwn(patch, "note") || Object.hasOwn(patch, "notes")) {
+    const notes = normalizeFixtureNotes(patch.notes ?? fx.notes, patch.note ?? fx.note);
+    nextFixture = { ...nextFixture, note: notes.crew, notes };
+  }
   return {
     ...doc,
     updatedAt: Date.now(),
-    fixtures: { ...doc.fixtures, [fixtureId]: { ...fx, ...patch } },
+    fixtures: { ...doc.fixtures, [fixtureId]: nextFixture },
   };
 }
 

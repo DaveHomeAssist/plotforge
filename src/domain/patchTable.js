@@ -1,4 +1,5 @@
 import { channelConflicts, patchConflicts } from "./patch.js";
+import { formatFixtureNotes, normalizeFixtureNotes } from "./fixtureNotes.js";
 import { getFixtureStatus } from "./fixtureStatus.js";
 import { getProfile } from "./profiles.js";
 
@@ -62,6 +63,7 @@ export function patchTableRows(doc) {
       const channelLabels = conflicts.channels.get(fixture.id) || [];
       const conflictLabels = [...dmxLabels, ...channelLabels];
       const status = getFixtureStatus(fixture.status);
+      const notes = normalizeFixtureNotes(fixture.notes, fixture.note);
 
       return {
         id: fixture.id,
@@ -77,7 +79,10 @@ export function patchTableRows(doc) {
         dmxRangeLabel: universe == null || address == null ? "Unpatched" : `U${universe} ${address}-${endAddress}`,
         footprint,
         color: fixture.color ?? "",
-        note: fixture.note ?? "",
+        gobo: fixture.gobo ?? "",
+        note: notes.crew,
+        notes,
+        notesLabel: formatFixtureNotes(notes),
         status: status.id,
         statusLabel: status.label,
         hasDmxConflict: dmxLabels.length > 0,
@@ -109,7 +114,11 @@ export function patchTableCsv(doc) {
     "End Address",
     "Footprint",
     "Color",
-    "Note",
+    "Gobo",
+    "Color Note",
+    "Gobo Note",
+    "Focus Note",
+    "Crew Note",
     "Conflicts",
   ];
   const body = patchTableRows(doc).map(row => [
@@ -124,7 +133,11 @@ export function patchTableCsv(doc) {
     row.endAddress,
     row.footprint,
     row.color,
-    row.note,
+    row.gobo,
+    row.notes.color,
+    row.notes.gobo,
+    row.notes.focus,
+    row.notes.crew,
     row.conflictLabel,
   ]);
 

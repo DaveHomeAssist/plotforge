@@ -91,4 +91,23 @@ describe("Inspector", () => {
 
     expect(onChange).toHaveBeenCalledWith(fixtureId, { status: "focused" });
   });
+
+  it("debounces layered note changes", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+
+    fireEvent.change(screen.getByLabelText("Focus note"), { target: { value: "Chair special" } });
+    act(() => vi.advanceTimersByTime(450));
+
+    expect(onChange).toHaveBeenCalledWith(fixtureId, {
+      notes: {
+        color: "",
+        gobo: "",
+        focus: "Chair special",
+        crew: "Warm front",
+      },
+      note: "Warm front",
+    });
+  });
 });

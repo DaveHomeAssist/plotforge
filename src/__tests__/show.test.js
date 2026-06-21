@@ -31,6 +31,28 @@ describe("show domain", () => {
     const fixture = newFixture({ positionId: posId, profileId: "s4_26", xMm: 0 });
 
     expect(fixture.status).toBe("planned");
+    expect(fixture.notes).toEqual({ color: "", gobo: "", focus: "", crew: "" });
+  });
+
+  it("keeps legacy note and layered crew note in sync", () => {
+    let { doc, posId } = seed();
+    doc = addFixture(doc, newFixture({ positionId: posId, profileId: "s4_26", xMm: 0, note: "hang low" }));
+    const fixtureId = doc.fixtureOrder[0];
+
+    expect(doc.fixtures[fixtureId].note).toBe("hang low");
+    expect(doc.fixtures[fixtureId].notes.crew).toBe("hang low");
+
+    doc = updateFixture(doc, fixtureId, {
+      notes: { color: "R02 warmer", gobo: "", focus: "", crew: "swap clamp" },
+    });
+
+    expect(doc.fixtures[fixtureId].note).toBe("swap clamp");
+    expect(doc.fixtures[fixtureId].notes).toEqual({
+      color: "R02 warmer",
+      gobo: "",
+      focus: "",
+      crew: "swap clamp",
+    });
   });
 
   it("updateFixture xMm renumbers when called with renumberPosition", () => {

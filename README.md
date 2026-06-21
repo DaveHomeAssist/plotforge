@@ -28,6 +28,7 @@ Notion is the canonical phase source for this project. README status was reconci
 - Debounced fixture inspector edits with imperial position parsing
 - Focus beam tool for placing fixture focus points on the plot and print sheet
 - Per-fixture status with inspector control, plot markers, patch table display, CSV export, and `.plot` migration
+- Layered fixture notes for color, gobo, focus, and crew handoff, with legacy note migration
 
 ## What's deliberately missing
 
@@ -69,6 +70,7 @@ src/
   domain/
     show.js          show / venue / position / fixture types + pure mutations
     patch.js         DMX + channel conflict detection
+    fixtureNotes.js  color / gobo / focus / crew note normalization
     fixtureStatus.js per-fixture status options + normalization
     focus.js         focus point snapping + beam rows
     profiles.js      curated GDTF seed profiles + OFL import normalization
@@ -126,10 +128,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P1-5 focus beam tool: shipped on 2026-06-21. The canvas Focus tool places snapped focus points for the selected fixture, renders focus beams on the live plot, includes focus beams in print output, and can clear the selected fixture focus.
 - P1 tier deploy: shipped on 2026-06-21. Production alias `https://plotforge-beta.vercel.app` points at the P1 focus beam build.
 - P2-1 fixture status: shipped in the repo on 2026-06-21. Fixtures store normalized status, legacy `.plot` docs migrate to planned, the inspector edits status, canvas symbols show a status marker, and patch table plus CSV output include status.
+- P2-2 layered notes: shipped in the repo on 2026-06-21. Fixtures store color, gobo, focus, and crew note layers, older `note` values migrate into the crew note, the inspector edits each layer, and patch table plus CSV output include layered note data.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
 2. P1: complete and deployed.
-3. P2: layered notes, multi-select, gel rollup, circuit schema, comment pins.
+3. P2: multi-select, gel rollup, circuit schema, comment pins.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.

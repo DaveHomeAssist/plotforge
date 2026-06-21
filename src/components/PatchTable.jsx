@@ -84,6 +84,7 @@ export default function PatchTable({ doc }) {
                 <td>
                   <strong>{row.profileName}</strong>
                   <span>{row.mode} · {row.footprint}ch</span>
+                  {row.notesLabel && <em>{row.notesLabel}</em>}
                 </td>
                 <td className="mono">
                   <span className={`patch-status patch-status--${row.status}`}>{row.statusLabel}</span>

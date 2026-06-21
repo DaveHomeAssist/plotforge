@@ -30,6 +30,7 @@ describe("patch table", () => {
       dmx: { universe: 1, address: 41 },
       color: "R02",
       note: "warm front",
+      notes: { color: "Add R119 backup", gobo: "", focus: "DSC special", crew: "warm front" },
       status: "hung",
     }));
 
@@ -45,6 +46,7 @@ describe("patch table", () => {
       footprint: 1,
       color: "R02",
       note: "warm front",
+      notesLabel: "Color: Add R119 backup | Focus: DSC special | Crew: warm front",
       status: "hung",
       statusLabel: "Hung",
     }));
@@ -91,10 +93,11 @@ describe("patch table", () => {
       dmx: { universe: 1, address: 80 },
       color: "R02",
       note: "warm, high side",
+      notes: { color: "warm", gobo: "breakup", focus: "lectern", crew: "high side" },
       status: "patched",
     }));
 
-    expect(patchTableCsv(doc)).toContain("Unit,Position,Profile,Mode,Status,Channel,Universe,Address,End Address,Footprint,Color,Note,Conflicts\n");
-    expect(patchTableCsv(doc)).toContain("1,1ST ELEC,ETC Source Four 26°,Default,Patched,7,1,80,80,1,R02,\"warm, high side\",\n");
+    expect(patchTableCsv(doc)).toContain("Unit,Position,Profile,Mode,Status,Channel,Universe,Address,End Address,Footprint,Color,Gobo,Color Note,Gobo Note,Focus Note,Crew Note,Conflicts\n");
+    expect(patchTableCsv(doc)).toContain("1,1ST ELEC,ETC Source Four 26°,Default,Patched,7,1,80,80,1,R02,,warm,breakup,lectern,high side,\n");
   });
 });
