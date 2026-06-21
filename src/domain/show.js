@@ -11,13 +11,27 @@
 import { uid } from "./ids.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 1;
+export const DOC_VERSION = 2;
+
+export function defaultProjectMetadata() {
+  return {
+    drawingTitle: "Lighting Plot",
+    venueName: "Studio A",
+    company: "",
+    designer: "",
+    draftsperson: "",
+    showDate: "",
+    revision: "Draft",
+    scaleLabel: "1/4\" = 1'-0\"",
+  };
+}
 
 export function newShow({ name = "Untitled Show" } = {}) {
   return {
     version: DOC_VERSION,
     id: uid("show"),
     name,
+    metadata: defaultProjectMetadata(),
     createdAt: Date.now(),
     updatedAt: Date.now(),
     venue: {
@@ -109,6 +123,22 @@ export function updateVenue(doc, patch) {
     ...doc,
     updatedAt: Date.now(),
     venue: { ...doc.venue, ...patch },
+  };
+}
+
+export function updateShowName(doc, name) {
+  return {
+    ...doc,
+    name,
+    updatedAt: Date.now(),
+  };
+}
+
+export function updateProjectMetadata(doc, patch) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}), ...patch },
   };
 }
 

@@ -1,4 +1,5 @@
 import PlotCanvas from "./components/PlotCanvas.jsx";
+import ProjectMetadata from "./components/ProjectMetadata.jsx";
 import Inspector from "./components/Inspector.jsx";
 import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
@@ -63,6 +64,11 @@ export default function PlotForge() {
           onMoveFixture={show.onMoveFixture}
         />
         <aside className="sidepanel">
+          <ProjectMetadata
+            doc={show.doc}
+            onShowNameChange={show.onShowNameChange}
+            onProjectMetadataChange={show.onProjectMetadataChange}
+          />
           <PositionEditor
             doc={show.doc}
             selectedPositionId={show.selectedPositionId}

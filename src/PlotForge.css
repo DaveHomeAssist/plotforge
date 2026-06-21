@@ -144,6 +144,7 @@ input, textarea { font: inherit; color: inherit; }
   flex-direction: column;
 }
 
+.project-metadata,
 .position-editor {
   padding: 16px;
   display: flex;
@@ -383,10 +384,25 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
 }
-.inspector input:focus, .inspector textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .position-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
+.inspector input:focus, .inspector textarea:focus, .project-metadata input:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .position-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -1px;
   border-color: transparent;
+}
+.project-metadata label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
+}
+.project-metadata label > span { font-size: 11px; }
+.project-metadata input {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-transform: none; letter-spacing: 0;
 }
 .fixture-library label {
   display: flex; flex-direction: column; gap: 4px;

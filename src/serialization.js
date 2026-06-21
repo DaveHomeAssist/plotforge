@@ -1,7 +1,7 @@
 // JSON serialization for .plot project files.
 // Forward-compatible: writes DOC_VERSION, reads with a migration table.
 
-import { DOC_VERSION } from "./domain/show.js";
+import { DOC_VERSION, defaultProjectMetadata } from "./domain/show.js";
 
 export const PLOT_MIME = "application/x-plotforge+json";
 
@@ -17,6 +17,12 @@ export function deserialize(text) {
 const migrators = {
   // 0 → 1: bootstrap any pre-versioned docs encountered during dev.
   0: (doc) => ({ ...doc, version: 1 }),
+  1: (doc) => ({
+    ...doc,
+    version: 2,
+    metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}) },
+    fixtureProfiles: doc.fixtureProfiles || {},
+  }),
 };
 
 export function migrate(doc) {

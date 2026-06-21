@@ -7,6 +7,8 @@ import {
   addPosition,
   addFixture,
   addFixtureProfile,
+  updateShowName,
+  updateProjectMetadata,
   updateFixture,
   removeFixture,
   renumberPosition,
@@ -108,6 +110,14 @@ export default function useShowDoc(seedShow) {
     commit(updateVenue(doc, patch));
   }, [doc, commit]);
 
+  const onShowNameChange = useCallback((name) => {
+    commit(updateShowName(doc, name));
+  }, [doc, commit]);
+
+  const onProjectMetadataChange = useCallback((patch) => {
+    commit(updateProjectMetadata(doc, patch));
+  }, [doc, commit]);
+
   const onPositionChange = useCallback((id, patch) => {
     commit(updatePosition(doc, id, patch));
   }, [doc, commit]);
@@ -161,6 +171,8 @@ export default function useShowDoc(seedShow) {
     onAddFixture,
     onImportOpenFixtureLibraryProfile,
     onVenueChange,
+    onShowNameChange,
+    onProjectMetadataChange,
     onPositionChange,
     onFixtureChange,
     onFixtureDelete,

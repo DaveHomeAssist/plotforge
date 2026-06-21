@@ -150,9 +150,12 @@ function legendMarkup(doc) {
 export function printSheetHtml(doc, { paperId = "ansi_d", now = new Date() } = {}) {
   const paper = getPrintPaper(paperId);
   const bounds = printWorldBounds(doc);
+  const metadata = doc.metadata || {};
   const date = now.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" });
   const patchStatus = printPatchStatus(doc);
-  const printTitle = `${doc.name || "Untitled Show"} print sheet`;
+  const drawingTitle = metadata.drawingTitle || "Lighting Plot";
+  const venueName = metadata.venueName || "";
+  const printTitle = `${doc.name || "Untitled Show"} ${drawingTitle}`;
 
   return `<!doctype html>
 <html lang="en">
@@ -197,9 +200,17 @@ th { font-family: ui-monospace, Menlo, monospace; text-transform: uppercase; fon
     <div class="title-block">
       <h1>${escapeHtml(doc.name || "Untitled Show")}</h1>
       <dl>
-        <dt>Date</dt><dd>${escapeHtml(date)}</dd>
+        <dt>Drawing</dt><dd>${escapeHtml(drawingTitle)}</dd>
+        <dt>Venue</dt><dd>${escapeHtml(venueName || "Unspecified")}</dd>
+        <dt>Designer</dt><dd>${escapeHtml(metadata.designer || "Unassigned")}</dd>
+        <dt>Drafted by</dt><dd>${escapeHtml(metadata.draftsperson || "Unassigned")}</dd>
+        <dt>Company</dt><dd>${escapeHtml(metadata.company || "Unassigned")}</dd>
+        <dt>Show date</dt><dd>${escapeHtml(metadata.showDate || "Unscheduled")}</dd>
+        <dt>Revision</dt><dd>${escapeHtml(metadata.revision || "Draft")}</dd>
+        <dt>Scale</dt><dd>${escapeHtml(metadata.scaleLabel || "Not set")}</dd>
+        <dt>Print date</dt><dd>${escapeHtml(date)}</dd>
         <dt>Paper</dt><dd>${escapeHtml(paper.label)} ${paper.widthIn} x ${paper.heightIn} in</dd>
-        <dt>Venue</dt><dd>${escapeHtml(formatImperial(doc.venue.stageWidthMm))} wide x ${escapeHtml(formatImperial(doc.venue.stageDepthMm))} deep</dd>
+        <dt>Stage</dt><dd>${escapeHtml(formatImperial(doc.venue.stageWidthMm))} wide x ${escapeHtml(formatImperial(doc.venue.stageDepthMm))} deep</dd>
         <dt>Fixtures</dt><dd>${doc.fixtureOrder.length}</dd>
         <dt>Positions</dt><dd>${doc.positionOrder.length}</dd>
         <dt>Patch</dt><dd>${escapeHtml(patchStatus)}</dd>
