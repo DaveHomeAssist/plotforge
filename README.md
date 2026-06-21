@@ -103,12 +103,12 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 
 - P0-1 venue and position editor: shipped.
 - P0-2 fixture library and add-fixture flow: shipped on 2026-06-18. Curated GDTF profiles and OFL JSON import are implemented.
-- P0-3 patch table plus CSV export: next.
+- P0-3 patch table plus CSV export: shipped on 2026-06-21. The sidepanel patch table lists fixture, profile, channel, DMX range, footprint, and conflict state, with CSV export.
 - P0-4 print to PDF with title block: open. Build the export path, then park physical ANSI D fidelity sign-off until plotter access is available.
 
 Documented remaining plan:
 
-1. P0: patch table plus CSV export, then print to PDF.
+1. P0: print to PDF.
 2. P1: metadata, named revisions, conflict panel, inspector parsing, focus beam tool.
 3. P2: fixture status, layered notes, multi-select, gel rollup, circuit schema, comment pins.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.
