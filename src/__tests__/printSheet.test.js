@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { newShow, newPosition, newFixture, addPosition, addFixture, updateProjectMetadata } from "../domain/show.js";
+import { newShow, newPosition, newFixture, addPosition, addFixture, updateFixture, updateProjectMetadata } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 import { printLegendRows, printPatchStatus, printSheetHtml, printWorldBounds } from "../domain/printSheet.js";
 
@@ -51,6 +51,19 @@ describe("print sheet", () => {
 
     expect(bounds.width).toBeGreaterThan(doc.venue.stageWidthMm);
     expect(bounds.height).toBeGreaterThan(doc.venue.stageDepthMm);
+  });
+
+  it("prints focus beam lines and includes focus points in bounds", () => {
+    let { doc } = seedPrintShow();
+    const fixtureId = doc.fixtureOrder[0];
+    doc = updateFixture(doc, fixtureId, { focus: { xMm: feetToMm(30), yMm: feetToMm(-2) } });
+
+    const html = printSheetHtml(doc);
+    const bounds = printWorldBounds(doc);
+
+    expect(html).toContain("class=\"focus-beam\"");
+    expect(html).toContain("class=\"focus-point\"");
+    expect(bounds.x + bounds.width).toBeGreaterThan(feetToMm(30));
   });
 
   it("summarizes duplicate channel and DMX conflicts", () => {

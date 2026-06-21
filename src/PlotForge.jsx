@@ -64,6 +64,8 @@ export default function PlotForge() {
           onSelectFixture={show.onSelectFixture}
           onSelectPosition={show.onSelectPosition}
           onMoveFixture={show.onMoveFixture}
+          onSetFixtureFocus={show.onSetFixtureFocus}
+          onClearFixtureFocus={show.onClearFixtureFocus}
         />
         <aside className="sidepanel">
           <ProjectMetadata

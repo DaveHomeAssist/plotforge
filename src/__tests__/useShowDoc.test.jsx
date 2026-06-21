@@ -161,6 +161,23 @@ describe("useShowDoc", () => {
     expect(result.current.doc.fixtures[fixtureId].unitNumber).toBe(5);
   });
 
+  it("sets and clears fixture focus points", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+    const fixtureId = result.current.doc.fixtureOrder[0];
+
+    act(() => {
+      result.current.onSetFixtureFocus(fixtureId, { xMm: feetToMm(2), yMm: feetToMm(-3) });
+    });
+
+    expect(result.current.doc.fixtures[fixtureId].focus).toEqual({ xMm: feetToMm(2), yMm: feetToMm(-3) });
+
+    act(() => {
+      result.current.onClearFixtureFocus(fixtureId);
+    });
+
+    expect(result.current.doc.fixtures[fixtureId].focus).toBeNull();
+  });
+
   it("onFixtureDelete clears selectedFixtureId", () => {
     const { result } = renderHook(() => useShowDoc(seedShow));
     const fixtureId = result.current.doc.fixtureOrder[0];

@@ -3,6 +3,7 @@ import usePanZoom from "../hooks/usePanZoom.js";
 import FixtureSymbol from "./FixtureSymbol.jsx";
 import { fixturesOnPosition } from "../domain/show.js";
 import { feetToMm, MM_PER_FOOT } from "../domain/units.js";
+import { focusBeamRows, snapFocusPoint } from "../domain/focus.js";
 
 const GRID_MM = MM_PER_FOOT;          // 1 ft minor grid
 const GRID_MAJOR_MM = MM_PER_FOOT * 5; // 5 ft major grid
@@ -14,39 +15,52 @@ export default function PlotCanvas({
   onSelectFixture,
   onSelectPosition,
   onMoveFixture,
+  onSetFixtureFocus,
+  onClearFixtureFocus,
 }) {
   const svgRef = useRef(null);
   const dragState = useRef(null);
 
-  // Initial world view: a generous margin around the venue.
   const margin = feetToMm(8);
   const halfW = doc.venue.stageWidthMm / 2 + margin;
   const initial = {
     x: -halfW,
     y: -doc.venue.stageDepthMm - margin,
     width: halfW * 2,
-    height: doc.venue.stageDepthMm + margin * 2 + feetToMm(20),  // include FOH area
+    height: doc.venue.stageDepthMm + margin * 2 + feetToMm(20),
   };
 
   const { viewBox, onWheel, beginPan, panTo, endPan, screenToWorld, reset } =
     usePanZoom({ initialWorldRect: initial, viewportSize: { width: 800, height: 600 } });
 
   const [panActive, setPanActive] = useState(false);
+  const [focusFixtureId, setFocusFixtureId] = useState(null);
+  const selectedFixture = selectedFixtureId ? doc.fixtures[selectedFixtureId] : null;
+  const focusActive = Boolean(selectedFixtureId && focusFixtureId === selectedFixtureId);
+
+  const setFocusAtEvent = useCallback((e) => {
+    if (!focusActive || !selectedFixtureId || e.button !== 0) return false;
+    const svg = e.currentTarget.ownerSVGElement || e.currentTarget;
+    const world = screenToWorld(e.clientX, e.clientY, svg);
+    onSetFixtureFocus?.(selectedFixtureId, snapFocusPoint({ xMm: world.x, yMm: world.y }));
+    setFocusFixtureId(null);
+    return true;
+  }, [focusActive, selectedFixtureId, screenToWorld, onSetFixtureFocus]);
 
   const onSvgPointerDown = useCallback((e) => {
+    if (setFocusAtEvent(e)) return;
     if (e.target.closest(".fx")) return; // fixture handles its own drag
     if (e.button !== 0 && e.button !== 1) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     setPanActive(true);
     beginPan(e.clientX, e.clientY);
-  }, [beginPan]);
+  }, [beginPan, setFocusAtEvent]);
 
   const onSvgPointerMove = useCallback((e) => {
     if (panActive) panTo(e.clientX, e.clientY, e.currentTarget);
     if (dragState.current) {
       const { fixtureId, positionId } = dragState.current;
       const world = screenToWorld(e.clientX, e.clientY, e.currentTarget);
-      // Snap x to the nearest 1-inch increment for a calmer drag feel.
       const snap = 25.4;
       const xMm = Math.round(world.x / snap) * snap;
       onMoveFixture(fixtureId, positionId, xMm);
@@ -64,10 +78,13 @@ export default function PlotCanvas({
 
   const onFixturePointerDown = useCallback((e, fixture) => {
     e.stopPropagation();
+    if (focusActive && selectedFixtureId) return;
     onSelectFixture(fixture.id);
     e.currentTarget.ownerSVGElement?.setPointerCapture?.(e.pointerId);
     dragState.current = { fixtureId: fixture.id, positionId: fixture.positionId };
-  }, [onSelectFixture]);
+  }, [focusActive, selectedFixtureId, onSelectFixture]);
+
+  const focusRows = focusBeamRows(doc);
 
   // ---- grid ----
   const gridStartX = Math.floor(viewBox.x / GRID_MM) * GRID_MM;
@@ -90,8 +107,23 @@ export default function PlotCanvas({
     <div className="canvas-wrap">
       <div className="canvas-toolbar">
         <button onClick={reset} type="button">Reset view</button>
+        <button
+          onClick={() => setFocusFixtureId(focusActive ? null : selectedFixtureId)}
+          type="button"
+          disabled={!selectedFixtureId}
+          className={focusActive ? "tool-active" : ""}
+        >
+          Focus
+        </button>
+        <button
+          onClick={() => selectedFixtureId && onClearFixtureFocus?.(selectedFixtureId)}
+          type="button"
+          disabled={!selectedFixture?.focus}
+        >
+          Clear focus
+        </button>
         <span className="mono">
-          view: {Math.round(viewBox.x)}, {Math.round(viewBox.y)} · {Math.round(viewBox.width)} × {Math.round(viewBox.height)} mm
+          {focusActive ? "click plot to place focus" : `view: ${Math.round(viewBox.x)}, ${Math.round(viewBox.y)} | ${Math.round(viewBox.width)} x ${Math.round(viewBox.height)} mm`}
         </span>
       </div>
       <svg
@@ -137,6 +169,7 @@ export default function PlotCanvas({
               className={`position-line ${selected ? "position-line--selected" : ""}`}
               onPointerDown={(event) => {
                 event.stopPropagation();
+                if (setFocusAtEvent(event)) return;
                 onSelectPosition?.(p.id);
               }}
             >
@@ -162,6 +195,45 @@ export default function PlotCanvas({
             </g>
           );
         })}
+
+        <g className="focus-beams" aria-label="Focus beams">
+          {focusRows.map(row => {
+            const selected = row.fixtureId === selectedFixtureId;
+            return (
+              <g key={row.fixtureId} className={`focus-beam ${selected ? "focus-beam--selected" : ""}`}>
+                <line
+                  x1={row.fromX}
+                  y1={row.fromY}
+                  x2={row.toX}
+                  y2={row.toY}
+                  stroke={selected ? "#ffb547" : "rgba(255,181,71,.52)"}
+                  strokeWidth={selected ? 14 : 9}
+                  strokeDasharray="90 42"
+                  pointerEvents="none"
+                />
+                <circle
+                  cx={row.toX}
+                  cy={row.toY}
+                  r={selected ? 90 : 70}
+                  fill={selected ? "rgba(255,181,71,.18)" : "rgba(255,181,71,.1)"}
+                  stroke={selected ? "#ffb547" : "rgba(255,181,71,.68)"}
+                  strokeWidth={selected ? 12 : 8}
+                  pointerEvents="none"
+                />
+                <text
+                  x={row.toX + 120}
+                  y={row.toY - 90}
+                  fill={selected ? "#ffb547" : "rgba(255,181,71,.8)"}
+                  fontFamily="ui-monospace, Menlo, monospace"
+                  fontSize={110}
+                  pointerEvents="none"
+                >
+                  F{row.unitNumber ?? ""}
+                </text>
+              </g>
+            );
+          })}
+        </g>
 
         {/* Fixtures */}
         {doc.fixtureOrder.map(fid => {

@@ -26,10 +26,11 @@ Notion is the canonical phase source for this project. README status was reconci
 - Named revision log with active revision selection for title block issue tracking
 - Conflict panel that lists channel and DMX issues with reveal selection
 - Debounced fixture inspector edits with imperial position parsing
+- Focus beam tool for placing fixture focus points on the plot and print sheet
 
 ## What's deliberately missing
 
-Focus beam tool, Lightwright roundtrip, auth, sharing, and production quality of life tools.
+Lightwright roundtrip, auth, sharing, and production quality of life tools.
 MVR import and export remain a later strategic interop track.
 
 ## Run
@@ -67,6 +68,7 @@ src/
   domain/
     show.js          show / venue / position / fixture types + pure mutations
     patch.js         DMX + channel conflict detection
+    focus.js         focus point snapping + beam rows
     profiles.js      curated GDTF seed profiles + OFL import normalization
     units.js         mm-as-integer conversions + imperial parser
     ids.js           collision-resistant id generator
@@ -119,10 +121,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P1-2 named revisions: shipped on 2026-06-21. The sidepanel saves named revision records with notes, can activate a prior revision, and drives the title block revision field from the active record.
 - P1-3 conflict panel with reveal: shipped on 2026-06-21. The sidepanel lists channel and DMX conflicts with affected fixtures and a Reveal action that selects the first fixture in the conflict.
 - P1-4 inspector debouncing plus imperial parsing: shipped on 2026-06-21. The inspector stages channel, DMX, color, note, and position edits locally, commits after a short pause or blur, parses feet and inch position text, and shows inline errors for invalid measurements.
+- P1-5 focus beam tool: shipped on 2026-06-21. The canvas Focus tool places snapped focus points for the selected fixture, renders focus beams on the live plot, includes focus beams in print output, and can clear the selected fixture focus.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
-2. P1: focus beam tool.
+2. P1: complete locally, pending tier deploy and live smoke.
 3. P2: fixture status, layered notes, multi-select, gel rollup, circuit schema, comment pins.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.

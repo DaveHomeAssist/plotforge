@@ -142,6 +142,14 @@ export default function useShowDoc(seedShow) {
     commit(patch.xMm == null || positionId == null ? next : renumberPosition(next, positionId));
   }, [doc, commit]);
 
+  const onSetFixtureFocus = useCallback((id, focus) => {
+    commit(updateFixture(doc, id, { focus }));
+  }, [doc, commit]);
+
+  const onClearFixtureFocus = useCallback((id) => {
+    commit(updateFixture(doc, id, { focus: null }));
+  }, [doc, commit]);
+
   const onFixtureDelete = useCallback((id) => {
     commit(removeFixture(doc, id));
     setSelectedFixtureId(null);
@@ -193,6 +201,8 @@ export default function useShowDoc(seedShow) {
     onActivateRevision,
     onPositionChange,
     onFixtureChange,
+    onSetFixtureFocus,
+    onClearFixtureFocus,
     onFixtureDelete,
     onPositionDelete,
     onSave,

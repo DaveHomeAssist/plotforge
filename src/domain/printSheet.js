@@ -1,4 +1,5 @@
 import { patchConflicts, channelConflicts } from "./patch.js";
+import { focusBeamRows } from "./focus.js";
 import { getProfile } from "./profiles.js";
 import { MM_PER_FOOT, formatImperial } from "./units.js";
 
@@ -35,11 +36,13 @@ export function printWorldBounds(doc) {
       return [-half, half];
     }),
     ...doc.fixtureOrder.map(id => doc.fixtures[id]?.xMm).filter(value => value != null),
+    ...focusBeamRows(doc).map(row => row.toX),
   ];
   const yValues = [
     -doc.venue.stageDepthMm,
     0,
     ...doc.positionOrder.map(id => doc.positions[id]?.yMm).filter(value => value != null),
+    ...focusBeamRows(doc).map(row => row.toY),
   ];
   const minX = Math.min(...xValues) - margin;
   const maxX = Math.max(...xValues) + margin;
@@ -111,6 +114,9 @@ function fixtureSymbol(profile, fixture, position) {
 }
 
 function plotSvg(doc, bounds) {
+  const beams = focusBeamRows(doc).map(row => (
+    `<g class="focus-beam"><line x1="${row.fromX}" y1="${row.fromY}" x2="${row.toX}" y2="${row.toY}"/><circle class="focus-point" cx="${row.toX}" cy="${row.toY}" r="80"/><text x="${row.toX + 120}" y="${row.toY - 90}">F${escapeHtml(row.unitNumber ?? "")}</text></g>`
+  )).join("");
   const positions = doc.positionOrder.map(id => {
     const position = doc.positions[id];
     if (!position) return "";
@@ -133,6 +139,7 @@ function plotSvg(doc, bounds) {
     <line x1="${bounds.x}" y1="0" x2="${bounds.x + bounds.width}" y2="0" class="plaster"/>
     <rect x="${-doc.venue.stageWidthMm / 2}" y="${-doc.venue.stageDepthMm}" width="${doc.venue.stageWidthMm}" height="${doc.venue.stageDepthMm}" class="stage"/>
     ${positions}
+    ${beams}
     ${fixtures}
     <g class="scale"><line x1="${scaleX}" y1="${scaleY}" x2="${scaleX + scaleLength}" y2="${scaleY}"/><text x="${scaleX}" y="${scaleY - 120}">10 ft</text></g>
   </svg>`;
@@ -175,6 +182,9 @@ svg { display: block; width: 100%; height: 100%; min-height: 6.5in; }
 .plaster { stroke: #111; stroke-width: 6; }
 .stage, .fixture circle, .fixture rect, .fixture polygon { fill: none; stroke: #111; stroke-width: 18; vector-effect: non-scaling-stroke; }
 .fixture line { stroke-width: 18; vector-effect: non-scaling-stroke; }
+.focus-beam line { stroke: #111; stroke-width: 8; stroke-dasharray: 90 42; vector-effect: non-scaling-stroke; }
+.focus-point { fill: none; stroke: #111; stroke-width: 8; vector-effect: non-scaling-stroke; }
+.focus-beam text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 120px; }
 .position { stroke: #111; stroke-width: 10; vector-effect: non-scaling-stroke; }
 .position-label, .unit, .scale text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 130px; }
 .unit { text-anchor: middle; font-weight: 700; }
