@@ -2,8 +2,11 @@ import { useCallback, useState } from "react";
 import useHistory from "./useHistory.js";
 import useAutosaveRecovery from "./useAutosaveRecovery.js";
 import {
+  newFixture,
   newPosition,
   addPosition,
+  addFixture,
+  addFixtureProfile,
   updateFixture,
   removeFixture,
   renumberPosition,
@@ -13,8 +16,24 @@ import {
   fixturesOnPosition
 } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
+import { getProfile, normalizeOpenFixtureLibraryProfile } from "../domain/profiles.js";
 import { saveProjectFile, openProjectFile } from "../serialization.js";
 import { patchConflicts } from "../domain/patch.js";
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(value, max));
+}
+
+function nextFixtureX(doc, positionId) {
+  const position = doc.positions[positionId];
+  if (!position) return 0;
+  const marginMm = feetToMm(2);
+  const spacingMm = feetToMm(3);
+  const minX = -position.lengthMm / 2 + marginMm;
+  const maxX = position.lengthMm / 2 - marginMm;
+  const nextX = minX + fixturesOnPosition(doc, positionId).length * spacingMm;
+  return Math.round(clamp(nextX, minX, maxX));
+}
 
 export default function useShowDoc(seedShow) {
   const [doc, setDoc] = useState(seedShow);
@@ -56,6 +75,33 @@ export default function useShowDoc(seedShow) {
     commit(addPosition(doc, position));
     setSelectedPositionId(position.id);
     setSelectedFixtureId(null);
+  }, [doc, commit]);
+
+  const onAddFixture = useCallback((positionId, profileId) => {
+    const position = doc.positions[positionId];
+    const profile = getProfile(profileId, doc.fixtureProfiles);
+    if (!position || !profile) return null;
+
+    const fixture = newFixture({
+      positionId,
+      profileId,
+      xMm: nextFixtureX(doc, positionId),
+    });
+
+    commit(addFixture(doc, fixture));
+    setSelectedPositionId(positionId);
+    setSelectedFixtureId(fixture.id);
+    return fixture.id;
+  }, [doc, commit]);
+
+  const onImportOpenFixtureLibraryProfile = useCallback((oflFixture, options = {}) => {
+    try {
+      const profile = normalizeOpenFixtureLibraryProfile(oflFixture, options);
+      commit(addFixtureProfile(doc, profile));
+      return { ok: true, profile };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }, [doc, commit]);
 
   const onVenueChange = useCallback((patch) => {
@@ -112,6 +158,8 @@ export default function useShowDoc(seedShow) {
     onSelectFixture,
     onSelectPosition,
     onAddPosition,
+    onAddFixture,
+    onImportOpenFixtureLibraryProfile,
     onVenueChange,
     onPositionChange,
     onFixtureChange,

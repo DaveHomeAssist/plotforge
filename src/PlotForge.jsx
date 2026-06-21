@@ -1,6 +1,7 @@
 import PlotCanvas from "./components/PlotCanvas.jsx";
 import Inspector from "./components/Inspector.jsx";
 import PositionEditor from "./components/PositionEditor.jsx";
+import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import DraftRecoveryBanner from "./components/DraftRecoveryBanner.jsx";
 import useShowDoc from "./hooks/useShowDoc.js";
 import { newShow, newPosition, newFixture, addPosition, addFixture } from "./domain/show.js";
@@ -68,6 +69,12 @@ export default function PlotForge() {
             onVenueChange={show.onVenueChange}
             onPositionChange={show.onPositionChange}
             onDeletePosition={show.onPositionDelete}
+          />
+          <FixtureLibrary
+            doc={show.doc}
+            selectedPositionId={show.selectedPositionId}
+            onAddFixture={show.onAddFixture}
+            onImportOpenFixtureLibraryProfile={show.onImportOpenFixtureLibraryProfile}
           />
           <Inspector
             doc={show.doc}
