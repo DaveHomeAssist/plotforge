@@ -42,6 +42,48 @@ describe("useShowDoc", () => {
     expect(result.current.doc.positionOrder).toHaveLength(4);
   });
 
+  it("onAddFixture adds a curated profile to the selected position", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+    const positionId = result.current.doc.positionOrder[0];
+    let fixtureId = null;
+
+    act(() => {
+      fixtureId = result.current.onAddFixture(positionId, "robe_megapointe");
+    });
+
+    expect(fixtureId).toEqual(expect.stringMatching(/^fx_/));
+    expect(result.current.doc.fixtureOrder).toHaveLength(11);
+    expect(result.current.selectedFixtureId).toBe(fixtureId);
+    expect(result.current.selectedPositionId).toBe(positionId);
+    expect(result.current.doc.fixtures[fixtureId]).toEqual(expect.objectContaining({
+      positionId,
+      profileId: "robe_megapointe",
+    }));
+  });
+
+  it("imports an Open Fixture Library profile into the document", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+
+    act(() => {
+      result.current.onImportOpenFixtureLibraryProfile({
+        name: "Tiny Wash",
+        categories: ["Color Changer"],
+        modes: [{ name: "RGBW", channels: ["red", "green", "blue", "white"] }],
+      }, {
+        manufacturerKey: "demo-maker",
+        fixtureKey: "tiny-wash",
+        importedAt: 123,
+      });
+    });
+
+    expect(result.current.doc.fixtureProfiles.ofl_demo_maker_tiny_wash).toEqual(expect.objectContaining({
+      manufacturer: "demo-maker",
+      model: "Tiny Wash",
+      dmxFootprint: 4,
+      libraryTier: "ofl-import",
+    }));
+  });
+
   it("onPositionChange updates the selected position name", () => {
     const { result } = renderHook(() => useShowDoc(seedShow));
     const positionId = result.current.doc.positionOrder[0];

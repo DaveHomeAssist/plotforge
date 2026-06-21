@@ -4,8 +4,8 @@ import { getProfile } from "../domain/profiles.js";
  * Renders a fixture symbol in world (mm) coordinates centered on (cx, cy).
  * Symbols are deliberately schematic — Phase 2 will swap these for GDTF-imported SVGs.
  */
-export default function FixtureSymbol({ fixture, position, selected, onPointerDown }) {
-  const profile = getProfile(fixture.profileId);
+export default function FixtureSymbol({ fixture, position, profiles, selected, onPointerDown }) {
+  const profile = getProfile(fixture.profileId, profiles);
   if (!profile) return null;
   const r = profile.radiusMm;
   const cx = fixture.xMm;

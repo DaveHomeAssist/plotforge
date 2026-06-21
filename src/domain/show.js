@@ -31,6 +31,7 @@ export function newShow({ name = "Untitled Show" } = {}) {
     positionOrder: [],  // render/numbering order
     fixtures: {},       // id -> Fixture
     fixtureOrder: [],
+    fixtureProfiles: {}, // imported fixture profiles keyed by profile id
   };
 }
 
@@ -83,6 +84,14 @@ export function addFixture(doc, fixture) {
     fixtureOrder: [...doc.fixtureOrder, fixture.id],
   };
   return renumberPosition(next, fixture.positionId);
+}
+
+export function addFixtureProfile(doc, profile) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    fixtureProfiles: { ...(doc.fixtureProfiles || {}), [profile.id]: profile },
+  };
 }
 
 export function updateFixture(doc, fixtureId, patch) {

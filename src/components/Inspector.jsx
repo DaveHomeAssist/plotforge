@@ -11,7 +11,7 @@ export default function Inspector({ doc, fixtureId, onChange, onDelete }) {
   }
   const fx = doc.fixtures[fixtureId];
   if (!fx) return null;
-  const profile = getProfile(fx.profileId);
+  const profile = getProfile(fx.profileId, doc.fixtureProfiles);
   const position = doc.positions[fx.positionId];
 
   return (

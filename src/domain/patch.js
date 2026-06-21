@@ -7,7 +7,7 @@ export function patchConflicts(doc) {
   const byUni = new Map();
   for (const fx of Object.values(doc.fixtures)) {
     if (!fx.dmx || fx.dmx.universe == null || fx.dmx.address == null) continue;
-    const profile = getProfile(fx.profileId);
+    const profile = getProfile(fx.profileId, doc.fixtureProfiles);
     const footprint = profile?.dmxFootprint ?? 1;
     const start = fx.dmx.address;
     const end = start + footprint;

@@ -173,6 +173,7 @@ export default function PlotCanvas({
               key={fx.id}
               fixture={fx}
               position={pos}
+              profiles={doc.fixtureProfiles}
               selected={fx.id === selectedFixtureId}
               onPointerDown={onFixturePointerDown}
             />
