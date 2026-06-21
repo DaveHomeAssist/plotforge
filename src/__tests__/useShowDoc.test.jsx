@@ -150,6 +150,17 @@ describe("useShowDoc", () => {
     expect(result.current.conflicts).toHaveLength(1);
   });
 
+  it("onFixtureChange renumbers when inspector position changes", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+    const fixtureId = result.current.doc.fixtureOrder[0];
+
+    act(() => {
+      result.current.onFixtureChange(fixtureId, { xMm: feetToMm(14) });
+    });
+
+    expect(result.current.doc.fixtures[fixtureId].unitNumber).toBe(5);
+  });
+
   it("onFixtureDelete clears selectedFixtureId", () => {
     const { result } = renderHook(() => useShowDoc(seedShow));
     const fixtureId = result.current.doc.fixtureOrder[0];

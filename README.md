@@ -25,10 +25,11 @@ Notion is the canonical phase source for this project. README status was reconci
 - Project metadata editor for show title, drawing title, venue, designer, company, show date, revision, and scale
 - Named revision log with active revision selection for title block issue tracking
 - Conflict panel that lists channel and DMX issues with reveal selection
+- Debounced fixture inspector edits with imperial position parsing
 
 ## What's deliberately missing
 
-Inspector debouncing, focus beam tool, Lightwright roundtrip, auth, sharing, and production quality of life tools.
+Focus beam tool, Lightwright roundtrip, auth, sharing, and production quality of life tools.
 MVR import and export remain a later strategic interop track.
 
 ## Run
@@ -79,7 +80,7 @@ src/
     ConflictPanel.jsx  conflict list + reveal action
     PlotCanvas.jsx   SVG drafting surface
     FixtureSymbol.jsx  fixture glyphs
-    Inspector.jsx    fixture metadata editor
+    Inspector.jsx    fixture metadata editor with debounced commits
     DraftRecoveryBanner.jsx
     ErrorBoundary.jsx
   autosave.js        IndexedDB store (ported from PixelForge)
@@ -117,10 +118,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P1-1 project metadata plus editable title block: shipped on 2026-06-21. The sidepanel edits show title, drawing title, venue, designer, draftsperson, company, show date, revision, and scale; print output uses the same metadata.
 - P1-2 named revisions: shipped on 2026-06-21. The sidepanel saves named revision records with notes, can activate a prior revision, and drives the title block revision field from the active record.
 - P1-3 conflict panel with reveal: shipped on 2026-06-21. The sidepanel lists channel and DMX conflicts with affected fixtures and a Reveal action that selects the first fixture in the conflict.
+- P1-4 inspector debouncing plus imperial parsing: shipped on 2026-06-21. The inspector stages channel, DMX, color, note, and position edits locally, commits after a short pause or blur, parses feet and inch position text, and shows inline errors for invalid measurements.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
-2. P1: inspector parsing, focus beam tool.
+2. P1: focus beam tool.
 3. P2: fixture status, layered notes, multi-select, gel rollup, circuit schema, comment pins.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.

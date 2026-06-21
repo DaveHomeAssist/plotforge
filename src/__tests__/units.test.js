@@ -7,6 +7,10 @@ describe("units", () => {
     expect(parseImperial("0'-3\"")).toBe(Math.round(3 * 25.4));
     expect(parseImperial("8'")).toBe(Math.round(8 * 304.8));
     expect(parseImperial("36\"")).toBe(Math.round(36 * 25.4));
+    expect(parseImperial("12 ft 6 in")).toBe(Math.round(12 * 304.8 + 6 * 25.4));
+    expect(parseImperial("12-6")).toBe(Math.round(12 * 304.8 + 6 * 25.4));
+    expect(parseImperial("12\u2019-6\u201d")).toBe(Math.round(12 * 304.8 + 6 * 25.4));
+    expect(parseImperial("-8'-6\"")).toBe(Math.round(-8 * 304.8 - 6 * 25.4));
   });
 
   it("parseImperial returns null for nonsense", () => {

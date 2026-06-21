@@ -136,7 +136,10 @@ export default function useShowDoc(seedShow) {
   }, [doc, commit]);
 
   const onFixtureChange = useCallback((id, patch) => {
-    commit(updateFixture(doc, id, patch));
+    const current = doc.fixtures[id];
+    const next = updateFixture(doc, id, patch);
+    const positionId = patch.positionId ?? current?.positionId;
+    commit(patch.xMm == null || positionId == null ? next : renumberPosition(next, positionId));
   }, [doc, commit]);
 
   const onFixtureDelete = useCallback((id) => {

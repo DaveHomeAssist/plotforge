@@ -1,5 +1,5 @@
 // Internal canonical unit: millimeters as integers.
-// Conversions live at the UI edge — never inside the document.
+// Conversions live at the UI edge; never inside the document.
 
 export const MM_PER_INCH = 25.4;
 export const MM_PER_FOOT = 304.8;
@@ -9,22 +9,38 @@ export const feetToMm = (n) => Math.round(n * MM_PER_FOOT);
 export const mmToInches = (n) => n / MM_PER_INCH;
 export const mmToFeet = (n) => n / MM_PER_FOOT;
 
-/** "12'-6\"" → mm. Accepts feet, inches, or feet+inches. */
+function normalizeImperialInput(input) {
+  return input
+    .trim()
+    .replace(/[\u2019\u2032]/g, "'")
+    .replace(/[\u201c\u201d\u2033]/g, "\"")
+    .replace(/\b(feet|foot|ft)\b/gi, "'")
+    .replace(/\b(inches|inch|in)\b/gi, "\"")
+    .replace(/\s+/g, " ");
+}
+
+/** "12'-6\"" to mm. Accepts feet, inches, or feet plus inches. */
 export function parseImperial(input) {
   if (typeof input !== "string") return null;
-  const s = input.trim();
-  const ft = s.match(/^(-?\d+(?:\.\d+)?)'(?:\s*-?\s*(\d+(?:\.\d+)?)")?$/);
+  let s = normalizeImperialInput(input);
+  if (!s) return null;
+
+  const shorthand = s.match(/^(-?\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+  if (shorthand) s = `${shorthand[1]}'-${shorthand[2]}"`;
+
+  const ft = s.match(/^(-?\d+(?:\.\d+)?)\s*'(?:\s*-?\s*(\d+(?:\.\d+)?)\s*"?\s*)?$/);
   if (ft) {
     const feet = parseFloat(ft[1]);
     const inches = ft[2] ? parseFloat(ft[2]) : 0;
-    return Math.round(feet * MM_PER_FOOT + inches * MM_PER_INCH);
+    const sign = feet < 0 ? -1 : 1;
+    return Math.round(sign * (Math.abs(feet) * MM_PER_FOOT + inches * MM_PER_INCH));
   }
-  const inOnly = s.match(/^(-?\d+(?:\.\d+)?)"$/);
+  const inOnly = s.match(/^(-?\d+(?:\.\d+)?)\s*"$/);
   if (inOnly) return Math.round(parseFloat(inOnly[1]) * MM_PER_INCH);
   return null;
 }
 
-/** mm → human-readable feet-inches like 12'-6". */
+/** mm to human-readable feet-inches like 12'-6". */
 export function formatImperial(mm) {
   if (mm == null || Number.isNaN(mm)) return "";
   const sign = mm < 0 ? "-" : "";
