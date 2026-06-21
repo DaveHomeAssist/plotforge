@@ -24,6 +24,7 @@ import { feetToMm } from "../domain/units.js";
 import { getProfile, normalizeOpenFixtureLibraryProfile } from "../domain/profiles.js";
 import { saveProjectFile, openProjectFile } from "../serialization.js";
 import { patchConflicts } from "../domain/patch.js";
+import { alignFixtures, distributeFixtures } from "../domain/fixtureLayout.js";
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(value, max));
@@ -43,6 +44,7 @@ function nextFixtureX(doc, positionId) {
 export default function useShowDoc(seedShow) {
   const [doc, setDoc] = useState(seedShow);
   const [selectedFixtureId, setSelectedFixtureId] = useState(null);
+  const [selectedFixtureIds, setSelectedFixtureIds] = useState([]);
   const [selectedPositionId, setSelectedPositionId] = useState(null);
 
   const history = useHistory(setDoc);
@@ -58,15 +60,38 @@ export default function useShowDoc(seedShow) {
     setDoc(prev => renumberPosition(updateFixture(prev, fixtureId, { xMm }), positionId));
   }, []);
 
-  const onSelectFixture = useCallback((id) => {
-    setSelectedFixtureId(id);
-    setSelectedPositionId(doc.fixtures[id]?.positionId ?? null);
-  }, [doc.fixtures]);
+  const onClearFixtureSelection = useCallback(() => {
+    setSelectedFixtureId(null);
+    setSelectedFixtureIds([]);
+  }, []);
+
+  const onSelectFixture = useCallback((id, options = {}) => {
+    const fixture = doc.fixtures[id];
+    if (!fixture) return;
+
+    if (!options.additive) {
+      setSelectedFixtureId(id);
+      setSelectedFixtureIds([id]);
+      setSelectedPositionId(fixture.positionId);
+      return;
+    }
+
+    setSelectedFixtureIds(current => {
+      const exists = current.includes(id);
+      const next = exists ? current.filter(fixtureId => fixtureId !== id) : [...current, id];
+      const nextPrimaryId = exists
+        ? selectedFixtureId === id ? next[0] ?? null : selectedFixtureId
+        : id;
+      setSelectedFixtureId(nextPrimaryId);
+      setSelectedPositionId(nextPrimaryId ? doc.fixtures[nextPrimaryId]?.positionId ?? null : null);
+      return next;
+    });
+  }, [doc.fixtures, selectedFixtureId]);
 
   const onSelectPosition = useCallback((id) => {
     setSelectedPositionId(id);
-    setSelectedFixtureId(null);
-  }, []);
+    onClearFixtureSelection();
+  }, [onClearFixtureSelection]);
 
   const onAddPosition = useCallback(() => {
     const n = doc.positionOrder.length + 1;
@@ -79,8 +104,8 @@ export default function useShowDoc(seedShow) {
     });
     commit(addPosition(doc, position));
     setSelectedPositionId(position.id);
-    setSelectedFixtureId(null);
-  }, [doc, commit]);
+    onClearFixtureSelection();
+  }, [doc, commit, onClearFixtureSelection]);
 
   const onAddFixture = useCallback((positionId, profileId) => {
     const position = doc.positions[positionId];
@@ -96,6 +121,7 @@ export default function useShowDoc(seedShow) {
     commit(addFixture(doc, fixture));
     setSelectedPositionId(positionId);
     setSelectedFixtureId(fixture.id);
+    setSelectedFixtureIds([fixture.id]);
     return fixture.id;
   }, [doc, commit]);
 
@@ -150,18 +176,37 @@ export default function useShowDoc(seedShow) {
     commit(updateFixture(doc, id, { focus: null }));
   }, [doc, commit]);
 
+  const onAlignSelectedFixtures = useCallback((mode) => {
+    const next = alignFixtures(doc, selectedFixtureIds, mode);
+    if (next !== doc) commit(next);
+  }, [doc, commit, selectedFixtureIds]);
+
+  const onDistributeSelectedFixtures = useCallback(() => {
+    const next = distributeFixtures(doc, selectedFixtureIds);
+    if (next !== doc) commit(next);
+  }, [doc, commit, selectedFixtureIds]);
+
   const onFixtureDelete = useCallback((id) => {
     commit(removeFixture(doc, id));
-    setSelectedFixtureId(null);
-  }, [doc, commit]);
+    const nextSelectedIds = selectedFixtureIds.filter(fixtureId => fixtureId !== id && doc.fixtures[fixtureId]);
+    const nextPrimaryId = selectedFixtureId === id ? nextSelectedIds[0] ?? null : selectedFixtureId;
+    setSelectedFixtureIds(nextSelectedIds);
+    setSelectedFixtureId(nextPrimaryId);
+    setSelectedPositionId(nextPrimaryId ? doc.fixtures[nextPrimaryId]?.positionId ?? null : null);
+  }, [doc, commit, selectedFixtureId, selectedFixtureIds]);
 
   const onPositionDelete = useCallback((id) => {
     const fixtureCount = fixturesOnPosition(doc, id).length;
     if (fixtureCount > 0 && !window.confirm(`Delete this position and ${fixtureCount} fixtures?`)) return;
     commit(removePosition(doc, id));
-    setSelectedPositionId(null);
-    setSelectedFixtureId(prev => (doc.fixtures[prev]?.positionId === id ? null : prev));
-  }, [doc, commit]);
+    const nextSelectedIds = selectedFixtureIds.filter(fixtureId => doc.fixtures[fixtureId]?.positionId !== id);
+    const nextPrimaryId = doc.fixtures[selectedFixtureId]?.positionId === id
+      ? nextSelectedIds[0] ?? null
+      : selectedFixtureId;
+    setSelectedFixtureIds(nextSelectedIds);
+    setSelectedFixtureId(nextPrimaryId);
+    setSelectedPositionId(nextPrimaryId ? doc.fixtures[nextPrimaryId]?.positionId ?? null : null);
+  }, [doc, commit, selectedFixtureId, selectedFixtureIds]);
 
   const onSave = useCallback(async () => {
     const r = await saveProjectFile(doc, `${doc.name.replace(/\s+/g, "_")}.plot`);
@@ -171,20 +216,21 @@ export default function useShowDoc(seedShow) {
   const onOpen = useCallback(async () => {
     try {
       const r = await openProjectFile();
-      if (r.ok) { commit(r.doc); setSelectedFixtureId(null); }
+      if (r.ok) { commit(r.doc); setSelectedPositionId(null); onClearFixtureSelection(); }
     } catch (e) {
       alert("Could not read that file: " + (e?.message || e));
     }
-  }, [commit]);
+  }, [commit, onClearFixtureSelection]);
 
   const onRestoreDraft = useCallback(() => {
     const d = recovery.restoreDraft();
-    if (d) { commit(d); setSelectedFixtureId(null); }
-  }, [recovery, commit]);
+    if (d) { commit(d); setSelectedPositionId(null); onClearFixtureSelection(); }
+  }, [recovery, commit, onClearFixtureSelection]);
 
   return {
     doc,
     selectedFixtureId,
+    selectedFixtureIds,
     selectedPositionId,
     history,
     recovery,
@@ -203,6 +249,9 @@ export default function useShowDoc(seedShow) {
     onFixtureChange,
     onSetFixtureFocus,
     onClearFixtureFocus,
+    onAlignSelectedFixtures,
+    onDistributeSelectedFixtures,
+    onClearFixtureSelection,
     onFixtureDelete,
     onPositionDelete,
     onSave,

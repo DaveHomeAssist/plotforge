@@ -61,6 +61,29 @@ describe("useShowDoc", () => {
     }));
   });
 
+  it("tracks additive fixture selection and primary fixture", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+    const [firstId, secondId] = result.current.doc.fixtureOrder;
+
+    act(() => {
+      result.current.onSelectFixture(firstId);
+    });
+    expect(result.current.selectedFixtureId).toBe(firstId);
+    expect(result.current.selectedFixtureIds).toEqual([firstId]);
+
+    act(() => {
+      result.current.onSelectFixture(secondId, { additive: true });
+    });
+    expect(result.current.selectedFixtureId).toBe(secondId);
+    expect(result.current.selectedFixtureIds).toEqual([firstId, secondId]);
+
+    act(() => {
+      result.current.onSelectFixture(secondId, { additive: true });
+    });
+    expect(result.current.selectedFixtureId).toBe(firstId);
+    expect(result.current.selectedFixtureIds).toEqual([firstId]);
+  });
+
   it("imports an Open Fixture Library profile into the document", () => {
     const { result } = renderHook(() => useShowDoc(seedShow));
 
@@ -159,6 +182,24 @@ describe("useShowDoc", () => {
     });
 
     expect(result.current.doc.fixtures[fixtureId].unitNumber).toBe(5);
+  });
+
+  it("aligns selected fixtures through the document history", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+    const [firstId, secondId] = result.current.doc.fixtureOrder;
+    const targetX = result.current.doc.fixtures[secondId].xMm;
+
+    act(() => {
+      result.current.onSelectFixture(firstId);
+      result.current.onSelectFixture(secondId, { additive: true });
+    });
+    act(() => {
+      result.current.onAlignSelectedFixtures("right");
+    });
+
+    expect(result.current.doc.fixtures[firstId].xMm).toBe(targetX);
+    expect(result.current.doc.fixtures[secondId].xMm).toBe(targetX);
+    expect(result.current.history.undoN).toBeGreaterThan(0);
   });
 
   it("sets and clears fixture focus points", () => {

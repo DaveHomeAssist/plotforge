@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import usePanZoom from "../hooks/usePanZoom.js";
 import FixtureSymbol from "./FixtureSymbol.jsx";
 import { fixturesOnPosition } from "../domain/show.js";
@@ -11,6 +11,7 @@ const GRID_MAJOR_MM = MM_PER_FOOT * 5; // 5 ft major grid
 export default function PlotCanvas({
   doc,
   selectedFixtureId,
+  selectedFixtureIds = [],
   selectedPositionId,
   onSelectFixture,
   onSelectPosition,
@@ -36,6 +37,7 @@ export default function PlotCanvas({
   const [panActive, setPanActive] = useState(false);
   const [focusFixtureId, setFocusFixtureId] = useState(null);
   const selectedFixture = selectedFixtureId ? doc.fixtures[selectedFixtureId] : null;
+  const selectedFixtureSet = useMemo(() => new Set(selectedFixtureIds), [selectedFixtureIds]);
   const focusActive = Boolean(selectedFixtureId && focusFixtureId === selectedFixtureId);
 
   const setFocusAtEvent = useCallback((e) => {
@@ -79,7 +81,9 @@ export default function PlotCanvas({
   const onFixturePointerDown = useCallback((e, fixture) => {
     e.stopPropagation();
     if (focusActive && selectedFixtureId) return;
-    onSelectFixture(fixture.id);
+    const additive = e.shiftKey || e.metaKey || e.ctrlKey;
+    onSelectFixture(fixture.id, { additive });
+    if (additive) return;
     e.currentTarget.ownerSVGElement?.setPointerCapture?.(e.pointerId);
     dragState.current = { fixtureId: fixture.id, positionId: fixture.positionId };
   }, [focusActive, selectedFixtureId, onSelectFixture]);
@@ -246,7 +250,7 @@ export default function PlotCanvas({
               fixture={fx}
               position={pos}
               profiles={doc.fixtureProfiles}
-              selected={fx.id === selectedFixtureId}
+              selected={fx.id === selectedFixtureId || selectedFixtureSet.has(fx.id)}
               onPointerDown={onFixturePointerDown}
             />
           );

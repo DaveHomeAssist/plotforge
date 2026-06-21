@@ -6,6 +6,7 @@ import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import PatchTable from "./components/PatchTable.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
+import SelectionTools from "./components/SelectionTools.jsx";
 import PrintExport from "./components/PrintExport.jsx";
 import DraftRecoveryBanner from "./components/DraftRecoveryBanner.jsx";
 import useShowDoc from "./hooks/useShowDoc.js";
@@ -60,6 +61,7 @@ export default function PlotForge() {
         <PlotCanvas
           doc={show.doc}
           selectedFixtureId={show.selectedFixtureId}
+          selectedFixtureIds={show.selectedFixtureIds}
           selectedPositionId={show.selectedPositionId}
           onSelectFixture={show.onSelectFixture}
           onSelectPosition={show.onSelectPosition}
@@ -95,6 +97,14 @@ export default function PlotForge() {
           />
           <PatchTable doc={show.doc} />
           <ConflictPanel doc={show.doc} onRevealFixture={show.onSelectFixture} />
+          <SelectionTools
+            doc={show.doc}
+            selectedFixtureId={show.selectedFixtureId}
+            selectedFixtureIds={show.selectedFixtureIds}
+            onAlignSelectedFixtures={show.onAlignSelectedFixtures}
+            onDistributeSelectedFixtures={show.onDistributeSelectedFixtures}
+            onClearSelection={show.onClearFixtureSelection}
+          />
           <PrintExport doc={show.doc} />
           <Inspector
             doc={show.doc}

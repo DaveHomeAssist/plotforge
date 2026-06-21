@@ -21,6 +21,7 @@ function renderCanvas(doc, fixtureId, props = {}) {
   const rendered = render(React.createElement(PlotCanvas, {
     doc,
     selectedFixtureId: fixtureId,
+    selectedFixtureIds: fixtureId ? [fixtureId] : [],
     selectedPositionId: null,
     onSelectFixture: vi.fn(),
     onSelectPosition: vi.fn(),
@@ -43,6 +44,35 @@ describe("PlotCanvas focus tool", () => {
 
     expect(marker).not.toBeNull();
     expect(marker.getAttribute("fill")).toBe("#ff6b6b");
+  });
+
+  it("renders every selected fixture with selected styling", () => {
+    let { doc, fixtureId } = seedCanvasDoc();
+    const positionId = doc.fixtures[fixtureId].positionId;
+    const secondFixture = newFixture({ positionId, profileId: "s4_26", xMm: feetToMm(4) });
+    doc = addFixture(doc, secondFixture);
+    const { container } = renderCanvas(doc, fixtureId, {
+      selectedFixtureIds: [fixtureId, secondFixture.id],
+    });
+
+    expect(container.querySelectorAll(".fx--selected")).toHaveLength(2);
+  });
+
+  it("uses additive selection for modifier clicks", () => {
+    const { doc, fixtureId } = seedCanvasDoc();
+    const onSelectFixture = vi.fn();
+    const onMoveFixture = vi.fn();
+    const { container } = renderCanvas(doc, null, {
+      onSelectFixture,
+      onMoveFixture,
+      selectedFixtureIds: [],
+    });
+    const fixtureNode = container.querySelector(".fx");
+
+    fireEvent.pointerDown(fixtureNode, { button: 0, clientX: 400, clientY: 300, pointerId: 1, shiftKey: true });
+
+    expect(onSelectFixture).toHaveBeenCalledWith(fixtureId, { additive: true });
+    expect(onMoveFixture).not.toHaveBeenCalled();
   });
 
   it("sets selected fixture focus by clicking the plot in focus mode", () => {

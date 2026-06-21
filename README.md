@@ -29,6 +29,7 @@ Notion is the canonical phase source for this project. README status was reconci
 - Focus beam tool for placing fixture focus points on the plot and print sheet
 - Per-fixture status with inspector control, plot markers, patch table display, CSV export, and `.plot` migration
 - Layered fixture notes for color, gobo, focus, and crew handoff, with legacy note migration
+- Multi-select fixture editing with align left, align center, align right, and distribute controls
 
 ## What's deliberately missing
 
@@ -129,10 +130,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P1 tier deploy: shipped on 2026-06-21. Production alias `https://plotforge-beta.vercel.app` points at the P1 focus beam build.
 - P2-1 fixture status: shipped in the repo on 2026-06-21. Fixtures store normalized status, legacy `.plot` docs migrate to planned, the inspector edits status, canvas symbols show a status marker, and patch table plus CSV output include status.
 - P2-2 layered notes: shipped in the repo on 2026-06-21. Fixtures store color, gobo, focus, and crew note layers, older `note` values migrate into the crew note, the inspector edits each layer, and patch table plus CSV output include layered note data.
+- P2-3 multi-select plus align and distribute: shipped in the repo on 2026-06-21. Modifier-click selection tracks multiple fixtures, the primary fixture still drives the inspector and focus tools, and the selection panel aligns or distributes selected fixtures along the X axis.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
 2. P1: complete and deployed.
-3. P2: multi-select, gel rollup, circuit schema, comment pins.
+3. P2: gel rollup, circuit schema, comment pins.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.
