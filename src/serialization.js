@@ -2,6 +2,7 @@
 // Forward-compatible: writes DOC_VERSION, reads with a migration table.
 
 import { DOC_VERSION, defaultProjectMetadata } from "./domain/show.js";
+import { normalizeFixtureCircuit } from "./domain/circuiting.js";
 import { normalizeFixtureNotes } from "./domain/fixtureNotes.js";
 import { normalizeFixtureStatus } from "./domain/fixtureStatus.js";
 
@@ -50,6 +51,16 @@ const migrators = {
         const notes = normalizeFixtureNotes(fixture.notes, fixture.note);
         return [id, { ...fixture, note: notes.crew, notes }];
       }),
+    ),
+  }),
+  5: (doc) => ({
+    ...doc,
+    version: 6,
+    fixtures: Object.fromEntries(
+      Object.entries(doc.fixtures || {}).map(([id, fixture]) => [
+        id,
+        { ...fixture, ...normalizeFixtureCircuit(fixture) },
+      ]),
     ),
   }),
 };

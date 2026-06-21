@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { normalizeFixtureCircuit } from "../domain/circuiting.js";
 import { fixtureNotesEqual, normalizeFixtureNotes } from "../domain/fixtureNotes.js";
 import { FIXTURE_STATUS_OPTIONS, normalizeFixtureStatus } from "../domain/fixtureStatus.js";
 import { getProfile } from "../domain/profiles.js";
@@ -8,11 +9,14 @@ const DEBOUNCE_MS = 450;
 
 function draftFromFixture(fx) {
   const notes = normalizeFixtureNotes(fx.notes, fx.note);
+  const circuiting = normalizeFixtureCircuit(fx);
   return {
     x: formatImperial(fx.xMm),
     channel: fx.channel == null ? "" : String(fx.channel),
     universe: fx.dmx?.universe == null ? "" : String(fx.dmx.universe),
     address: fx.dmx?.address == null ? "" : String(fx.dmx.address),
+    circuit: circuiting.circuit,
+    dimmer: circuiting.dimmer,
     color: fx.color ?? "",
     colorNote: notes.color,
     goboNote: notes.gobo,
@@ -58,6 +62,8 @@ function buildPendingPatch(fx, draft) {
     ? null
     : { universe: universe.value, address: address.value };
   if (!sameDmx(nextDmx, fx.dmx)) patch.dmx = nextDmx;
+  if (draft.circuit.trim() !== (fx.circuit ?? "")) patch.circuit = draft.circuit;
+  if (draft.dimmer.trim() !== (fx.dimmer ?? "")) patch.dimmer = draft.dimmer;
   if (draft.color !== (fx.color ?? "")) patch.color = draft.color;
   if (draft.note !== (fx.note ?? "")) patch.note = draft.note;
   const nextNotes = normalizeFixtureNotes({
@@ -92,6 +98,8 @@ export default function Inspector({ doc, fixtureId, onChange, onDelete }) {
     fx.channel ?? "",
     fx.dmx?.universe ?? "",
     fx.dmx?.address ?? "",
+    fx.circuit ?? "",
+    fx.dimmer ?? "",
     fx.color ?? "",
     JSON.stringify(normalizeFixtureNotes(fx.notes, fx.note)),
     fx.note ?? "",
@@ -193,6 +201,30 @@ function FixtureInspector({ doc, fx, onChange, onDelete }) {
           {pending.errors.address && <span id="inspector-address-error" className="field-error">{pending.errors.address}</span>}
         </label>
         <span className="mono small muted">footprint {profile?.dmxFootprint ?? 1}</span>
+      </fieldset>
+
+      <fieldset>
+        <legend>Circuit</legend>
+        <label>
+          <span>Circuit</span>
+          <input
+            type="text"
+            value={draft.circuit}
+            onChange={e => updateDraft("circuit", e.target.value)}
+            onBlur={flushPending}
+            placeholder="A1"
+          />
+        </label>
+        <label>
+          <span>Dimmer</span>
+          <input
+            type="text"
+            value={draft.dimmer}
+            onChange={e => updateDraft("dimmer", e.target.value)}
+            onBlur={flushPending}
+            placeholder="D12"
+          />
+        </label>
       </fieldset>
 
       <label>

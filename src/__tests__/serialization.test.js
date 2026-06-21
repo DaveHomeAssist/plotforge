@@ -102,6 +102,34 @@ describe("serialization", () => {
     expect(parsed.fixtures.fx_2.note).toBe("keep top hat");
   });
 
+  it("migrates older documents with circuit and dimmer fields", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: 5,
+      name: "Legacy Circuit Plot",
+      positions: {},
+      positionOrder: [],
+      fixtures: {
+        fx_1: { id: "fx_1", profileId: "s4_26", positionId: "pos_1", xMm: 0 },
+        fx_2: {
+          id: "fx_2",
+          profileId: "s4_26",
+          positionId: "pos_1",
+          xMm: 100,
+          circuit: " A  12 ",
+          dimmer: " Rack  1 ",
+        },
+      },
+      fixtureOrder: ["fx_1", "fx_2"],
+      venue: {},
+    }));
+
+    expect(parsed.version).toBe(DOC_VERSION);
+    expect(parsed.fixtures.fx_1.circuit).toBe("");
+    expect(parsed.fixtures.fx_1.dimmer).toBe("");
+    expect(parsed.fixtures.fx_2.circuit).toBe("A 12");
+    expect(parsed.fixtures.fx_2.dimmer).toBe("Rack 1");
+  });
+
   it("roundtrips named revisions", () => {
     const revision = newRevision({ name: "Rev A", note: "Focus notes", createdAt: 1 });
     const doc = addRevision(newShow({ name: "Revision Test" }), revision);

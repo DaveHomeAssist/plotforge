@@ -9,11 +9,12 @@
 // The document is a plain JSON tree. Every mutation produces a new tree.
 
 import { uid } from "./ids.js";
+import { normalizeCircuitPatch, normalizeFixtureCircuit } from "./circuiting.js";
 import { normalizeFixtureNotes } from "./fixtureNotes.js";
 import { DEFAULT_FIXTURE_STATUS, normalizeFixtureStatus } from "./fixtureStatus.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 5;
+export const DOC_VERSION = 6;
 
 export function defaultProjectMetadata() {
   return {
@@ -78,8 +79,11 @@ export function newFixture({
   note = "",
   notes = null,
   status = DEFAULT_FIXTURE_STATUS,
+  circuit = "",
+  dimmer = "",
 }) {
   const layeredNotes = normalizeFixtureNotes(notes, note);
+  const circuiting = normalizeFixtureCircuit({ circuit, dimmer });
   return {
     id: uid("fx"),
     positionId,
@@ -95,6 +99,8 @@ export function newFixture({
     note: layeredNotes.crew,
     notes: layeredNotes,
     status: normalizeFixtureStatus(status),
+    circuit: circuiting.circuit,
+    dimmer: circuiting.dimmer,
   };
 }
 
@@ -139,9 +145,10 @@ export function addFixtureProfile(doc, profile) {
 export function updateFixture(doc, fixtureId, patch) {
   const fx = doc.fixtures[fixtureId];
   if (!fx) return doc;
-  let nextFixture = { ...fx, ...patch };
-  if (Object.hasOwn(patch, "note") || Object.hasOwn(patch, "notes")) {
-    const notes = normalizeFixtureNotes(patch.notes ?? fx.notes, patch.note ?? fx.note);
+  const cleanPatch = normalizeCircuitPatch(patch);
+  let nextFixture = { ...fx, ...cleanPatch };
+  if (Object.hasOwn(cleanPatch, "note") || Object.hasOwn(cleanPatch, "notes")) {
+    const notes = normalizeFixtureNotes(cleanPatch.notes ?? fx.notes, cleanPatch.note ?? fx.note);
     nextFixture = { ...nextFixture, note: notes.crew, notes };
   }
   return {

@@ -540,6 +540,7 @@ input, textarea { font: inherit; color: inherit; }
 /* Patch table */
 .patch-panel,
 .gel-panel,
+.circuit-panel,
 .conflict-panel,
 .selection-panel {
   background: var(--surface);
@@ -552,11 +553,23 @@ input, textarea { font: inherit; color: inherit; }
   border-top: 1px solid var(--line);
 }
 .patch-panel__summary,
-.gel-panel__summary {
+.gel-panel__summary,
+.circuit-panel__summary,
+.circuit-panel__issues {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   color: var(--ink-mute);
+}
+.circuit-panel__issues {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.circuit-panel__issues span {
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
 }
 .patch-table-wrap {
   max-height: 260px;
@@ -594,7 +607,8 @@ input, textarea { font: inherit; color: inherit; }
 .patch-table td:nth-child(1),
 .patch-table td:nth-child(4),
 .patch-table td:nth-child(5),
-.patch-table td:nth-child(6) {
+.patch-table td:nth-child(6),
+.patch-table td:nth-child(7) {
   white-space: nowrap;
 }
 .patch-table td:nth-child(2),

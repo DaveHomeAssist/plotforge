@@ -16,6 +16,8 @@ function seedInspectorDoc() {
     channel: 11,
     dmx: { universe: 1, address: 41 },
     color: "R02",
+    circuit: "A1",
+    dimmer: "D11",
     note: "Warm front",
   }));
   return { doc, fixtureId: doc.fixtureOrder[0] };
@@ -109,5 +111,17 @@ describe("Inspector", () => {
       },
       note: "Warm front",
     });
+  });
+
+  it("debounces circuit and dimmer changes", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+
+    fireEvent.change(screen.getByLabelText("Circuit"), { target: { value: " A7 " } });
+    fireEvent.change(screen.getByLabelText("Dimmer"), { target: { value: " D17 " } });
+    act(() => vi.advanceTimersByTime(450));
+
+    expect(onChange).toHaveBeenCalledWith(fixtureId, { circuit: " A7 ", dimmer: " D17 " });
   });
 });

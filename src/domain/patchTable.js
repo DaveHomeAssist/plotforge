@@ -1,4 +1,5 @@
 import { channelConflicts, patchConflicts } from "./patch.js";
+import { circuitDisplay, normalizeFixtureCircuit } from "./circuiting.js";
 import { formatFixtureNotes, normalizeFixtureNotes } from "./fixtureNotes.js";
 import { getFixtureStatus } from "./fixtureStatus.js";
 import { getProfile } from "./profiles.js";
@@ -64,6 +65,7 @@ export function patchTableRows(doc) {
       const conflictLabels = [...dmxLabels, ...channelLabels];
       const status = getFixtureStatus(fixture.status);
       const notes = normalizeFixtureNotes(fixture.notes, fixture.note);
+      const circuiting = normalizeFixtureCircuit(fixture);
 
       return {
         id: fixture.id,
@@ -78,6 +80,9 @@ export function patchTableRows(doc) {
         endAddress,
         dmxRangeLabel: universe == null || address == null ? "Unpatched" : `U${universe} ${address}-${endAddress}`,
         footprint,
+        circuit: circuiting.circuit,
+        dimmer: circuiting.dimmer,
+        circuitLabel: circuitDisplay(circuiting),
         color: fixture.color ?? "",
         gobo: fixture.gobo ?? "",
         note: notes.crew,
@@ -113,6 +118,8 @@ export function patchTableCsv(doc) {
     "Address",
     "End Address",
     "Footprint",
+    "Circuit",
+    "Dimmer",
     "Color",
     "Gobo",
     "Color Note",
@@ -132,6 +139,8 @@ export function patchTableCsv(doc) {
     row.address,
     row.endAddress,
     row.footprint,
+    row.circuit,
+    row.dimmer,
     row.color,
     row.gobo,
     row.notes.color,

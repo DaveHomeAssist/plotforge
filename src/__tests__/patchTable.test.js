@@ -32,6 +32,8 @@ describe("patch table", () => {
       note: "warm front",
       notes: { color: "Add R119 backup", gobo: "", focus: "DSC special", crew: "warm front" },
       status: "hung",
+      circuit: "A1",
+      dimmer: "D11",
     }));
 
     const rows = patchTableRows(doc);
@@ -49,6 +51,9 @@ describe("patch table", () => {
       notesLabel: "Color: Add R119 backup | Focus: DSC special | Crew: warm front",
       status: "hung",
       statusLabel: "Hung",
+      circuit: "A1",
+      dimmer: "D11",
+      circuitLabel: "Circuit A1 / Dimmer D11",
     }));
     expect(rows[1]).toEqual(expect.objectContaining({
       positionName: "FOH",
@@ -95,9 +100,11 @@ describe("patch table", () => {
       note: "warm, high side",
       notes: { color: "warm", gobo: "breakup", focus: "lectern", crew: "high side" },
       status: "patched",
+      circuit: "A1",
+      dimmer: "D7",
     }));
 
-    expect(patchTableCsv(doc)).toContain("Unit,Position,Profile,Mode,Status,Channel,Universe,Address,End Address,Footprint,Color,Gobo,Color Note,Gobo Note,Focus Note,Crew Note,Conflicts\n");
-    expect(patchTableCsv(doc)).toContain("1,1ST ELEC,ETC Source Four 26°,Default,Patched,7,1,80,80,1,R02,,warm,breakup,lectern,high side,\n");
+    expect(patchTableCsv(doc)).toContain("Unit,Position,Profile,Mode,Status,Channel,Universe,Address,End Address,Footprint,Circuit,Dimmer,Color,Gobo,Color Note,Gobo Note,Focus Note,Crew Note,Conflicts\n");
+    expect(patchTableCsv(doc)).toContain("1,1ST ELEC,ETC Source Four 26°,Default,Patched,7,1,80,80,1,A1,D7,R02,,warm,breakup,lectern,high side,\n");
   });
 });

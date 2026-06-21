@@ -67,12 +67,13 @@ export default function PatchTable({ doc }) {
               <th scope="col">Status</th>
               <th scope="col">Ch</th>
               <th scope="col">DMX</th>
+              <th scope="col">Circuit</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="patch-table__empty">No fixtures patched.</td>
+                <td colSpan={7} className="patch-table__empty">No fixtures patched.</td>
               </tr>
             ) : rows.map(row => (
               <tr
@@ -93,6 +94,9 @@ export default function PatchTable({ doc }) {
                 <td>
                   <span className={row.hasDmxConflict ? "status-bad mono" : "mono"}>{row.dmxRangeLabel}</span>
                   {row.conflictLabel && <em>{row.conflictLabel}</em>}
+                </td>
+                <td>
+                  <span className="mono">{row.circuitLabel}</span>
                 </td>
               </tr>
             ))}

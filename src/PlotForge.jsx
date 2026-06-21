@@ -6,6 +6,7 @@ import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import PatchTable from "./components/PatchTable.jsx";
 import GelPalette from "./components/GelPalette.jsx";
+import CircuitPanel from "./components/CircuitPanel.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
 import PrintExport from "./components/PrintExport.jsx";
@@ -24,13 +25,13 @@ export function seedShow() {
   ];
   [elec1, elec2, foh].forEach(position => { doc = addPosition(doc, position); });
   [-12, -6, 0, 6, 12].forEach((feet, i) => {
-    doc = addFixture(doc, newFixture({ positionId: elec1.id, profileId: "s4_26", xMm: feetToMm(feet), channel: 11 + i, dmx: { universe: 1, address: 41 + i * 4 }, color: "R02" }));
+    doc = addFixture(doc, newFixture({ positionId: elec1.id, profileId: "s4_26", xMm: feetToMm(feet), channel: 11 + i, dmx: { universe: 1, address: 41 + i * 4 }, color: "R02", circuit: `A${i + 1}`, dimmer: `D${i + 1}` }));
   });
   [-9, 0, 9].forEach((feet, i) => {
-    doc = addFixture(doc, newFixture({ positionId: elec2.id, profileId: "fresnel", xMm: feetToMm(feet), channel: 31 + i, dmx: { universe: 1, address: 121 + i * 4 }, color: "R119" }));
+    doc = addFixture(doc, newFixture({ positionId: elec2.id, profileId: "fresnel", xMm: feetToMm(feet), channel: 31 + i, dmx: { universe: 1, address: 121 + i * 4 }, color: "R119", circuit: `B${i + 1}`, dimmer: `D${i + 11}` }));
   });
   [-10, 10].forEach((feet, i) => {
-    doc = addFixture(doc, newFixture({ positionId: foh.id, profileId: "spot_mh", xMm: feetToMm(feet), channel: 201 + i, dmx: { universe: 2, address: 1 + i * 24 } }));
+    doc = addFixture(doc, newFixture({ positionId: foh.id, profileId: "spot_mh", xMm: feetToMm(feet), channel: 201 + i, dmx: { universe: 2, address: 1 + i * 24 }, circuit: `C${i + 1}`, dimmer: `D${i + 21}` }));
   });
   return doc;
 }
@@ -98,6 +99,7 @@ export default function PlotForge() {
           />
           <PatchTable doc={show.doc} />
           <GelPalette doc={show.doc} />
+          <CircuitPanel doc={show.doc} />
           <ConflictPanel doc={show.doc} onRevealFixture={show.onSelectFixture} />
           <SelectionTools
             doc={show.doc}
