@@ -1,3 +1,4 @@
+import { getFixtureStatus } from "../domain/fixtureStatus.js";
 import { getProfile } from "../domain/profiles.js";
 
 /**
@@ -14,6 +15,7 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, o
   const stroke = selected ? "#4cc9ff" : profile.color;
   const fill = "#11161f";
   const strokeWidth = selected ? 28 : 18;
+  const status = getFixtureStatus(fixture.status);
 
   return (
     <g
@@ -22,6 +24,7 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, o
       style={{ cursor: "grab" }}
       className={`fx ${selected ? "fx--selected" : ""}`}
     >
+      <title>{status.label} status</title>
       {profile.symbol === "ellipsoidal" && (
         <>
           <circle r={r} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
@@ -49,6 +52,15 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, o
           <line x1={-r * 0.6} y1={0} x2={r * 0.6} y2={0} stroke={stroke} strokeWidth={strokeWidth} />
         </>
       )}
+      <circle
+        className="fixture-status-marker"
+        cx={r * 0.82}
+        cy={r * 0.82}
+        r={Math.max(56, r * 0.18)}
+        fill={status.color}
+        stroke="#0a0d12"
+        strokeWidth={18}
+      />
       {fixture.unitNumber != null && (
         <text
           x={0} y={-r - 60}

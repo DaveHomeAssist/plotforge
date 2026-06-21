@@ -2,6 +2,7 @@
 // Forward-compatible: writes DOC_VERSION, reads with a migration table.
 
 import { DOC_VERSION, defaultProjectMetadata } from "./domain/show.js";
+import { normalizeFixtureStatus } from "./domain/fixtureStatus.js";
 
 export const PLOT_MIME = "application/x-plotforge+json";
 
@@ -29,6 +30,16 @@ const migrators = {
     revisions: doc.revisions || {},
     revisionOrder: doc.revisionOrder || [],
     activeRevisionId: doc.activeRevisionId || null,
+  }),
+  3: (doc) => ({
+    ...doc,
+    version: 4,
+    fixtures: Object.fromEntries(
+      Object.entries(doc.fixtures || {}).map(([id, fixture]) => [
+        id,
+        { ...fixture, status: normalizeFixtureStatus(fixture.status) },
+      ]),
+    ),
   }),
 };
 

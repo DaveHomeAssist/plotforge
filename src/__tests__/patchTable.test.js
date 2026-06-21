@@ -30,6 +30,7 @@ describe("patch table", () => {
       dmx: { universe: 1, address: 41 },
       color: "R02",
       note: "warm front",
+      status: "hung",
     }));
 
     const rows = patchTableRows(doc);
@@ -44,12 +45,15 @@ describe("patch table", () => {
       footprint: 1,
       color: "R02",
       note: "warm front",
+      status: "hung",
+      statusLabel: "Hung",
     }));
     expect(rows[1]).toEqual(expect.objectContaining({
       positionName: "FOH",
       profileName: "Generic Moving Spot",
       dmxRangeLabel: "U2 1-24",
       footprint: 24,
+      statusLabel: "Planned",
     }));
   });
 
@@ -87,9 +91,10 @@ describe("patch table", () => {
       dmx: { universe: 1, address: 80 },
       color: "R02",
       note: "warm, high side",
+      status: "patched",
     }));
 
-    expect(patchTableCsv(doc)).toContain("Unit,Position,Profile,Mode,Channel,Universe,Address,End Address,Footprint,Color,Note,Conflicts\n");
-    expect(patchTableCsv(doc)).toContain("1,1ST ELEC,ETC Source Four 26°,Default,7,1,80,80,1,R02,\"warm, high side\",\n");
+    expect(patchTableCsv(doc)).toContain("Unit,Position,Profile,Mode,Status,Channel,Universe,Address,End Address,Footprint,Color,Note,Conflicts\n");
+    expect(patchTableCsv(doc)).toContain("1,1ST ELEC,ETC Source Four 26°,Default,Patched,7,1,80,80,1,R02,\"warm, high side\",\n");
   });
 });

@@ -133,6 +133,7 @@ input, textarea { font: inherit; color: inherit; }
 .fx { transition: filter .12s; }
 .fx:hover { filter: brightness(1.15); }
 .fx--selected { filter: drop-shadow(0 0 6px rgba(76,201,255,.6)); }
+.fixture-status-marker { pointer-events: none; }
 .position-line { cursor: pointer; }
 .position-line:hover text { fill: var(--blue); }
 
@@ -364,7 +365,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
 }
 .inspector label > span { font-size: 11px; }
-.inspector input, .inspector textarea {
+.inspector input, .inspector textarea, .inspector select {
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -399,7 +400,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
 }
-.inspector input:focus, .inspector textarea:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .position-row:focus-visible, .revision-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
+.inspector input:focus, .inspector textarea:focus, .inspector select:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .position-row:focus-visible, .revision-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -1px;
   border-color: transparent;
@@ -585,7 +586,8 @@ input, textarea { font: inherit; color: inherit; }
 }
 .patch-table td:nth-child(1),
 .patch-table td:nth-child(4),
-.patch-table td:nth-child(5) {
+.patch-table td:nth-child(5),
+.patch-table td:nth-child(6) {
   white-space: nowrap;
 }
 .patch-table td:nth-child(2),
@@ -610,6 +612,21 @@ input, textarea { font: inherit; color: inherit; }
   font-style: normal;
   line-height: 1.25;
 }
+.patch-status {
+  display: inline-block !important;
+  margin-top: 0 !important;
+  padding: 2px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--bg-2);
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  color: var(--ink-mute) !important;
+}
+.patch-status--hung { border-color: rgba(255, 181, 71, .62); color: var(--amber) !important; }
+.patch-status--patched { border-color: rgba(76, 201, 255, .62); color: var(--blue) !important; }
+.patch-status--focused { border-color: rgba(88, 232, 150, .62); color: var(--green) !important; }
+.patch-status--needs_work { border-color: rgba(255, 107, 107, .62); color: var(--red) !important; }
 .patch-table__row--flagged {
   background: rgba(255, 107, 107, .06);
 }

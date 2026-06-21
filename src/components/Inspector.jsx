@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { FIXTURE_STATUS_OPTIONS, normalizeFixtureStatus } from "../domain/fixtureStatus.js";
 import { getProfile } from "../domain/profiles.js";
 import { formatImperial, parseImperial } from "../domain/units.js";
 
@@ -12,6 +13,7 @@ function draftFromFixture(fx) {
     address: fx.dmx?.address == null ? "" : String(fx.dmx.address),
     color: fx.color ?? "",
     note: fx.note ?? "",
+    status: normalizeFixtureStatus(fx.status),
   };
 }
 
@@ -53,6 +55,8 @@ function buildPendingPatch(fx, draft) {
   if (!sameDmx(nextDmx, fx.dmx)) patch.dmx = nextDmx;
   if (draft.color !== (fx.color ?? "")) patch.color = draft.color;
   if (draft.note !== (fx.note ?? "")) patch.note = draft.note;
+  const status = normalizeFixtureStatus(draft.status);
+  if (status !== normalizeFixtureStatus(fx.status)) patch.status = status;
 
   return { errors, patch: Object.keys(patch).length ? patch : null };
 }
@@ -75,6 +79,7 @@ export default function Inspector({ doc, fixtureId, onChange, onDelete }) {
     fx.dmx?.address ?? "",
     fx.color ?? "",
     fx.note ?? "",
+    fx.status ?? "",
   ].join(":");
 
   return <FixtureInspector key={editorKey} doc={doc} fx={fx} onChange={onChange} onDelete={onDelete} />;
@@ -182,6 +187,19 @@ function FixtureInspector({ doc, fx, onChange, onDelete }) {
           onChange={e => updateDraft("color", e.target.value)}
           onBlur={flushPending}
         />
+      </label>
+
+      <label>
+        <span>Status</span>
+        <select
+          value={draft.status}
+          onChange={e => updateDraft("status", e.target.value)}
+          onBlur={flushPending}
+        >
+          {FIXTURE_STATUS_OPTIONS.map(status => (
+            <option key={status.id} value={status.id}>{status.label}</option>
+          ))}
+        </select>
       </label>
 
       <label>

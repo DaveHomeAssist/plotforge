@@ -9,9 +9,10 @@
 // The document is a plain JSON tree. Every mutation produces a new tree.
 
 import { uid } from "./ids.js";
+import { DEFAULT_FIXTURE_STATUS, normalizeFixtureStatus } from "./fixtureStatus.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 3;
+export const DOC_VERSION = 4;
 
 export function defaultProjectMetadata() {
   return {
@@ -65,7 +66,16 @@ export function newPosition({ name, kind = "pipe", yMm, lengthMm, trimMm = null 
 }
 
 /** Fixture: snaps to a position; xMm is along the line, yMm derives from position. */
-export function newFixture({ positionId, profileId, xMm, channel = null, dmx = null, color = "", note = "" }) {
+export function newFixture({
+  positionId,
+  profileId,
+  xMm,
+  channel = null,
+  dmx = null,
+  color = "",
+  note = "",
+  status = DEFAULT_FIXTURE_STATUS,
+}) {
   return {
     id: uid("fx"),
     positionId,
@@ -79,6 +89,7 @@ export function newFixture({ positionId, profileId, xMm, channel = null, dmx = n
     color,                          // gel string, e.g. "R02"
     gobo: "",
     note,
+    status: normalizeFixtureStatus(status),
   };
 }
 

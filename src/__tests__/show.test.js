@@ -26,6 +26,13 @@ describe("show domain", () => {
     expect(onPos.map(f => f.unitNumber)).toEqual([1, 2, 3]);
   });
 
+  it("creates fixtures with planned status by default", () => {
+    const { posId } = seed();
+    const fixture = newFixture({ positionId: posId, profileId: "s4_26", xMm: 0 });
+
+    expect(fixture.status).toBe("planned");
+  });
+
   it("updateFixture xMm renumbers when called with renumberPosition", () => {
     let { doc, posId } = seed();
     doc = addFixture(doc, newFixture({ positionId: posId, profileId: "s4_26", xMm: feetToMm(-6) }));

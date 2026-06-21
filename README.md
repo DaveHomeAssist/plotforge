@@ -27,6 +27,7 @@ Notion is the canonical phase source for this project. README status was reconci
 - Conflict panel that lists channel and DMX issues with reveal selection
 - Debounced fixture inspector edits with imperial position parsing
 - Focus beam tool for placing fixture focus points on the plot and print sheet
+- Per-fixture status with inspector control, plot markers, patch table display, CSV export, and `.plot` migration
 
 ## What's deliberately missing
 
@@ -68,6 +69,7 @@ src/
   domain/
     show.js          show / venue / position / fixture types + pure mutations
     patch.js         DMX + channel conflict detection
+    fixtureStatus.js per-fixture status options + normalization
     focus.js         focus point snapping + beam rows
     profiles.js      curated GDTF seed profiles + OFL import normalization
     units.js         mm-as-integer conversions + imperial parser
@@ -122,10 +124,12 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P1-3 conflict panel with reveal: shipped on 2026-06-21. The sidepanel lists channel and DMX conflicts with affected fixtures and a Reveal action that selects the first fixture in the conflict.
 - P1-4 inspector debouncing plus imperial parsing: shipped on 2026-06-21. The inspector stages channel, DMX, color, note, and position edits locally, commits after a short pause or blur, parses feet and inch position text, and shows inline errors for invalid measurements.
 - P1-5 focus beam tool: shipped on 2026-06-21. The canvas Focus tool places snapped focus points for the selected fixture, renders focus beams on the live plot, includes focus beams in print output, and can clear the selected fixture focus.
+- P1 tier deploy: shipped on 2026-06-21. Production alias `https://plotforge-beta.vercel.app` points at the P1 focus beam build.
+- P2-1 fixture status: shipped in the repo on 2026-06-21. Fixtures store normalized status, legacy `.plot` docs migrate to planned, the inspector edits status, canvas symbols show a status marker, and patch table plus CSV output include status.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
-2. P1: complete locally, pending tier deploy and live smoke.
-3. P2: fixture status, layered notes, multi-select, gel rollup, circuit schema, comment pins.
+2. P1: complete and deployed.
+3. P2: layered notes, multi-select, gel rollup, circuit schema, comment pins.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.

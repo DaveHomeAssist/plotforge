@@ -35,6 +35,16 @@ function renderCanvas(doc, fixtureId, props = {}) {
 }
 
 describe("PlotCanvas focus tool", () => {
+  it("renders fixture status markers on the plot", () => {
+    let { doc, fixtureId } = seedCanvasDoc();
+    doc = updateFixture(doc, fixtureId, { status: "needs_work" });
+    const { container } = renderCanvas(doc, fixtureId);
+    const marker = container.querySelector(".fixture-status-marker");
+
+    expect(marker).not.toBeNull();
+    expect(marker.getAttribute("fill")).toBe("#ff6b6b");
+  });
+
   it("sets selected fixture focus by clicking the plot in focus mode", () => {
     const { doc, fixtureId } = seedCanvasDoc();
     const onSetFixtureFocus = vi.fn();

@@ -43,6 +43,27 @@ describe("serialization", () => {
     expect(parsed.activeRevisionId).toBeNull();
   });
 
+  it("migrates older documents with planned fixture status", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: 3,
+      name: "Legacy Status Plot",
+      positions: {},
+      positionOrder: [],
+      fixtures: {
+        fx_1: { id: "fx_1", profileId: "s4_26", positionId: "pos_1", xMm: 0 },
+        fx_2: { id: "fx_2", profileId: "s4_26", positionId: "pos_1", xMm: 100, status: "patched" },
+        fx_3: { id: "fx_3", profileId: "s4_26", positionId: "pos_1", xMm: 200, status: "bad" },
+      },
+      fixtureOrder: ["fx_1", "fx_2", "fx_3"],
+      venue: {},
+    }));
+
+    expect(parsed.version).toBe(DOC_VERSION);
+    expect(parsed.fixtures.fx_1.status).toBe("planned");
+    expect(parsed.fixtures.fx_2.status).toBe("patched");
+    expect(parsed.fixtures.fx_3.status).toBe("planned");
+  });
+
   it("roundtrips named revisions", () => {
     const revision = newRevision({ name: "Rev A", note: "Focus notes", createdAt: 1 });
     const doc = addRevision(newShow({ name: "Revision Test" }), revision);

@@ -1,4 +1,5 @@
 import { channelConflicts, patchConflicts } from "./patch.js";
+import { getFixtureStatus } from "./fixtureStatus.js";
 import { getProfile } from "./profiles.js";
 
 function addConflict(map, fixtureId, label) {
@@ -60,6 +61,7 @@ export function patchTableRows(doc) {
       const dmxLabels = conflicts.dmx.get(fixture.id) || [];
       const channelLabels = conflicts.channels.get(fixture.id) || [];
       const conflictLabels = [...dmxLabels, ...channelLabels];
+      const status = getFixtureStatus(fixture.status);
 
       return {
         id: fixture.id,
@@ -76,6 +78,8 @@ export function patchTableRows(doc) {
         footprint,
         color: fixture.color ?? "",
         note: fixture.note ?? "",
+        status: status.id,
+        statusLabel: status.label,
         hasDmxConflict: dmxLabels.length > 0,
         hasChannelConflict: channelLabels.length > 0,
         conflictLabel: conflictLabels.join("; "),
@@ -98,6 +102,7 @@ export function patchTableCsv(doc) {
     "Position",
     "Profile",
     "Mode",
+    "Status",
     "Channel",
     "Universe",
     "Address",
@@ -112,6 +117,7 @@ export function patchTableCsv(doc) {
     row.positionName,
     row.profileName,
     row.mode,
+    row.statusLabel,
     row.channel,
     row.universe,
     row.address,

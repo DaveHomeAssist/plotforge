@@ -64,6 +64,7 @@ export default function PatchTable({ doc }) {
               <th scope="col">Unit</th>
               <th scope="col">Pos</th>
               <th scope="col">Type</th>
+              <th scope="col">Status</th>
               <th scope="col">Ch</th>
               <th scope="col">DMX</th>
             </tr>
@@ -71,7 +72,7 @@ export default function PatchTable({ doc }) {
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="patch-table__empty">No fixtures patched.</td>
+                <td colSpan={6} className="patch-table__empty">No fixtures patched.</td>
               </tr>
             ) : rows.map(row => (
               <tr
@@ -83,6 +84,9 @@ export default function PatchTable({ doc }) {
                 <td>
                   <strong>{row.profileName}</strong>
                   <span>{row.mode} · {row.footprint}ch</span>
+                </td>
+                <td className="mono">
+                  <span className={`patch-status patch-status--${row.status}`}>{row.statusLabel}</span>
                 </td>
                 <td className={row.hasChannelConflict ? "status-bad mono" : "mono"}>{row.channel ?? ""}</td>
                 <td>

@@ -80,4 +80,15 @@ describe("Inspector", () => {
 
     expect(onChange).toHaveBeenCalledWith(fixtureId, { color: "R26" });
   });
+
+  it("debounces fixture status changes", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+
+    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "focused" } });
+    act(() => vi.advanceTimersByTime(450));
+
+    expect(onChange).toHaveBeenCalledWith(fixtureId, { status: "focused" });
+  });
 });
