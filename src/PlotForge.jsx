@@ -5,6 +5,7 @@ import Inspector from "./components/Inspector.jsx";
 import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import PatchTable from "./components/PatchTable.jsx";
+import GelPalette from "./components/GelPalette.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
 import PrintExport from "./components/PrintExport.jsx";
@@ -96,6 +97,7 @@ export default function PlotForge() {
             onImportOpenFixtureLibraryProfile={show.onImportOpenFixtureLibraryProfile}
           />
           <PatchTable doc={show.doc} />
+          <GelPalette doc={show.doc} />
           <ConflictPanel doc={show.doc} onRevealFixture={show.onSelectFixture} />
           <SelectionTools
             doc={show.doc}

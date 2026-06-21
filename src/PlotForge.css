@@ -539,6 +539,7 @@ input, textarea { font: inherit; color: inherit; }
 
 /* Patch table */
 .patch-panel,
+.gel-panel,
 .conflict-panel,
 .selection-panel {
   background: var(--surface);
@@ -550,7 +551,8 @@ input, textarea { font: inherit; color: inherit; }
   gap: 12px;
   border-top: 1px solid var(--line);
 }
-.patch-panel__summary {
+.patch-panel__summary,
+.gel-panel__summary {
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -639,6 +641,20 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--ink-mute);
   font-style: italic;
   text-align: center;
+}
+.gel-code {
+  display: inline-block !important;
+  margin-top: 0 !important;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 181, 71, .62);
+  border-radius: 999px;
+  background: rgba(255, 181, 71, .07);
+  color: var(--amber) !important;
+  line-height: 1.2 !important;
+}
+.gel-table td:nth-child(1),
+.gel-table td:nth-child(2) {
+  white-space: nowrap;
 }
 .conflict-list {
   display: flex;
