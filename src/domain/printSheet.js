@@ -1,6 +1,7 @@
 import { patchConflicts, channelConflicts } from "./patch.js";
 import { focusBeamRows } from "./focus.js";
 import { getProfile } from "./profiles.js";
+import { commentPinRows } from "./show.js";
 import { MM_PER_FOOT, formatImperial } from "./units.js";
 
 export const PRINT_PAPERS = {
@@ -37,12 +38,14 @@ export function printWorldBounds(doc) {
     }),
     ...doc.fixtureOrder.map(id => doc.fixtures[id]?.xMm).filter(value => value != null),
     ...focusBeamRows(doc).map(row => row.toX),
+    ...commentPinRows(doc).map(row => row.xMm),
   ];
   const yValues = [
     -doc.venue.stageDepthMm,
     0,
     ...doc.positionOrder.map(id => doc.positions[id]?.yMm).filter(value => value != null),
     ...focusBeamRows(doc).map(row => row.toY),
+    ...commentPinRows(doc).map(row => row.yMm),
   ];
   const minX = Math.min(...xValues) - margin;
   const maxX = Math.max(...xValues) + margin;
@@ -117,6 +120,9 @@ function plotSvg(doc, bounds) {
   const beams = focusBeamRows(doc).map(row => (
     `<g class="focus-beam"><line x1="${row.fromX}" y1="${row.fromY}" x2="${row.toX}" y2="${row.toY}"/><circle class="focus-point" cx="${row.toX}" cy="${row.toY}" r="80"/><text x="${row.toX + 120}" y="${row.toY - 90}">F${escapeHtml(row.unitNumber ?? "")}</text></g>`
   )).join("");
+  const comments = commentPinRows(doc).map((row, index) => (
+    `<g class="comment-pin" transform="translate(${row.xMm} ${row.yMm})"><circle r="90"/><text class="comment-number" x="0" y="36">${index + 1}</text><text class="comment-text" x="125" y="-70">${escapeHtml(row.text)}</text></g>`
+  )).join("");
   const positions = doc.positionOrder.map(id => {
     const position = doc.positions[id];
     if (!position) return "";
@@ -141,6 +147,7 @@ function plotSvg(doc, bounds) {
     ${positions}
     ${beams}
     ${fixtures}
+    ${comments}
     <g class="scale"><line x1="${scaleX}" y1="${scaleY}" x2="${scaleX + scaleLength}" y2="${scaleY}"/><text x="${scaleX}" y="${scaleY - 120}">10 ft</text></g>
   </svg>`;
 }
@@ -185,6 +192,9 @@ svg { display: block; width: 100%; height: 100%; min-height: 6.5in; }
 .focus-beam line { stroke: #111; stroke-width: 8; stroke-dasharray: 90 42; vector-effect: non-scaling-stroke; }
 .focus-point { fill: none; stroke: #111; stroke-width: 8; vector-effect: non-scaling-stroke; }
 .focus-beam text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 120px; }
+.comment-pin circle { fill: none; stroke: #111; stroke-width: 10; vector-effect: non-scaling-stroke; }
+.comment-number { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 110px; font-weight: 700; text-anchor: middle; }
+.comment-text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 110px; }
 .position { stroke: #111; stroke-width: 10; vector-effect: non-scaling-stroke; }
 .position-label, .unit, .scale text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 130px; }
 .unit { text-anchor: middle; font-weight: 700; }

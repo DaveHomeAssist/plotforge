@@ -63,6 +63,12 @@ const migrators = {
       ]),
     ),
   }),
+  6: (doc) => ({
+    ...doc,
+    version: 7,
+    commentPins: doc.commentPins || {},
+    commentPinOrder: doc.commentPinOrder || [],
+  }),
 };
 
 export function migrate(doc) {

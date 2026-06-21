@@ -2,7 +2,7 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PlotCanvas from "../components/PlotCanvas.jsx";
-import { newShow, newPosition, newFixture, addPosition, addFixture, updateFixture } from "../domain/show.js";
+import { newShow, newPosition, newFixture, addPosition, addFixture, updateFixture, newCommentPin, addCommentPin } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 
 function seedCanvasDoc({ withFocus = false } = {}) {
@@ -23,11 +23,14 @@ function renderCanvas(doc, fixtureId, props = {}) {
     selectedFixtureId: fixtureId,
     selectedFixtureIds: fixtureId ? [fixtureId] : [],
     selectedPositionId: null,
+    selectedCommentPinId: null,
     onSelectFixture: vi.fn(),
     onSelectPosition: vi.fn(),
+    onSelectCommentPin: vi.fn(),
     onMoveFixture: vi.fn(),
     onSetFixtureFocus: vi.fn(),
     onClearFixtureFocus: vi.fn(),
+    onAddCommentPin: vi.fn(),
     ...props,
   }));
   const svg = rendered.container.querySelector("svg");
@@ -98,5 +101,36 @@ describe("PlotCanvas focus tool", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear focus" }));
 
     expect(onClearFixtureFocus).toHaveBeenCalledWith(fixtureId);
+  });
+
+  it("adds a comment pin by clicking the plot in comment mode", () => {
+    const { doc, fixtureId } = seedCanvasDoc();
+    const onAddCommentPin = vi.fn();
+    const { svg } = renderCanvas(doc, fixtureId, { onAddCommentPin });
+
+    fireEvent.click(screen.getByRole("button", { name: "Comment" }));
+    fireEvent.pointerDown(svg, { button: 0, clientX: 400, clientY: 300, pointerId: 1 });
+
+    expect(onAddCommentPin).toHaveBeenCalledWith(expect.objectContaining({
+      xMm: expect.any(Number),
+      yMm: expect.any(Number),
+    }));
+  });
+
+  it("renders and selects comment pins", () => {
+    let { doc, fixtureId } = seedCanvasDoc();
+    const pin = newCommentPin({ xMm: feetToMm(2), yMm: feetToMm(-3), text: "Sightline check" });
+    doc = addCommentPin(doc, pin);
+    const onSelectCommentPin = vi.fn();
+    const { container } = renderCanvas(doc, fixtureId, {
+      selectedCommentPinId: pin.id,
+      onSelectCommentPin,
+    });
+    const pinNode = container.querySelector(".comment-pin");
+
+    expect(pinNode.classList.contains("comment-pin--selected")).toBe(true);
+    fireEvent.pointerDown(pinNode, { button: 0, pointerId: 1 });
+
+    expect(onSelectCommentPin).toHaveBeenCalledWith(pin.id);
   });
 });

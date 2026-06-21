@@ -130,6 +130,22 @@ describe("serialization", () => {
     expect(parsed.fixtures.fx_2.dimmer).toBe("Rack 1");
   });
 
+  it("migrates older documents with empty comment pin stores", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: 6,
+      name: "Legacy Comment Plot",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+    }));
+
+    expect(parsed.version).toBe(DOC_VERSION);
+    expect(parsed.commentPins).toEqual({});
+    expect(parsed.commentPinOrder).toEqual([]);
+  });
+
   it("roundtrips named revisions", () => {
     const revision = newRevision({ name: "Rev A", note: "Focus notes", createdAt: 1 });
     const doc = addRevision(newShow({ name: "Revision Test" }), revision);

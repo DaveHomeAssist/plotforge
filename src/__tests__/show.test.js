@@ -3,6 +3,7 @@ import {
   newShow, newPosition, newFixture,
   addPosition, addFixture, updateFixture, removeFixture, renumberPosition,
   newRevision, addRevision, activateRevision,
+  newCommentPin, addCommentPin, updateCommentPin, removeCommentPin, commentPinRows,
   updateVenue, updatePosition, removePosition, fixturesOnPosition,
 } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
@@ -128,6 +129,20 @@ describe("show domain", () => {
 
     expect(doc.activeRevisionId).toBe(draft.id);
     expect(doc.metadata.revision).toBe("Rev A");
+  });
+
+  it("adds, updates, lists, and removes comment pins", () => {
+    let { doc } = seed();
+    const pin = newCommentPin({ xMm: feetToMm(4), yMm: feetToMm(-3), text: "Check boom sightline" });
+
+    doc = addCommentPin(doc, pin);
+    expect(commentPinRows(doc)).toEqual([pin]);
+
+    doc = updateCommentPin(doc, pin.id, { text: "Shift two feet SL" });
+    expect(commentPinRows(doc)[0]).toEqual(expect.objectContaining({ text: "Shift two feet SL" }));
+
+    doc = removeCommentPin(doc, pin.id);
+    expect(commentPinRows(doc)).toEqual([]);
   });
 
   it("serialize → deserialize roundtrip preserves the doc", () => {

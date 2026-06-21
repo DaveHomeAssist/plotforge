@@ -7,6 +7,7 @@ import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import PatchTable from "./components/PatchTable.jsx";
 import GelPalette from "./components/GelPalette.jsx";
 import CircuitPanel from "./components/CircuitPanel.jsx";
+import CommentPins from "./components/CommentPins.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
 import PrintExport from "./components/PrintExport.jsx";
@@ -65,11 +66,14 @@ export default function PlotForge() {
           selectedFixtureId={show.selectedFixtureId}
           selectedFixtureIds={show.selectedFixtureIds}
           selectedPositionId={show.selectedPositionId}
+          selectedCommentPinId={show.selectedCommentPinId}
           onSelectFixture={show.onSelectFixture}
           onSelectPosition={show.onSelectPosition}
+          onSelectCommentPin={show.onSelectCommentPin}
           onMoveFixture={show.onMoveFixture}
           onSetFixtureFocus={show.onSetFixtureFocus}
           onClearFixtureFocus={show.onClearFixtureFocus}
+          onAddCommentPin={show.onAddCommentPin}
         />
         <aside className="sidepanel">
           <ProjectMetadata
@@ -100,6 +104,13 @@ export default function PlotForge() {
           <PatchTable doc={show.doc} />
           <GelPalette doc={show.doc} />
           <CircuitPanel doc={show.doc} />
+          <CommentPins
+            doc={show.doc}
+            selectedCommentPinId={show.selectedCommentPinId}
+            onSelectCommentPin={show.onSelectCommentPin}
+            onChange={show.onCommentPinChange}
+            onDelete={show.onCommentPinDelete}
+          />
           <ConflictPanel doc={show.doc} onRevealFixture={show.onSelectFixture} />
           <SelectionTools
             doc={show.doc}

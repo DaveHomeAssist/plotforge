@@ -32,6 +32,7 @@ Notion is the canonical phase source for this project. README status was reconci
 - Multi-select fixture editing with align left, align center, align right, and distribute controls
 - Gel palette rollup with per-gel fixture counts, fixture labels, and CSV export
 - Circuit and dimmer schema with inspector edits, patch table display, CSV export, and circuit check summary
+- Comment pins with canvas placement, sidepanel editing, print output, and `.plot` migration
 
 ## What's deliberately missing
 
@@ -135,10 +136,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P2-3 multi-select plus align and distribute: shipped in the repo on 2026-06-21. Modifier-click selection tracks multiple fixtures, the primary fixture still drives the inspector and focus tools, and the selection panel aligns or distributes selected fixtures along the X axis.
 - P2-4 gel palette plus order rollup: shipped in the repo on 2026-06-21. Fixture color strings are parsed into normalized gel codes, the sidepanel lists per-gel counts and fixture labels, and CSV export produces the gel order.
 - P2-5 circuit and dimmer schema: shipped in the repo on 2026-06-21. Fixtures store normalized circuit and dimmer fields, legacy `.plot` docs migrate with empty defaults, the inspector edits both fields, the patch table and CSV include both fields, and the circuit check panel flags unassigned, partial, and shared assignments.
+- P2-6 comment pins: shipped in the repo on 2026-06-21. Plot clicks in Comment mode create pinned notes, the canvas renders selectable numbered pins, the sidepanel edits and deletes pin text, print output includes pin callouts, and legacy `.plot` docs migrate with empty pin stores.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
 2. P1: complete and deployed.
-3. P2: comment pins.
+3. P2: complete in the repo. Deploy pending.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.

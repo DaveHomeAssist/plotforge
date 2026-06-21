@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import usePanZoom from "../hooks/usePanZoom.js";
 import FixtureSymbol from "./FixtureSymbol.jsx";
-import { fixturesOnPosition } from "../domain/show.js";
+import { commentPinRows, fixturesOnPosition } from "../domain/show.js";
 import { feetToMm, MM_PER_FOOT } from "../domain/units.js";
 import { focusBeamRows, snapFocusPoint } from "../domain/focus.js";
 
@@ -13,11 +13,14 @@ export default function PlotCanvas({
   selectedFixtureId,
   selectedFixtureIds = [],
   selectedPositionId,
+  selectedCommentPinId,
   onSelectFixture,
   onSelectPosition,
+  onSelectCommentPin,
   onMoveFixture,
   onSetFixtureFocus,
   onClearFixtureFocus,
+  onAddCommentPin,
 }) {
   const svgRef = useRef(null);
   const dragState = useRef(null);
@@ -36,6 +39,7 @@ export default function PlotCanvas({
 
   const [panActive, setPanActive] = useState(false);
   const [focusFixtureId, setFocusFixtureId] = useState(null);
+  const [commentActive, setCommentActive] = useState(false);
   const selectedFixture = selectedFixtureId ? doc.fixtures[selectedFixtureId] : null;
   const selectedFixtureSet = useMemo(() => new Set(selectedFixtureIds), [selectedFixtureIds]);
   const focusActive = Boolean(selectedFixtureId && focusFixtureId === selectedFixtureId);
@@ -49,14 +53,29 @@ export default function PlotCanvas({
     return true;
   }, [focusActive, selectedFixtureId, screenToWorld, onSetFixtureFocus]);
 
+  const setCommentAtEvent = useCallback((e) => {
+    if (!commentActive || e.button !== 0) return false;
+    const svg = e.currentTarget.ownerSVGElement || e.currentTarget;
+    const world = screenToWorld(e.clientX, e.clientY, svg);
+    const snap = 25.4;
+    onAddCommentPin?.({
+      xMm: Math.round(world.x / snap) * snap,
+      yMm: Math.round(world.y / snap) * snap,
+    });
+    setCommentActive(false);
+    return true;
+  }, [commentActive, screenToWorld, onAddCommentPin]);
+
   const onSvgPointerDown = useCallback((e) => {
+    if (setCommentAtEvent(e)) return;
     if (setFocusAtEvent(e)) return;
     if (e.target.closest(".fx")) return; // fixture handles its own drag
+    if (e.target.closest(".comment-pin")) return; // comment pin handles its own select
     if (e.button !== 0 && e.button !== 1) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     setPanActive(true);
     beginPan(e.clientX, e.clientY);
-  }, [beginPan, setFocusAtEvent]);
+  }, [beginPan, setCommentAtEvent, setFocusAtEvent]);
 
   const onSvgPointerMove = useCallback((e) => {
     if (panActive) panTo(e.clientX, e.clientY, e.currentTarget);
@@ -80,15 +99,16 @@ export default function PlotCanvas({
 
   const onFixturePointerDown = useCallback((e, fixture) => {
     e.stopPropagation();
-    if (focusActive && selectedFixtureId) return;
+    if (commentActive || (focusActive && selectedFixtureId)) return;
     const additive = e.shiftKey || e.metaKey || e.ctrlKey;
     onSelectFixture(fixture.id, { additive });
     if (additive) return;
     e.currentTarget.ownerSVGElement?.setPointerCapture?.(e.pointerId);
     dragState.current = { fixtureId: fixture.id, positionId: fixture.positionId };
-  }, [focusActive, selectedFixtureId, onSelectFixture]);
+  }, [commentActive, focusActive, selectedFixtureId, onSelectFixture]);
 
   const focusRows = focusBeamRows(doc);
+  const commentRows = commentPinRows(doc);
 
   // ---- grid ----
   const gridStartX = Math.floor(viewBox.x / GRID_MM) * GRID_MM;
@@ -112,7 +132,10 @@ export default function PlotCanvas({
       <div className="canvas-toolbar">
         <button onClick={reset} type="button">Reset view</button>
         <button
-          onClick={() => setFocusFixtureId(focusActive ? null : selectedFixtureId)}
+          onClick={() => {
+            setFocusFixtureId(focusActive ? null : selectedFixtureId);
+            setCommentActive(false);
+          }}
           type="button"
           disabled={!selectedFixtureId}
           className={focusActive ? "tool-active" : ""}
@@ -126,8 +149,22 @@ export default function PlotCanvas({
         >
           Clear focus
         </button>
+        <button
+          onClick={() => {
+            setCommentActive(active => !active);
+            setFocusFixtureId(null);
+          }}
+          type="button"
+          className={commentActive ? "tool-active" : ""}
+        >
+          Comment
+        </button>
         <span className="mono">
-          {focusActive ? "click plot to place focus" : `view: ${Math.round(viewBox.x)}, ${Math.round(viewBox.y)} | ${Math.round(viewBox.width)} x ${Math.round(viewBox.height)} mm`}
+          {commentActive
+            ? "click plot to place comment"
+            : focusActive
+              ? "click plot to place focus"
+              : `view: ${Math.round(viewBox.x)}, ${Math.round(viewBox.y)} | ${Math.round(viewBox.width)} x ${Math.round(viewBox.height)} mm`}
         </span>
       </div>
       <svg
@@ -140,7 +177,7 @@ export default function PlotCanvas({
         onPointerMove={onSvgPointerMove}
         onPointerUp={onSvgPointerUp}
         onPointerCancel={onSvgPointerUp}
-        style={{ cursor: panActive ? "grabbing" : "default" }}
+        style={{ cursor: panActive ? "grabbing" : commentActive || focusActive ? "crosshair" : "default" }}
       >
         {/* Grid */}
         <g aria-hidden="true">{gridLines}</g>
@@ -173,6 +210,7 @@ export default function PlotCanvas({
               className={`position-line ${selected ? "position-line--selected" : ""}`}
               onPointerDown={(event) => {
                 event.stopPropagation();
+                if (setCommentAtEvent(event)) return;
                 if (setFocusAtEvent(event)) return;
                 onSelectPosition?.(p.id);
               }}
@@ -255,6 +293,27 @@ export default function PlotCanvas({
             />
           );
         })}
+
+        <g className="comment-pins" aria-label="Comment pins">
+          {commentRows.map((commentPin, index) => {
+            const selected = commentPin.id === selectedCommentPinId;
+            return (
+              <g
+                key={commentPin.id}
+                className={`comment-pin ${selected ? "comment-pin--selected" : ""}`}
+                transform={`translate(${commentPin.xMm} ${commentPin.yMm})`}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                  onSelectCommentPin?.(commentPin.id);
+                }}
+              >
+                <circle r={selected ? 112 : 92} />
+                <text className="comment-pin__number" x="0" y="38">{index + 1}</text>
+                <text className="comment-pin__text" x="132" y="-88">{commentPin.text}</text>
+              </g>
+            );
+          })}
+        </g>
       </svg>
     </div>
   );

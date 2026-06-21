@@ -5,15 +5,19 @@ import {
   newFixture,
   newPosition,
   newRevision,
+  newCommentPin,
   addPosition,
   addFixture,
   addFixtureProfile,
   addRevision,
+  addCommentPin,
   activateRevision,
   updateShowName,
   updateProjectMetadata,
   updateFixture,
+  updateCommentPin,
   removeFixture,
+  removeCommentPin,
   renumberPosition,
   updateVenue,
   updatePosition,
@@ -46,6 +50,7 @@ export default function useShowDoc(seedShow) {
   const [selectedFixtureId, setSelectedFixtureId] = useState(null);
   const [selectedFixtureIds, setSelectedFixtureIds] = useState([]);
   const [selectedPositionId, setSelectedPositionId] = useState(null);
+  const [selectedCommentPinId, setSelectedCommentPinId] = useState(null);
 
   const history = useHistory(setDoc);
   const recovery = useAutosaveRecovery(doc);
@@ -68,6 +73,7 @@ export default function useShowDoc(seedShow) {
   const onSelectFixture = useCallback((id, options = {}) => {
     const fixture = doc.fixtures[id];
     if (!fixture) return;
+    setSelectedCommentPinId(null);
 
     if (!options.additive) {
       setSelectedFixtureId(id);
@@ -90,8 +96,16 @@ export default function useShowDoc(seedShow) {
 
   const onSelectPosition = useCallback((id) => {
     setSelectedPositionId(id);
+    setSelectedCommentPinId(null);
     onClearFixtureSelection();
   }, [onClearFixtureSelection]);
+
+  const onSelectCommentPin = useCallback((id) => {
+    if (!doc.commentPins?.[id]) return;
+    setSelectedCommentPinId(id);
+    setSelectedPositionId(null);
+    onClearFixtureSelection();
+  }, [doc.commentPins, onClearFixtureSelection]);
 
   const onAddPosition = useCallback(() => {
     const n = doc.positionOrder.length + 1;
@@ -104,6 +118,7 @@ export default function useShowDoc(seedShow) {
     });
     commit(addPosition(doc, position));
     setSelectedPositionId(position.id);
+    setSelectedCommentPinId(null);
     onClearFixtureSelection();
   }, [doc, commit, onClearFixtureSelection]);
 
@@ -122,6 +137,7 @@ export default function useShowDoc(seedShow) {
     setSelectedPositionId(positionId);
     setSelectedFixtureId(fixture.id);
     setSelectedFixtureIds([fixture.id]);
+    setSelectedCommentPinId(null);
     return fixture.id;
   }, [doc, commit]);
 
@@ -166,6 +182,24 @@ export default function useShowDoc(seedShow) {
     const next = updateFixture(doc, id, patch);
     const positionId = patch.positionId ?? current?.positionId;
     commit(patch.xMm == null || positionId == null ? next : renumberPosition(next, positionId));
+  }, [doc, commit]);
+
+  const onAddCommentPin = useCallback((point) => {
+    const commentPin = newCommentPin(point);
+    commit(addCommentPin(doc, commentPin));
+    setSelectedCommentPinId(commentPin.id);
+    setSelectedPositionId(null);
+    onClearFixtureSelection();
+    return commentPin.id;
+  }, [doc, commit, onClearFixtureSelection]);
+
+  const onCommentPinChange = useCallback((id, patch) => {
+    commit(updateCommentPin(doc, id, patch));
+  }, [doc, commit]);
+
+  const onCommentPinDelete = useCallback((id) => {
+    commit(removeCommentPin(doc, id));
+    setSelectedCommentPinId(current => current === id ? null : current);
   }, [doc, commit]);
 
   const onSetFixtureFocus = useCallback((id, focus) => {
@@ -216,7 +250,7 @@ export default function useShowDoc(seedShow) {
   const onOpen = useCallback(async () => {
     try {
       const r = await openProjectFile();
-      if (r.ok) { commit(r.doc); setSelectedPositionId(null); onClearFixtureSelection(); }
+      if (r.ok) { commit(r.doc); setSelectedPositionId(null); setSelectedCommentPinId(null); onClearFixtureSelection(); }
     } catch (e) {
       alert("Could not read that file: " + (e?.message || e));
     }
@@ -224,7 +258,7 @@ export default function useShowDoc(seedShow) {
 
   const onRestoreDraft = useCallback(() => {
     const d = recovery.restoreDraft();
-    if (d) { commit(d); setSelectedPositionId(null); onClearFixtureSelection(); }
+    if (d) { commit(d); setSelectedPositionId(null); setSelectedCommentPinId(null); onClearFixtureSelection(); }
   }, [recovery, commit, onClearFixtureSelection]);
 
   return {
@@ -232,11 +266,13 @@ export default function useShowDoc(seedShow) {
     selectedFixtureId,
     selectedFixtureIds,
     selectedPositionId,
+    selectedCommentPinId,
     history,
     recovery,
     onMoveFixture,
     onSelectFixture,
     onSelectPosition,
+    onSelectCommentPin,
     onAddPosition,
     onAddFixture,
     onImportOpenFixtureLibraryProfile,
@@ -247,6 +283,9 @@ export default function useShowDoc(seedShow) {
     onActivateRevision,
     onPositionChange,
     onFixtureChange,
+    onAddCommentPin,
+    onCommentPinChange,
+    onCommentPinDelete,
     onSetFixtureFocus,
     onClearFixtureFocus,
     onAlignSelectedFixtures,

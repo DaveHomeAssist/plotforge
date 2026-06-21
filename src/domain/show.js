@@ -14,7 +14,7 @@ import { normalizeFixtureNotes } from "./fixtureNotes.js";
 import { DEFAULT_FIXTURE_STATUS, normalizeFixtureStatus } from "./fixtureStatus.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 6;
+export const DOC_VERSION = 7;
 
 export function defaultProjectMetadata() {
   return {
@@ -52,6 +52,8 @@ export function newShow({ name = "Untitled Show" } = {}) {
     revisions: {},
     revisionOrder: [],
     activeRevisionId: null,
+    commentPins: {},
+    commentPinOrder: [],
   };
 }
 
@@ -110,6 +112,16 @@ export function newRevision({ name, note = "", createdAt = Date.now() }) {
     name,
     note,
     createdAt,
+  };
+}
+
+export function newCommentPin({ xMm, yMm, text = "New note" }) {
+  return {
+    id: uid("pin"),
+    xMm,
+    yMm,
+    text: String(text ?? "").trim() || "New note",
+    createdAt: Date.now(),
   };
 }
 
@@ -190,6 +202,44 @@ export function addRevision(doc, revision) {
     revisions: { ...(doc.revisions || {}), [revision.id]: revision },
     revisionOrder: [...(doc.revisionOrder || []), revision.id],
     metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}), revision: revision.name },
+  };
+}
+
+export function addCommentPin(doc, commentPin) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    commentPins: { ...(doc.commentPins || {}), [commentPin.id]: commentPin },
+    commentPinOrder: [...(doc.commentPinOrder || []), commentPin.id],
+  };
+}
+
+export function updateCommentPin(doc, commentPinId, patch) {
+  const commentPin = doc.commentPins?.[commentPinId];
+  if (!commentPin) return doc;
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    commentPins: {
+      ...(doc.commentPins || {}),
+      [commentPinId]: {
+        ...commentPin,
+        ...patch,
+        text: Object.hasOwn(patch, "text") ? String(patch.text ?? "") : commentPin.text,
+      },
+    },
+  };
+}
+
+export function removeCommentPin(doc, commentPinId) {
+  if (!doc.commentPins?.[commentPinId]) return doc;
+  const commentPins = { ...(doc.commentPins || {}) };
+  delete commentPins[commentPinId];
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    commentPins,
+    commentPinOrder: (doc.commentPinOrder || []).filter(id => id !== commentPinId),
   };
 }
 
@@ -280,4 +330,10 @@ export function fixturesOnPosition(doc, positionId) {
   return doc.fixtureOrder
     .map(id => doc.fixtures[id])
     .filter(fx => fx.positionId === positionId);
+}
+
+export function commentPinRows(doc) {
+  return (doc.commentPinOrder || [])
+    .map(id => doc.commentPins?.[id])
+    .filter(Boolean);
 }

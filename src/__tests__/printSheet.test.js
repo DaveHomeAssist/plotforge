@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { newShow, newPosition, newFixture, addPosition, addFixture, updateFixture, updateProjectMetadata } from "../domain/show.js";
+import {
+  newShow, newPosition, newFixture,
+  addPosition, addFixture, updateFixture, updateProjectMetadata,
+  newCommentPin, addCommentPin,
+} from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 import { printLegendRows, printPatchStatus, printSheetHtml, printWorldBounds } from "../domain/printSheet.js";
 
@@ -64,6 +68,22 @@ describe("print sheet", () => {
     expect(html).toContain("class=\"focus-beam\"");
     expect(html).toContain("class=\"focus-point\"");
     expect(bounds.x + bounds.width).toBeGreaterThan(feetToMm(30));
+  });
+
+  it("prints comment pins and includes them in bounds", () => {
+    let { doc } = seedPrintShow();
+    doc = addCommentPin(doc, newCommentPin({
+      xMm: feetToMm(40),
+      yMm: feetToMm(-3),
+      text: "Check masking",
+    }));
+
+    const html = printSheetHtml(doc);
+    const bounds = printWorldBounds(doc);
+
+    expect(html).toContain("class=\"comment-pin\"");
+    expect(html).toContain("Check masking");
+    expect(bounds.x + bounds.width).toBeGreaterThan(feetToMm(40));
   });
 
   it("summarizes duplicate channel and DMX conflicts", () => {
