@@ -5,6 +5,7 @@ import Inspector from "./components/Inspector.jsx";
 import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import PatchTable from "./components/PatchTable.jsx";
+import ConflictPanel from "./components/ConflictPanel.jsx";
 import PrintExport from "./components/PrintExport.jsx";
 import DraftRecoveryBanner from "./components/DraftRecoveryBanner.jsx";
 import useShowDoc from "./hooks/useShowDoc.js";
@@ -91,6 +92,7 @@ export default function PlotForge() {
             onImportOpenFixtureLibraryProfile={show.onImportOpenFixtureLibraryProfile}
           />
           <PatchTable doc={show.doc} />
+          <ConflictPanel doc={show.doc} onRevealFixture={show.onSelectFixture} />
           <PrintExport doc={show.doc} />
           <Inspector
             doc={show.doc}

@@ -24,10 +24,11 @@ Notion is the canonical phase source for this project. README status was reconci
 - Print to PDF export with title block and ANSI D paper preset
 - Project metadata editor for show title, drawing title, venue, designer, company, show date, revision, and scale
 - Named revision log with active revision selection for title block issue tracking
+- Conflict panel that lists channel and DMX issues with reveal selection
 
 ## What's deliberately missing
 
-Conflict reveal panel, inspector debouncing, focus beam tool, Lightwright roundtrip, auth, sharing, and production quality of life tools.
+Inspector debouncing, focus beam tool, Lightwright roundtrip, auth, sharing, and production quality of life tools.
 MVR import and export remain a later strategic interop track.
 
 ## Run
@@ -75,6 +76,7 @@ src/
   components/
     ProjectMetadata.jsx  editable project metadata + title block source
     RevisionsPanel.jsx  named revision log
+    ConflictPanel.jsx  conflict list + reveal action
     PlotCanvas.jsx   SVG drafting surface
     FixtureSymbol.jsx  fixture glyphs
     Inspector.jsx    fixture metadata editor
@@ -114,10 +116,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P0-4 print to PDF with title block: export path shipped on 2026-06-21. Physical ANSI D fidelity sign-off is parked until plotter access is available.
 - P1-1 project metadata plus editable title block: shipped on 2026-06-21. The sidepanel edits show title, drawing title, venue, designer, draftsperson, company, show date, revision, and scale; print output uses the same metadata.
 - P1-2 named revisions: shipped on 2026-06-21. The sidepanel saves named revision records with notes, can activate a prior revision, and drives the title block revision field from the active record.
+- P1-3 conflict panel with reveal: shipped on 2026-06-21. The sidepanel lists channel and DMX conflicts with affected fixtures and a Reveal action that selects the first fixture in the conflict.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
-2. P1: conflict panel, inspector parsing, focus beam tool.
+2. P1: inspector parsing, focus beam tool.
 3. P2: fixture status, layered notes, multi-select, gel rollup, circuit schema, comment pins.
 4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.

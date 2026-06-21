@@ -519,7 +519,8 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 /* Patch table */
-.patch-panel {
+.patch-panel,
+.conflict-panel {
   background: var(--surface);
   padding: 16px;
   overflow-y: visible;
@@ -602,6 +603,42 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--ink-mute);
   font-style: italic;
   text-align: center;
+}
+.conflict-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.conflict-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(255, 107, 107, .06);
+  border: 1px solid rgba(255, 107, 107, .28);
+  border-radius: 6px;
+}
+.conflict-row__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.conflict-row__head strong {
+  font-size: 13px;
+}
+.conflict-row p {
+  margin: 0;
+  color: var(--ink-mute);
+  font-size: 12px;
+}
+.conflict-row ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink);
+  font-size: 12px;
+}
+.conflict-row li + li {
+  margin-top: 3px;
 }
 
 /* Print export */
