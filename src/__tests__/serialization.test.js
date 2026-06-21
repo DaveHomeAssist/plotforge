@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { deserialize, serialize } from "../serialization.js";
-import { DOC_VERSION, newShow, updateProjectMetadata } from "../domain/show.js";
+import { DOC_VERSION, newRevision, newShow, addRevision, updateProjectMetadata } from "../domain/show.js";
 
 describe("serialization", () => {
   it("roundtrips project metadata", () => {
@@ -38,5 +38,22 @@ describe("serialization", () => {
       revision: "Draft",
     }));
     expect(parsed.fixtureProfiles).toEqual({});
+    expect(parsed.revisions).toEqual({});
+    expect(parsed.revisionOrder).toEqual([]);
+    expect(parsed.activeRevisionId).toBeNull();
+  });
+
+  it("roundtrips named revisions", () => {
+    const revision = newRevision({ name: "Rev A", note: "Focus notes", createdAt: 1 });
+    const doc = addRevision(newShow({ name: "Revision Test" }), revision);
+
+    const parsed = deserialize(serialize(doc));
+
+    expect(parsed.activeRevisionId).toBe(revision.id);
+    expect(parsed.revisionOrder).toEqual([revision.id]);
+    expect(parsed.revisions[revision.id]).toEqual(expect.objectContaining({
+      name: "Rev A",
+      note: "Focus notes",
+    }));
   });
 });

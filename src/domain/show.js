@@ -11,7 +11,7 @@
 import { uid } from "./ids.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 2;
+export const DOC_VERSION = 3;
 
 export function defaultProjectMetadata() {
   return {
@@ -46,6 +46,9 @@ export function newShow({ name = "Untitled Show" } = {}) {
     fixtures: {},       // id -> Fixture
     fixtureOrder: [],
     fixtureProfiles: {}, // imported fixture profiles keyed by profile id
+    revisions: {},
+    revisionOrder: [],
+    activeRevisionId: null,
   };
 }
 
@@ -76,6 +79,15 @@ export function newFixture({ positionId, profileId, xMm, channel = null, dmx = n
     color,                          // gel string, e.g. "R02"
     gobo: "",
     note,
+  };
+}
+
+export function newRevision({ name, note = "", createdAt = Date.now() }) {
+  return {
+    id: uid("rev"),
+    name,
+    note,
+    createdAt,
   };
 }
 
@@ -139,6 +151,28 @@ export function updateProjectMetadata(doc, patch) {
     ...doc,
     updatedAt: Date.now(),
     metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}), ...patch },
+  };
+}
+
+export function addRevision(doc, revision) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    activeRevisionId: revision.id,
+    revisions: { ...(doc.revisions || {}), [revision.id]: revision },
+    revisionOrder: [...(doc.revisionOrder || []), revision.id],
+    metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}), revision: revision.name },
+  };
+}
+
+export function activateRevision(doc, revisionId) {
+  const revision = doc.revisions?.[revisionId];
+  if (!revision) return doc;
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    activeRevisionId: revision.id,
+    metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}), revision: revision.name },
   };
 }
 

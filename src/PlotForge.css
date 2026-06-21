@@ -145,6 +145,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .project-metadata,
+.revisions-panel,
 .position-editor {
   padding: 16px;
   display: flex;
@@ -384,7 +385,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
 }
-.inspector input:focus, .inspector textarea:focus, .project-metadata input:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .position-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
+.inspector input:focus, .inspector textarea:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .position-row:focus-visible, .revision-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -1px;
   border-color: transparent;
@@ -403,6 +404,63 @@ input, textarea { font: inherit; color: inherit; }
   font-family: var(--mono);
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
+}
+.revisions-panel label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
+}
+.revisions-panel label > span { font-size: 11px; }
+.revisions-panel input,
+.revisions-panel textarea {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-transform: none; letter-spacing: 0;
+}
+.revision-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.revision-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.revision-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 58px;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  text-align: left;
+}
+.revision-row:hover,
+.revision-row--active {
+  background: var(--surface-2);
+  border-color: var(--green);
+}
+.revision-row strong,
+.revision-row em {
+  display: block;
+}
+.revision-row strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+.revision-row em {
+  margin-top: 3px;
+  color: var(--ink-mute);
+  font-size: 11px;
+  font-style: normal;
 }
 .fixture-library label {
   display: flex; flex-direction: column; gap: 4px;

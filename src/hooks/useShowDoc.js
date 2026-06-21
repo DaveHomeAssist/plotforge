@@ -4,9 +4,12 @@ import useAutosaveRecovery from "./useAutosaveRecovery.js";
 import {
   newFixture,
   newPosition,
+  newRevision,
   addPosition,
   addFixture,
   addFixtureProfile,
+  addRevision,
+  activateRevision,
   updateShowName,
   updateProjectMetadata,
   updateFixture,
@@ -118,6 +121,16 @@ export default function useShowDoc(seedShow) {
     commit(updateProjectMetadata(doc, patch));
   }, [doc, commit]);
 
+  const onAddRevision = useCallback(({ name, note }) => {
+    const revision = newRevision({ name, note });
+    commit(addRevision(doc, revision));
+    return revision.id;
+  }, [doc, commit]);
+
+  const onActivateRevision = useCallback((revisionId) => {
+    commit(activateRevision(doc, revisionId));
+  }, [doc, commit]);
+
   const onPositionChange = useCallback((id, patch) => {
     commit(updatePosition(doc, id, patch));
   }, [doc, commit]);
@@ -173,6 +186,8 @@ export default function useShowDoc(seedShow) {
     onVenueChange,
     onShowNameChange,
     onProjectMetadataChange,
+    onAddRevision,
+    onActivateRevision,
     onPositionChange,
     onFixtureChange,
     onFixtureDelete,

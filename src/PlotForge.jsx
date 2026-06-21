@@ -1,5 +1,6 @@
 import PlotCanvas from "./components/PlotCanvas.jsx";
 import ProjectMetadata from "./components/ProjectMetadata.jsx";
+import RevisionsPanel from "./components/RevisionsPanel.jsx";
 import Inspector from "./components/Inspector.jsx";
 import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
@@ -68,6 +69,11 @@ export default function PlotForge() {
             doc={show.doc}
             onShowNameChange={show.onShowNameChange}
             onProjectMetadataChange={show.onProjectMetadataChange}
+          />
+          <RevisionsPanel
+            doc={show.doc}
+            onAddRevision={show.onAddRevision}
+            onActivateRevision={show.onActivateRevision}
           />
           <PositionEditor
             doc={show.doc}

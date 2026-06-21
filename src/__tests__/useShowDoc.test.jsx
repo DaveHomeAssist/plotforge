@@ -84,6 +84,25 @@ describe("useShowDoc", () => {
     }));
   });
 
+  it("adds and activates named revisions", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+    let firstRevisionId = null;
+
+    act(() => {
+      firstRevisionId = result.current.onAddRevision({ name: "Rev A", note: "Issued for focus" });
+    });
+    act(() => {
+      result.current.onAddRevision({ name: "Tech", note: "Updated patch" });
+    });
+    act(() => {
+      result.current.onActivateRevision(firstRevisionId);
+    });
+
+    expect(result.current.doc.revisionOrder).toHaveLength(2);
+    expect(result.current.doc.activeRevisionId).toBe(firstRevisionId);
+    expect(result.current.doc.metadata.revision).toBe("Rev A");
+  });
+
   it("onPositionChange updates the selected position name", () => {
     const { result } = renderHook(() => useShowDoc(seedShow));
     const positionId = result.current.doc.positionOrder[0];

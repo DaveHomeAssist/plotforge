@@ -23,6 +23,13 @@ const migrators = {
     metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}) },
     fixtureProfiles: doc.fixtureProfiles || {},
   }),
+  2: (doc) => ({
+    ...doc,
+    version: 3,
+    revisions: doc.revisions || {},
+    revisionOrder: doc.revisionOrder || [],
+    activeRevisionId: doc.activeRevisionId || null,
+  }),
 };
 
 export function migrate(doc) {

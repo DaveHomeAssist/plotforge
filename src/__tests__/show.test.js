@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   newShow, newPosition, newFixture,
   addPosition, addFixture, updateFixture, removeFixture, renumberPosition,
+  newRevision, addRevision, activateRevision,
   updateVenue, updatePosition, removePosition, fixturesOnPosition,
 } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
@@ -80,6 +81,24 @@ describe("show domain", () => {
     expect(doc.fixtures[keptFx.id]).toEqual(expect.objectContaining({ positionId: keep.id }));
     expect(doc.positionOrder).toEqual([keep.id]);
     expect(doc.fixtureOrder).toEqual([keptFx.id]);
+  });
+
+  it("adds and activates named revisions", () => {
+    let { doc } = seed();
+    const draft = newRevision({ name: "Rev A", note: "Issued for focus", createdAt: 1 });
+    const tech = newRevision({ name: "Tech", note: "Updated FOH", createdAt: 2 });
+
+    doc = addRevision(doc, draft);
+    doc = addRevision(doc, tech);
+
+    expect(doc.revisionOrder).toEqual([draft.id, tech.id]);
+    expect(doc.activeRevisionId).toBe(tech.id);
+    expect(doc.metadata.revision).toBe("Tech");
+
+    doc = activateRevision(doc, draft.id);
+
+    expect(doc.activeRevisionId).toBe(draft.id);
+    expect(doc.metadata.revision).toBe("Rev A");
   });
 
   it("serialize → deserialize roundtrip preserves the doc", () => {
