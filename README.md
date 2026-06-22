@@ -35,6 +35,7 @@ Notion is the canonical phase source for this project. README status was reconci
 - Comment pins with canvas placement, sidepanel editing, print output, and `.plot` migration
 - Interop manifest export with fixture paperwork, GDTF provenance, focus points, circuit data, and comment pins
 - OSC bridge route map with saved relay settings, JSON export, selected fixture send, and a dependency-free local WebSocket-to-UDP relay
+- Multi-show registry with IndexedDB snapshots, load/delete actions, `.plot` share/export, and PWA manifest plus service worker shell caching
 
 ## What's deliberately missing
 
@@ -98,6 +99,7 @@ src/
     DraftRecoveryBanner.jsx
     ErrorBoundary.jsx
   autosave.js        IndexedDB store (ported from PixelForge)
+  showRegistry.js    multi-show IndexedDB snapshot registry
   serialization.js   .plot JSON schema + File System Access API + migrations
   PlotForge.jsx      app root
   PlotForge.css      tokens + layout
@@ -144,10 +146,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P2 tier deploy: shipped on 2026-06-21. Production alias `https://plotforge-beta.vercel.app` serves the P2 comment pin build.
 - P3-1 MVR and GDTF interop: partially shipped in the repo on 2026-06-21. The P3 Interop manifest exports fixture paperwork, GDTF Share provenance, focus points, circuit and dimmer data, layered notes, and comment pins as JSON. MVR import parser locking is parked until Vectorworks Spotlight 2024 / 2025 / 2026 `.mvr` sample files are available.
 - P3-2 OSC console bridge: shipped in the repo on 2026-06-22. The sidepanel stores relay settings in the `.plot` document, exports a JSON OSC bridge manifest, creates select / patch / status / focus routes from fixture data, sends the selected fixture route over WebSocket, and includes `npm run osc:relay` as a local UDP OSC relay.
+- P3-3 multi-show registry plus share plus PWA: shipped in the repo on 2026-06-22. The sidepanel saves named show snapshots into IndexedDB, loads or deletes saved shows, shares the current `.plot` through Web Share with download fallback, and adds a web app manifest plus service worker shell cache.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
 2. P1: complete and deployed.
 3. P2: complete and deployed.
-4. P3: MVR import corpus blocker, multi-show registry, PWA, AI plot starter.
+4. P3: MVR import corpus blocker, AI plot starter.

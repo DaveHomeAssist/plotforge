@@ -266,6 +266,13 @@ export default function useShowDoc(seedShow) {
     if (d) { commit(d); setSelectedPositionId(null); setSelectedCommentPinId(null); onClearFixtureSelection(); }
   }, [recovery, commit, onClearFixtureSelection]);
 
+  const onLoadShow = useCallback((nextDoc) => {
+    commit(nextDoc);
+    setSelectedPositionId(null);
+    setSelectedCommentPinId(null);
+    onClearFixtureSelection();
+  }, [commit, onClearFixtureSelection]);
+
   return {
     doc,
     selectedFixtureId,
@@ -302,6 +309,7 @@ export default function useShowDoc(seedShow) {
     onSave,
     onOpen,
     onRestoreDraft,
+    onLoadShow,
     conflicts: patchConflicts(doc),
     totalFixtures: doc.fixtureOrder.length
   };

@@ -434,7 +434,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
 }
-.inspector input:focus, .inspector textarea:focus, .inspector select:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .osc-bridge-fields input:focus, .comment-editor textarea:focus, .position-row:focus-visible, .revision-row:focus-visible, .comment-pin-row:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
+.inspector input:focus, .inspector textarea:focus, .inspector select:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .osc-bridge-fields input:focus, .comment-editor textarea:focus, .position-row:focus-visible, .revision-row:focus-visible, .comment-pin-row:focus-visible, .registry-row button:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -1px;
   border-color: transparent;
@@ -851,6 +851,7 @@ input, textarea { font: inherit; color: inherit; }
 /* Print export */
 .interop-panel,
 .osc-bridge-panel,
+.show-registry-panel,
 .print-export-panel {
   background: var(--surface);
   padding: 16px;
@@ -863,6 +864,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .interop-panel__summary,
 .osc-bridge-panel__summary,
+.show-registry-panel__summary,
 .print-export-panel__summary {
   display: flex;
   justify-content: space-between;
@@ -893,6 +895,43 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--blue);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.registry-actions,
+.registry-row__actions {
+  display: flex;
+  gap: 6px;
+}
+.registry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.registry-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.registry-row strong,
+.registry-row span {
+  display: block;
+}
+.registry-row strong {
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.registry-row span {
+  margin-top: 3px;
+  color: var(--ink-mute);
+  font-size: 11px;
+  line-height: 1.25;
 }
 
 /* Status bar */
