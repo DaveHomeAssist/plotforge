@@ -27,6 +27,7 @@ import {
 } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 import { getProfile, normalizeOpenFixtureLibraryProfile } from "../domain/profiles.js";
+import { applyPlotStarterPlan } from "../domain/plotStarter.js";
 import { saveProjectFile, openProjectFile } from "../serialization.js";
 import { patchConflicts } from "../domain/patch.js";
 import { alignFixtures, distributeFixtures } from "../domain/fixtureLayout.js";
@@ -273,6 +274,15 @@ export default function useShowDoc(seedShow) {
     onClearFixtureSelection();
   }, [commit, onClearFixtureSelection]);
 
+  const onApplyPlotStarterPlan = useCallback((plan) => {
+    const result = applyPlotStarterPlan(doc, plan);
+    commit(result.doc);
+    setSelectedPositionId(result.addedPositionIds[0] ?? null);
+    setSelectedCommentPinId(null);
+    onClearFixtureSelection();
+    return result;
+  }, [doc, commit, onClearFixtureSelection]);
+
   return {
     doc,
     selectedFixtureId,
@@ -310,6 +320,7 @@ export default function useShowDoc(seedShow) {
     onOpen,
     onRestoreDraft,
     onLoadShow,
+    onApplyPlotStarterPlan,
     conflicts: patchConflicts(doc),
     totalFixtures: doc.fixtureOrder.length
   };

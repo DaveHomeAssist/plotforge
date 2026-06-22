@@ -11,6 +11,7 @@ import CommentPins from "./components/CommentPins.jsx";
 import InteropPanel from "./components/InteropPanel.jsx";
 import OscBridgePanel from "./components/OscBridgePanel.jsx";
 import ShowRegistryPanel from "./components/ShowRegistryPanel.jsx";
+import PlotStarterPanel from "./components/PlotStarterPanel.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
 import PrintExport from "./components/PrintExport.jsx";
@@ -122,6 +123,7 @@ export default function PlotForge() {
             onBridgeChange={show.onOscBridgeChange}
           />
           <ShowRegistryPanel doc={show.doc} onLoadShow={show.onLoadShow} />
+          <PlotStarterPanel doc={show.doc} onApplyStarter={show.onApplyPlotStarterPlan} />
           <SelectionTools
             doc={show.doc}
             selectedFixtureId={show.selectedFixtureId}

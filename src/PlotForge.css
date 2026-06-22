@@ -434,7 +434,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
 }
-.inspector input:focus, .inspector textarea:focus, .inspector select:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .osc-bridge-fields input:focus, .comment-editor textarea:focus, .position-row:focus-visible, .revision-row:focus-visible, .comment-pin-row:focus-visible, .registry-row button:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
+.inspector input:focus, .inspector textarea:focus, .inspector select:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .print-export-panel select:focus, .osc-bridge-fields input:focus, .plot-starter-brief textarea:focus, .comment-editor textarea:focus, .position-row:focus-visible, .revision-row:focus-visible, .comment-pin-row:focus-visible, .registry-row button:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -1px;
   border-color: transparent;
@@ -852,6 +852,7 @@ input, textarea { font: inherit; color: inherit; }
 .interop-panel,
 .osc-bridge-panel,
 .show-registry-panel,
+.plot-starter-panel,
 .print-export-panel {
   background: var(--surface);
   padding: 16px;
@@ -865,11 +866,67 @@ input, textarea { font: inherit; color: inherit; }
 .interop-panel__summary,
 .osc-bridge-panel__summary,
 .show-registry-panel__summary,
+.plot-starter-panel__summary,
 .print-export-panel__summary {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   color: var(--ink-mute);
+}
+.plot-starter-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink-mute);
+  font-size: 12px;
+}
+.plot-starter-brief textarea {
+  min-height: 96px;
+  resize: vertical;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.plot-starter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plot-starter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 8px;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.plot-starter-row strong,
+.plot-starter-row span {
+  display: block;
+}
+.plot-starter-row strong {
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plot-starter-row span {
+  margin-top: 3px;
+  color: var(--ink-mute);
+  font-size: 11px;
+  line-height: 1.25;
+}
+.plot-starter-row > .mono {
+  margin-top: 0;
+  color: var(--blue);
+  text-align: right;
 }
 .osc-route-list {
   display: flex;
