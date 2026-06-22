@@ -33,11 +33,12 @@ Notion is the canonical phase source for this project. README status was reconci
 - Gel palette rollup with per-gel fixture counts, fixture labels, and CSV export
 - Circuit and dimmer schema with inspector edits, patch table display, CSV export, and circuit check summary
 - Comment pins with canvas placement, sidepanel editing, print output, and `.plot` migration
+- Interop manifest export with fixture paperwork, GDTF provenance, focus points, circuit data, and comment pins
 
 ## What's deliberately missing
 
 Lightwright roundtrip, auth, sharing, and production quality of life tools.
-MVR import and export remain a later strategic interop track.
+MVR import parser locking is parked until Vectorworks Spotlight 2024 / 2025 / 2026 `.mvr` sample files are available.
 
 ## Run
 
@@ -137,10 +138,12 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P2-4 gel palette plus order rollup: shipped in the repo on 2026-06-21. Fixture color strings are parsed into normalized gel codes, the sidepanel lists per-gel counts and fixture labels, and CSV export produces the gel order.
 - P2-5 circuit and dimmer schema: shipped in the repo on 2026-06-21. Fixtures store normalized circuit and dimmer fields, legacy `.plot` docs migrate with empty defaults, the inspector edits both fields, the patch table and CSV include both fields, and the circuit check panel flags unassigned, partial, and shared assignments.
 - P2-6 comment pins: shipped in the repo on 2026-06-21. Plot clicks in Comment mode create pinned notes, the canvas renders selectable numbered pins, the sidepanel edits and deletes pin text, print output includes pin callouts, and legacy `.plot` docs migrate with empty pin stores.
+- P2 tier deploy: shipped on 2026-06-21. Production alias `https://plotforge-beta.vercel.app` serves the P2 comment pin build.
+- P3-1 MVR and GDTF interop: partially shipped in the repo on 2026-06-21. The P3 Interop manifest exports fixture paperwork, GDTF Share provenance, focus points, circuit and dimmer data, layered notes, and comment pins as JSON. MVR import parser locking is parked until Vectorworks Spotlight 2024 / 2025 / 2026 `.mvr` sample files are available.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
 2. P1: complete and deployed.
-3. P2: complete in the repo. Deploy pending.
-4. P3: MVR and GDTF interop, OSC bridge, multi-show registry, PWA, AI plot starter.
+3. P2: complete and deployed.
+4. P3: MVR import corpus blocker, OSC bridge, multi-show registry, PWA, AI plot starter.

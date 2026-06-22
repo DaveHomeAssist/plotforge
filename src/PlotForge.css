@@ -363,6 +363,9 @@ input, textarea { font: inherit; color: inherit; }
 .library-status--error {
   color: var(--red);
 }
+.library-status--warn {
+  color: var(--amber);
+}
 .btn-compact {
   padding: 4px 9px;
   background: var(--bg-2);
@@ -816,6 +819,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 /* Print export */
+.interop-panel,
 .print-export-panel {
   background: var(--surface);
   padding: 16px;
@@ -826,6 +830,7 @@ input, textarea { font: inherit; color: inherit; }
   gap: 12px;
   border-top: 1px solid var(--line);
 }
+.interop-panel__summary,
 .print-export-panel__summary {
   display: flex;
   justify-content: space-between;
