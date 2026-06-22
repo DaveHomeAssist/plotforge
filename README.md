@@ -152,10 +152,11 @@ Current canonical status, reconciled from Notion on 2026-06-22:
 - P3-2 OSC console bridge: shipped in the repo on 2026-06-22. The sidepanel stores relay settings in the `.plot` document, exports a JSON OSC bridge manifest, creates select / patch / status / focus routes from fixture data, sends the selected fixture route over WebSocket, and includes `npm run osc:relay` as a local UDP OSC relay.
 - P3-3 multi-show registry plus share plus PWA: shipped in the repo on 2026-06-22. The sidepanel saves named show snapshots into IndexedDB, loads or deletes saved shows, shares the current `.plot` through Web Share with download fallback, and adds a web app manifest plus service worker shell cache.
 - P3-4 AI plot starter: shipped in the repo on 2026-06-22. The sidepanel accepts a production brief, generates a local starter plan with positions, fixture groups, colors, channels, DMX starts, and focus notes, applies that plan into the document without clearing existing work, and copies a structured prompt for future provider backed AI refinement.
+- P3 tier deploy: shipped on 2026-06-22. Production alias `https://plotforge-beta.vercel.app` serves the P3 AI plot starter build.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
 2. P1: complete and deployed.
 3. P2: complete and deployed.
-4. P3: feature work complete except MVR import parser locking parked on sample file access. Tier deploy is next.
+4. P3: complete and deployed except MVR import parser locking parked on sample file access.
