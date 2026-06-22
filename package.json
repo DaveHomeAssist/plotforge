@@ -14,7 +14,8 @@
     "lint": "eslint src eslint.config.js vite.config.js vitest.config.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ci": "npm run lint && npm run test && npm run build"
+    "ci": "npm run lint && npm run test && npm run build",
+    "osc:relay": "node scripts/osc-relay.mjs"
   },
   "dependencies": {
     "react": "^19.2.5",

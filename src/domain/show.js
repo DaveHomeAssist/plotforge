@@ -12,9 +12,10 @@ import { uid } from "./ids.js";
 import { normalizeCircuitPatch, normalizeFixtureCircuit } from "./circuiting.js";
 import { normalizeFixtureNotes } from "./fixtureNotes.js";
 import { DEFAULT_FIXTURE_STATUS, normalizeFixtureStatus } from "./fixtureStatus.js";
+import { defaultOscBridgeSettings, normalizeOscBridgeSettings } from "./oscBridge.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 7;
+export const DOC_VERSION = 8;
 
 export function defaultProjectMetadata() {
   return {
@@ -54,6 +55,7 @@ export function newShow({ name = "Untitled Show" } = {}) {
     activeRevisionId: null,
     commentPins: {},
     commentPinOrder: [],
+    oscBridge: defaultOscBridgeSettings(),
   };
 }
 
@@ -191,6 +193,14 @@ export function updateProjectMetadata(doc, patch) {
     ...doc,
     updatedAt: Date.now(),
     metadata: { ...defaultProjectMetadata(), ...(doc.metadata || {}), ...patch },
+  };
+}
+
+export function updateOscBridge(doc, patch) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    oscBridge: normalizeOscBridgeSettings({ ...(doc.oscBridge || {}), ...patch }),
   };
 }
 

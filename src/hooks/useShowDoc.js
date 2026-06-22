@@ -12,6 +12,7 @@ import {
   addRevision,
   addCommentPin,
   activateRevision,
+  updateOscBridge,
   updateShowName,
   updateProjectMetadata,
   updateFixture,
@@ -163,6 +164,10 @@ export default function useShowDoc(seedShow) {
     commit(updateProjectMetadata(doc, patch));
   }, [doc, commit]);
 
+  const onOscBridgeChange = useCallback((patch) => {
+    commit(updateOscBridge(doc, patch));
+  }, [doc, commit]);
+
   const onAddRevision = useCallback(({ name, note }) => {
     const revision = newRevision({ name, note });
     commit(addRevision(doc, revision));
@@ -279,6 +284,7 @@ export default function useShowDoc(seedShow) {
     onVenueChange,
     onShowNameChange,
     onProjectMetadataChange,
+    onOscBridgeChange,
     onAddRevision,
     onActivateRevision,
     onPositionChange,

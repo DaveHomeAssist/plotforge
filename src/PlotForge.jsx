@@ -9,6 +9,7 @@ import GelPalette from "./components/GelPalette.jsx";
 import CircuitPanel from "./components/CircuitPanel.jsx";
 import CommentPins from "./components/CommentPins.jsx";
 import InteropPanel from "./components/InteropPanel.jsx";
+import OscBridgePanel from "./components/OscBridgePanel.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
 import PrintExport from "./components/PrintExport.jsx";
@@ -114,6 +115,11 @@ export default function PlotForge() {
           />
           <ConflictPanel doc={show.doc} onRevealFixture={show.onSelectFixture} />
           <InteropPanel doc={show.doc} />
+          <OscBridgePanel
+            doc={show.doc}
+            selectedFixtureId={show.selectedFixtureId}
+            onBridgeChange={show.onOscBridgeChange}
+          />
           <SelectionTools
             doc={show.doc}
             selectedFixtureId={show.selectedFixtureId}

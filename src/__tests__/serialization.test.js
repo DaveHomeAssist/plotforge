@@ -146,6 +146,26 @@ describe("serialization", () => {
     expect(parsed.commentPinOrder).toEqual([]);
   });
 
+  it("migrates older documents with default OSC bridge settings", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: 7,
+      name: "Legacy OSC Plot",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+    }));
+
+    expect(parsed.version).toBe(DOC_VERSION);
+    expect(parsed.oscBridge).toEqual(expect.objectContaining({
+      namespace: "/plotforge",
+      relayUrl: "ws://127.0.0.1:8765",
+      targetHost: "127.0.0.1",
+      targetPort: 8000,
+    }));
+  });
+
   it("roundtrips named revisions", () => {
     const revision = newRevision({ name: "Rev A", note: "Focus notes", createdAt: 1 });
     const doc = addRevision(newShow({ name: "Revision Test" }), revision);

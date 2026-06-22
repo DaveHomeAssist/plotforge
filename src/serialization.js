@@ -5,6 +5,7 @@ import { DOC_VERSION, defaultProjectMetadata } from "./domain/show.js";
 import { normalizeFixtureCircuit } from "./domain/circuiting.js";
 import { normalizeFixtureNotes } from "./domain/fixtureNotes.js";
 import { normalizeFixtureStatus } from "./domain/fixtureStatus.js";
+import { normalizeOscBridgeSettings } from "./domain/oscBridge.js";
 
 export const PLOT_MIME = "application/x-plotforge+json";
 
@@ -68,6 +69,11 @@ const migrators = {
     version: 7,
     commentPins: doc.commentPins || {},
     commentPinOrder: doc.commentPinOrder || [],
+  }),
+  7: (doc) => ({
+    ...doc,
+    version: 8,
+    oscBridge: normalizeOscBridgeSettings(doc.oscBridge || {}),
   }),
 };
 

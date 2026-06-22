@@ -34,11 +34,13 @@ Notion is the canonical phase source for this project. README status was reconci
 - Circuit and dimmer schema with inspector edits, patch table display, CSV export, and circuit check summary
 - Comment pins with canvas placement, sidepanel editing, print output, and `.plot` migration
 - Interop manifest export with fixture paperwork, GDTF provenance, focus points, circuit data, and comment pins
+- OSC bridge route map with saved relay settings, JSON export, selected fixture send, and a dependency-free local WebSocket-to-UDP relay
 
 ## What's deliberately missing
 
 Lightwright roundtrip, auth, sharing, and production quality of life tools.
 MVR import parser locking is parked until Vectorworks Spotlight 2024 / 2025 / 2026 `.mvr` sample files are available.
+Vendor-specific OSC console macro packs remain future work.
 
 ## Run
 
@@ -75,6 +77,7 @@ src/
   domain/
     show.js          show / venue / position / fixture types + pure mutations
     patch.js         DMX + channel conflict detection
+    oscBridge.js     OSC route map, manifest, and packet encoding
     fixtureNotes.js  color / gobo / focus / crew note normalization
     fixtureStatus.js per-fixture status options + normalization
     focus.js         focus point snapping + beam rows
@@ -140,10 +143,11 @@ Current canonical status, reconciled from Notion on 2026-06-21:
 - P2-6 comment pins: shipped in the repo on 2026-06-21. Plot clicks in Comment mode create pinned notes, the canvas renders selectable numbered pins, the sidepanel edits and deletes pin text, print output includes pin callouts, and legacy `.plot` docs migrate with empty pin stores.
 - P2 tier deploy: shipped on 2026-06-21. Production alias `https://plotforge-beta.vercel.app` serves the P2 comment pin build.
 - P3-1 MVR and GDTF interop: partially shipped in the repo on 2026-06-21. The P3 Interop manifest exports fixture paperwork, GDTF Share provenance, focus points, circuit and dimmer data, layered notes, and comment pins as JSON. MVR import parser locking is parked until Vectorworks Spotlight 2024 / 2025 / 2026 `.mvr` sample files are available.
+- P3-2 OSC console bridge: shipped in the repo on 2026-06-22. The sidepanel stores relay settings in the `.plot` document, exports a JSON OSC bridge manifest, creates select / patch / status / focus routes from fixture data, sends the selected fixture route over WebSocket, and includes `npm run osc:relay` as a local UDP OSC relay.
 
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.
 2. P1: complete and deployed.
 3. P2: complete and deployed.
-4. P3: MVR import corpus blocker, OSC bridge, multi-show registry, PWA, AI plot starter.
+4. P3: MVR import corpus blocker, multi-show registry, PWA, AI plot starter.
