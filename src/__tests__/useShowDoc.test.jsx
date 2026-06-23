@@ -261,4 +261,27 @@ describe("useShowDoc", () => {
 
     expect(saveProjectFile).toHaveBeenCalledWith(result.current.doc, "Studio_A_·_Spike.plot");
   });
+
+  it("tracks explicit save status", async () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+    const fixtureId = result.current.doc.fixtureOrder[0];
+
+    expect(result.current.saveStatus.state).toBe("unsaved");
+
+    act(() => {
+      result.current.onFixtureChange(fixtureId, { channel: 88 });
+    });
+    expect(result.current.saveStatus.state).toBe("unsaved");
+
+    await act(async () => {
+      await result.current.onSave();
+    });
+
+    expect(result.current.saveStatus).toEqual(expect.objectContaining({
+      state: "saved",
+      mode: "mock",
+      error: null,
+    }));
+    expect(result.current.saveStatus.lastSavedAt).toEqual(expect.any(Number));
+  });
 });

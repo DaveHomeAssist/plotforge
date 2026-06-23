@@ -1,0 +1,120 @@
+.topbar-actions .save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--ink-mute);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.topbar-actions .save-status--saved {
+  border-color: rgba(88, 232, 150, .45);
+  color: var(--green);
+}
+
+.topbar-actions .save-status--dirty {
+  border-color: rgba(255, 181, 71, .5);
+  color: var(--amber);
+}
+
+.topbar-actions .save-status--saving {
+  border-color: rgba(76, 201, 255, .5);
+  color: var(--blue);
+}
+
+.topbar-actions .save-status--error {
+  border-color: rgba(255, 107, 107, .58);
+  color: var(--red);
+}
+
+.save-status button {
+  min-height: 22px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.save-status__mode {
+  color: var(--ink-dim);
+}
+
+.inspector {
+  border-top: 1px solid var(--line);
+}
+
+.inspector__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inspector__state,
+.inspector__multi {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-2);
+}
+
+.inspector__state {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  color: var(--ink-mute);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.inspector__multi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-color: rgba(76, 201, 255, .4);
+}
+
+.inspector__multi strong {
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.inspector__multi span {
+  color: var(--ink-mute);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.inspector input[aria-invalid="true"],
+.inspector textarea[aria-invalid="true"],
+.inspector select[aria-invalid="true"] {
+  border-color: var(--red);
+  background: rgba(255, 107, 107, .07);
+}
+
+.inspector input:disabled,
+.inspector textarea:disabled,
+.inspector select:disabled,
+.inspector button:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+.inspector--empty p {
+  margin: 0;
+  color: var(--ink-mute);
+  font-style: normal;
+  line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  .topbar-actions .save-status__mode {
+    display: none;
+  }
+}

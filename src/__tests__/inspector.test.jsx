@@ -71,6 +71,32 @@ describe("Inspector", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("commits valid sibling fields while another field is invalid", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+
+    fireEvent.change(screen.getByLabelText("Position"), { target: { value: "downstage a bit" } });
+    fireEvent.change(screen.getByLabelText("Channel"), { target: { value: "22" } });
+    act(() => vi.advanceTimersByTime(450));
+
+    expect(screen.getByText("Use feet and inches, like 2'-6\".")).toBeInTheDocument();
+    expect(onChange).toHaveBeenCalledWith(fixtureId, { channel: 22 });
+  });
+
+  it("reverts an invalid field on blur", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+    const position = screen.getByLabelText("Position");
+
+    fireEvent.change(position, { target: { value: "downstage a bit" } });
+    fireEvent.blur(position);
+
+    expect(position).toHaveValue("0\"");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("flushes a valid edit on blur", () => {
     const { doc, fixtureId } = seedInspectorDoc();
     const onChange = vi.fn();
@@ -92,6 +118,75 @@ describe("Inspector", () => {
     act(() => vi.advanceTimersByTime(450));
 
     expect(onChange).toHaveBeenCalledWith(fixtureId, { status: "focused" });
+  });
+
+  it("clears DMX when universe is cleared", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+
+    fireEvent.change(screen.getByLabelText("Universe"), { target: { value: "" } });
+    fireEvent.blur(screen.getByLabelText("Universe"));
+
+    expect(screen.queryByText("Set universe before address.")).not.toBeInTheDocument();
+    expect(onChange).toHaveBeenCalledWith(fixtureId, { dmx: null });
+  });
+
+  it("blocks address commits when no universe exists", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const fixture = doc.fixtures[fixtureId];
+    const docWithoutDmx = {
+      ...doc,
+      fixtures: {
+        ...doc.fixtures,
+        [fixtureId]: { ...fixture, dmx: null },
+      },
+    };
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc: docWithoutDmx, fixtureId, onChange, onDelete: vi.fn() }));
+
+    fireEvent.change(screen.getByLabelText("Address"), { target: { value: "101" } });
+    act(() => vi.advanceTimersByTime(450));
+
+    expect(screen.getByText("Set universe before address.")).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("increments numeric fields with arrow keys", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+    const channel = screen.getByLabelText("Channel");
+
+    fireEvent.keyDown(channel, { key: "ArrowUp" });
+    expect(channel).toHaveValue("12");
+    act(() => vi.advanceTimersByTime(450));
+
+    expect(onChange).toHaveBeenCalledWith(fixtureId, { channel: 12 });
+  });
+
+  it("shows the multi selection state while editing the primary fixture", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    render(React.createElement(Inspector, {
+      doc,
+      fixtureId,
+      selectedFixtureIds: [fixtureId, "fx_a", "fx_b"],
+      onChange: vi.fn(),
+      onDelete: vi.fn(),
+    }));
+
+    expect(screen.getByText("3 FIXTURES SELECTED")).toBeInTheDocument();
+  });
+
+  it("flushes a valid draft on unmount", () => {
+    const { doc, fixtureId } = seedInspectorDoc();
+    const onChange = vi.fn();
+    const { unmount } = render(React.createElement(Inspector, { doc, fixtureId, onChange, onDelete: vi.fn() }));
+
+    fireEvent.change(screen.getByLabelText("Color"), { target: { value: "R26" } });
+    unmount();
+
+    expect(onChange).toHaveBeenCalledWith(fixtureId, { color: "R26" });
   });
 
   it("debounces layered note changes", () => {
@@ -122,6 +217,6 @@ describe("Inspector", () => {
     fireEvent.change(screen.getByLabelText("Dimmer"), { target: { value: " D17 " } });
     act(() => vi.advanceTimersByTime(450));
 
-    expect(onChange).toHaveBeenCalledWith(fixtureId, { circuit: " A7 ", dimmer: " D17 " });
+    expect(onChange).toHaveBeenCalledWith(fixtureId, { circuit: "A7", dimmer: "D17" });
   });
 });

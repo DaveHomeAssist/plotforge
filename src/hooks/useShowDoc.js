@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import useHistory from "./useHistory.js";
 import useAutosaveRecovery from "./useAutosaveRecovery.js";
 import {
@@ -31,6 +31,7 @@ import { applyPlotStarterPlan } from "../domain/plotStarter.js";
 import { saveProjectFile, openProjectFile } from "../serialization.js";
 import { patchConflicts } from "../domain/patch.js";
 import { alignFixtures, distributeFixtures } from "../domain/fixtureLayout.js";
+import { recordDebugEvent } from "../debugEvents.js";
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(value, max));
@@ -53,19 +54,50 @@ export default function useShowDoc(seedShow) {
   const [selectedFixtureIds, setSelectedFixtureIds] = useState([]);
   const [selectedPositionId, setSelectedPositionId] = useState(null);
   const [selectedCommentPinId, setSelectedCommentPinId] = useState(null);
+  const [saveStatus, setSaveStatus] = useState({
+    state: "unsaved",
+    lastSavedAt: null,
+    mode: null,
+    error: null,
+  });
 
   const history = useHistory(setDoc);
   const recovery = useAutosaveRecovery(doc);
 
+  const markUnsaved = useCallback(() => {
+    setSaveStatus(current => (
+      current.state === "unsaved"
+        ? current
+        : { ...current, state: "unsaved", error: null }
+    ));
+    recordDebugEvent("doc:dirty");
+  }, []);
+
   const commit = useCallback((next) => {
     history.push(doc, next);
     setDoc(next);
-  }, [doc, history]);
+    markUnsaved();
+  }, [doc, history, markUnsaved]);
+
+  const historyActions = useMemo(() => ({
+    ...history,
+    undo: () => {
+      const changed = history.undo();
+      if (changed) markUnsaved();
+      return changed;
+    },
+    redo: () => {
+      const changed = history.redo();
+      if (changed) markUnsaved();
+      return changed;
+    },
+  }), [history, markUnsaved]);
 
   const onMoveFixture = useCallback((fixtureId, positionId, xMm) => {
     // Drag ticks bypass history so fixture movement stays responsive.
     setDoc(prev => renumberPosition(updateFixture(prev, fixtureId, { xMm }), positionId));
-  }, []);
+    markUnsaved();
+  }, [markUnsaved]);
 
   const onClearFixtureSelection = useCallback(() => {
     setSelectedFixtureId(null);
@@ -249,14 +281,42 @@ export default function useShowDoc(seedShow) {
   }, [doc, commit, selectedFixtureId, selectedFixtureIds]);
 
   const onSave = useCallback(async () => {
-    const r = await saveProjectFile(doc, `${doc.name.replace(/\s+/g, "_")}.plot`);
-    if (!r.ok && !r.aborted) alert("Save failed.");
+    setSaveStatus(current => ({ ...current, state: "saving", error: null }));
+    try {
+      const r = await saveProjectFile(doc, `${doc.name.replace(/\s+/g, "_")}.plot`);
+      if (r.ok) {
+        const nextStatus = {
+          state: "saved",
+          lastSavedAt: Date.now(),
+          mode: r.mode,
+          error: null,
+        };
+        setSaveStatus(nextStatus);
+        recordDebugEvent("file:saved", { mode: r.mode });
+        return r;
+      }
+      if (r.aborted) {
+        setSaveStatus(current => ({ ...current, state: "unsaved", error: null }));
+        return r;
+      }
+      setSaveStatus(current => ({ ...current, state: "error", error: r.error?.message ?? "Save failed." }));
+      return r;
+    } catch (error) {
+      setSaveStatus(current => ({ ...current, state: "error", error: error?.message ?? String(error) }));
+      return { ok: false, error };
+    }
   }, [doc]);
 
   const onOpen = useCallback(async () => {
     try {
       const r = await openProjectFile();
-      if (r.ok) { commit(r.doc); setSelectedPositionId(null); setSelectedCommentPinId(null); onClearFixtureSelection(); }
+      if (r.ok) {
+        commit(r.doc);
+        setSaveStatus({ state: "saved", lastSavedAt: Date.now(), mode: "fs", error: null });
+        setSelectedPositionId(null);
+        setSelectedCommentPinId(null);
+        onClearFixtureSelection();
+      }
     } catch (e) {
       alert("Could not read that file: " + (e?.message || e));
     }
@@ -289,8 +349,9 @@ export default function useShowDoc(seedShow) {
     selectedFixtureIds,
     selectedPositionId,
     selectedCommentPinId,
-    history,
+    history: historyActions,
     recovery,
+    saveStatus,
     onMoveFixture,
     onSelectFixture,
     onSelectPosition,

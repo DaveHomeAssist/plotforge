@@ -11,9 +11,10 @@ Notion is the canonical phase source for this project. README status was reconci
 - 10 fixtures pre-placed (5 S4s, 3 Fresnels, 2 moving spots)
 - SVG canvas: pan (drag empty area), zoom (wheel), drag fixtures along their position
 - 1" snap on drag, automatic stage-right-to-left unit renumbering
-- Inspector: channel, DMX universe + address, color (gel string), notes, delete
+- Inspector: per field validation, keyboard recovery, channel, DMX, circuit, dimmer, color, status, layered notes, and delete
 - IndexedDB autosave with crash-recovery banner
 - `.plot` file save/load via File System Access API + download fallback
+- Topbar save status for unsaved, saving, saved, and failed save states
 - Document-snapshot undo/redo (80-entry history)
 - DMX conflict detection across universes (footprint-aware) + duplicate channel detection
 - Status bar reflects fixture count, position count, DMX OK / N conflicts
@@ -25,7 +26,7 @@ Notion is the canonical phase source for this project. README status was reconci
 - Project metadata editor for show title, drawing title, venue, designer, company, show date, revision, and scale
 - Named revision log with active revision selection for title block issue tracking
 - Conflict panel that lists channel and DMX issues with reveal selection
-- Debounced fixture inspector edits with imperial position parsing
+- Debounced fixture inspector edits with imperial position parsing, per field commit isolation, invalid field recovery, and multi-select primary editing
 - Focus beam tool for placing fixture focus points on the plot and print sheet
 - Per-fixture status with inspector control, plot markers, patch table display, CSV export, and `.plot` migration
 - Layered fixture notes for color, gobo, focus, and crew handoff, with legacy note migration
@@ -59,7 +60,15 @@ Requires Node 22+.
 
 ## Verification status
 
-Verified locally on 2026-06-11 with Node v22.22.1 and npm 10.9.4:
+Latest local verification on 2026-06-22 with Node v22.22.1:
+
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH ./node_modules/.bin/eslint src/components/Inspector.jsx src/components/SaveStatus.jsx src/hooks/useShowDoc.js src/hooks/useAutosaveRecovery.js src/PlotForge.jsx src/debugEvents.js src/__tests__/inspector.test.jsx src/__tests__/useShowDoc.test.jsx`: 0 errors, 0 warnings.
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH ./node_modules/.bin/vitest run src/__tests__/inspector.test.jsx src/__tests__/useShowDoc.test.jsx --pool=forks --maxWorkers=1 --no-file-parallelism --reporter=verbose`: 2 files passed, 30 tests passed.
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH npm run lint`: 0 errors, 0 warnings.
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH npm run build`: Vite production build completed.
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH ./node_modules/.bin/vitest run --pool=forks --maxWorkers=1 --no-file-parallelism`: 25 files passed, 115 tests passed.
+
+Earlier local verification on 2026-06-11 with Node v22.22.1 and npm 10.9.4:
 
 - Cleared the locked partial install directory `_trash-nm`.
 - `npm install` completed with 346 packages audited and 0 vulnerabilities.
@@ -99,14 +108,17 @@ src/
     PlotCanvas.jsx   SVG drafting surface
     FixtureSymbol.jsx  fixture glyphs
     Inspector.jsx    fixture metadata editor with debounced commits
+    SaveStatus.jsx   topbar save state chip
     PlotStarterPanel.jsx  AI plot starter sidepanel
     DraftRecoveryBanner.jsx
     ErrorBoundary.jsx
   autosave.js        IndexedDB store (ported from PixelForge)
+  debugEvents.js     dev-only local debug ring buffer
   showRegistry.js    multi-show IndexedDB snapshot registry
   serialization.js   .plot JSON schema + File System Access API + migrations
   PlotForge.jsx      app root
   PlotForge.css      tokens + layout
+  InspectorUx.css    inspector and save status UX refinements
   main.jsx           entry
 scripts/
   smoke-domain.mjs   no-deps smoke harness for the domain layer
@@ -153,6 +165,7 @@ Current canonical status, reconciled from Notion on 2026-06-22:
 - P3-3 multi-show registry plus share plus PWA: shipped in the repo on 2026-06-22. The sidepanel saves named show snapshots into IndexedDB, loads or deletes saved shows, shares the current `.plot` through Web Share with download fallback, and adds a web app manifest plus service worker shell cache.
 - P3-4 AI plot starter: shipped in the repo on 2026-06-22. The sidepanel accepts a production brief, generates a local starter plan with positions, fixture groups, colors, channels, DMX starts, and focus notes, applies that plan into the document without clearing existing work, and copies a structured prompt for future provider backed AI refinement.
 - P3 tier deploy: shipped on 2026-06-22. Production alias `https://plotforge-beta.vercel.app` serves the P3 AI plot starter build.
+- Inspector UX and validation artifact: shipped in the repo on 2026-06-22. The inspector now keeps valid sibling field commits moving when one field is invalid, reverts invalid fields on blur or Escape, flushes valid drafts before unmount, supports arrow key numeric stepping, shows multi-select primary editing, exposes a topbar save status chip, and writes local debug events only in development.
 
 Documented remaining plan:
 

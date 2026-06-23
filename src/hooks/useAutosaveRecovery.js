@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { writeAutosave, readAutosave, deleteAutosave } from "../autosave.js";
+import { recordDebugEvent } from "../debugEvents.js";
 
 const AUTOSAVE_KEY = "current";
 const DEBOUNCE_MS = 800;
@@ -28,7 +29,9 @@ export default function useAutosaveRecovery(doc) {
     if (ignoreFirst.current) { ignoreFirst.current = false; return; }
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
-      writeAutosave(AUTOSAVE_KEY, doc).catch(() => {});
+      writeAutosave(AUTOSAVE_KEY, doc)
+        .then(() => recordDebugEvent("autosave:write", { key: AUTOSAVE_KEY }))
+        .catch(() => {});
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer.current);
   }, [doc]);

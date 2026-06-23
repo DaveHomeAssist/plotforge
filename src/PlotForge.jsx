@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import PlotCanvas from "./components/PlotCanvas.jsx";
 import ProjectMetadata from "./components/ProjectMetadata.jsx";
 import RevisionsPanel from "./components/RevisionsPanel.jsx";
 import Inspector from "./components/Inspector.jsx";
+import SaveStatus from "./components/SaveStatus.jsx";
 import PositionEditor from "./components/PositionEditor.jsx";
 import FixtureLibrary from "./components/FixtureLibrary.jsx";
 import PatchTable from "./components/PatchTable.jsx";
@@ -20,6 +22,7 @@ import useShowDoc from "./hooks/useShowDoc.js";
 import { newShow, newPosition, newFixture, addPosition, addFixture } from "./domain/show.js";
 import { feetToMm } from "./domain/units.js";
 import "./PlotForge.css";
+import "./InspectorUx.css";
 
 export function seedShow() {
   let doc = newShow({ name: "Studio A · Spike" });
@@ -43,6 +46,18 @@ export function seedShow() {
 
 export default function PlotForge() {
   const show = useShowDoc(seedShow);
+  const onSave = show.onSave;
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "s") return;
+      event.preventDefault();
+      onSave();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onSave]);
 
   return (
     <div className="app">
@@ -55,6 +70,7 @@ export default function PlotForge() {
           <button type="button" onClick={() => show.history.undo()} disabled={!show.history.undoN}>Undo</button>
           <button type="button" onClick={() => show.history.redo()} disabled={!show.history.redoN}>Redo</button>
           <span className="sep" />
+          <SaveStatus status={show.saveStatus} onRetry={show.onSave} />
           <button type="button" onClick={show.onOpen}>Open…</button>
           <button type="button" onClick={show.onSave} className="btn-primary">Save .plot</button>
         </nav>
@@ -136,6 +152,7 @@ export default function PlotForge() {
           <Inspector
             doc={show.doc}
             fixtureId={show.selectedFixtureId}
+            selectedFixtureIds={show.selectedFixtureIds}
             onChange={show.onFixtureChange}
             onDelete={show.onFixtureDelete}
           />
