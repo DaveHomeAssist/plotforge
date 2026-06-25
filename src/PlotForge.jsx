@@ -95,6 +95,10 @@ export default function PlotForge() {
     setShowSplash(false);
   }
 
+  function scrollToPanel(selector) {
+    document.querySelector(selector)?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
   if (showSplash) {
     return (
       <div className="app app--splash" data-theme={theme}>
@@ -158,6 +162,22 @@ export default function PlotForge() {
           onAddCommentPin={show.onAddCommentPin}
         />
         <aside className="sidepanel">
+          <section className="console-overview" aria-label="PlotForge console summary">
+            <div>
+              <span className="mono small">CONSOLE</span>
+              <h2>{show.doc.name || "Untitled Plot"}</h2>
+              <p>{show.doc.metadata?.venue || "Browser workspace"} | {show.totalFixtures} fixtures | {show.doc.positionOrder.length} positions</p>
+            </div>
+            <div className="console-overview__stats">
+              <span className={show.saveStatus.state === "error" ? "console-pill console-pill--bad" : "console-pill"}>
+                {show.saveStatus.state === "saved" ? (show.saveStatus.mode || ".plot") : show.saveStatus.state}
+              </span>
+              <span className={show.conflicts.length ? "console-pill console-pill--warn" : "console-pill console-pill--good"}>
+                {show.conflicts.length ? `${show.conflicts.length} conflicts` : "DMX clear"}
+              </span>
+              <span className="console-pill">{show.selectedFixtureIds.length || 0} selected</span>
+            </div>
+          </section>
           <ProjectMetadata
             doc={show.doc}
             onShowNameChange={show.onShowNameChange}
@@ -232,6 +252,13 @@ export default function PlotForge() {
         <span className="sep" />
         <span className="muted small">drag fixtures along their pipe · scroll to zoom · drag empty area to pan</span>
       </footer>
+
+      <nav className="mobile-dock" aria-label="Mobile workspace sections">
+        <button type="button" onClick={() => scrollToPanel(".plot-canvas")}>Plot</button>
+        <button type="button" onClick={() => scrollToPanel(".patch-panel")}>Patch</button>
+        <button type="button" onClick={() => scrollToPanel(".inspector")}>Inspect</button>
+        <button type="button" onClick={() => scrollToPanel(".show-registry-panel")}>More</button>
+      </nav>
     </div>
   );
 }

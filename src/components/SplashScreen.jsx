@@ -20,6 +20,44 @@ function docSummary(doc) {
   };
 }
 
+const TEMPLATE_CARDS = [
+  {
+    id: "template-rep",
+    name: "Rep plot starter",
+    venue: "3 electrics, FOH, patch-ready seed",
+    fixtureCount: 18,
+    positionCount: 4,
+    source: "Template",
+  },
+  {
+    id: "template-corporate",
+    name: "Corporate ballroom",
+    venue: "Truss, scenic wash, speaker specials",
+    fixtureCount: 24,
+    positionCount: 5,
+    source: "Template",
+  },
+  {
+    id: "template-focus",
+    name: "Focus session",
+    venue: "Channel-first focus workflow",
+    fixtureCount: 32,
+    positionCount: 6,
+    source: "Template",
+  },
+];
+
+const SHARED_CARDS = [
+  {
+    id: "shared-library",
+    name: "Fixture exchange",
+    venue: "Profiles, gel palettes, and template plots",
+    fixtureCount: 0,
+    positionCount: 0,
+    source: "Planned",
+  },
+];
+
 function thumbnailRows(doc) {
   const positions = (doc?.positionOrder || []).slice(0, 3).map((id, index) => ({
     ...doc.positions[id],
@@ -88,6 +126,12 @@ export default function SplashScreen({
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [section, setSection] = useState("recent");
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [emailDraft, setEmailDraft] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -98,7 +142,7 @@ export default function SplashScreen({
   }, []);
 
   const currentSummary = useMemo(() => docSummary(doc), [doc]);
-  const cards = useMemo(() => [
+  const recentCards = useMemo(() => [
     {
       id: "current",
       name: doc.name || "Untitled Plot",
@@ -120,6 +164,39 @@ export default function SplashScreen({
       source: "Saved",
     })),
   ], [currentSummary, doc, shows]);
+  const archivedCards = useMemo(() => shows
+    .filter(show => show.archived)
+    .map(show => ({
+      id: show.id,
+      name: show.name,
+      venue: show.doc?.metadata?.venue || show.doc?.name || "Archived show",
+      fixtureCount: show.fixtureCount,
+      positionCount: show.positionCount,
+      savedAt: show.savedAt,
+      doc: show.doc,
+      source: "Archive",
+    })), [shows]);
+
+  const cards = useMemo(() => {
+    if (section === "templates") return TEMPLATE_CARDS.map(card => ({ ...card, doc }));
+    if (section === "shared") return SHARED_CARDS.map(card => ({ ...card, doc }));
+    if (section === "archive") return archivedCards;
+    return recentCards;
+  }, [archivedCards, doc, recentCards, section]);
+
+  const navItems = [
+    { id: "recent", label: "Recent", count: recentCards.length },
+    { id: "templates", label: "Templates", count: TEMPLATE_CARDS.length },
+    { id: "shared", label: "Shared", count: SHARED_CARDS.length },
+    { id: "archive", label: "Archive", count: archivedCards.length },
+  ];
+
+  const sectionTitle = {
+    recent: "RECENT PLOTS",
+    templates: "TEMPLATES",
+    shared: "SHARED",
+    archive: "ARCHIVE",
+  }[section];
 
   async function openFile() {
     setStatus("Opening file...");
@@ -161,6 +238,27 @@ export default function SplashScreen({
     }
   }
 
+  function openCard(card) {
+    if (card.id === "current" || card.source === "Template" || card.source === "Planned") {
+      onStart();
+      return;
+    }
+    loadSavedShow(card.id);
+  }
+
+  function signIn() {
+    setSignedIn(true);
+    setSignInOpen(false);
+    setAccountOpen(false);
+    setEmailDraft("");
+  }
+
+  function closeMenus() {
+    setAccountOpen(false);
+    setSettingsOpen(false);
+    setSignInOpen(false);
+  }
+
   return (
     <section
       className={`splash ${dragOver ? "splash--drag" : ""}`}
@@ -190,18 +288,67 @@ export default function SplashScreen({
             {theme === "light" ? "Light" : "Dark"}
           </button>
           <button type="button" className="btn-compact" onClick={openFile}>Open .plot</button>
+          <button
+            type="button"
+            className="btn-compact"
+            onClick={() => {
+              setSettingsOpen(current => !current);
+              setAccountOpen(false);
+              setSignInOpen(false);
+            }}
+            aria-expanded={settingsOpen}
+          >
+            Settings
+          </button>
+          <button
+            type="button"
+            className="splash-account-button"
+            onClick={() => {
+              if (!signedIn) {
+                setSignInOpen(true);
+                setAccountOpen(false);
+                setSettingsOpen(false);
+                return;
+              }
+              setAccountOpen(current => !current);
+              setSettingsOpen(false);
+              setSignInOpen(false);
+            }}
+            aria-expanded={accountOpen || signInOpen}
+          >
+            {signedIn ? "DR" : "Sign in"}
+          </button>
         </div>
       </header>
 
       <div className="splash-shell">
         <aside className="splash-nav" aria-label="PlotForge launch">
           <span className="mono small">LIBRARY</span>
-          <button type="button" className="splash-nav__item splash-nav__item--active">Recent</button>
-          <button type="button" className="splash-nav__item" onClick={onStart}>Editor</button>
-          <button type="button" className="splash-nav__item" onClick={openFile}>Import</button>
+          {navItems.map(item => (
+            <button
+              type="button"
+              key={item.id}
+              className={`splash-nav__item${section === item.id ? " splash-nav__item--active" : ""}`}
+              onClick={() => {
+                setSection(item.id);
+                closeMenus();
+              }}
+            >
+              <span>{item.label}</span>
+              <span className="mono">{item.count}</span>
+            </button>
+          ))}
+          <button type="button" className="splash-nav__item" onClick={onStart}>
+            <span>Editor</span>
+            <span className="mono">GO</span>
+          </button>
+          <button type="button" className="splash-nav__item" onClick={openFile}>
+            <span>Import</span>
+            <span className="mono">.plot</span>
+          </button>
           <div className="splash-nav__foot">
             <span className="splash-status-dot" aria-hidden="true" />
-            <span className="mono small">Local first</span>
+            <span className="mono small">Local workspace</span>
           </div>
         </aside>
 
@@ -229,7 +376,7 @@ export default function SplashScreen({
           </div>
 
           <div className="splash-section-heading">
-            <span className="mono small">RECENT PLOTS</span>
+            <span className="mono small">{sectionTitle}</span>
             <span className="mono small">{cards.length}</span>
           </div>
 
@@ -253,7 +400,7 @@ export default function SplashScreen({
                   <button
                     type="button"
                     className="btn-compact"
-                    onClick={() => card.id === "current" ? onStart() : loadSavedShow(card.id)}
+                    onClick={() => openCard(card)}
                   >
                     Open
                   </button>
@@ -262,7 +409,10 @@ export default function SplashScreen({
             ))}
           </div>
 
-          {shows.length === 0 && (
+          {cards.length === 0 && (
+            <p className="splash-empty">No items in this section yet.</p>
+          )}
+          {section === "recent" && shows.length === 0 && (
             <p className="splash-empty">No saved registry shows yet. Use the editor registry panel to save show snapshots.</p>
           )}
           {status && <p className="library-status">{status}</p>}
@@ -273,6 +423,77 @@ export default function SplashScreen({
       {dragOver && (
         <div className="splash-drop" aria-hidden="true">
           <span>Drop .plot to import</span>
+        </div>
+      )}
+
+      {settingsOpen && (
+        <div className="splash-popover splash-popover--settings" role="dialog" aria-label="Launch settings">
+          <div className="splash-popover__head">
+            <strong>Settings</strong>
+            <button type="button" className="btn-compact" onClick={closeMenus}>Close</button>
+          </div>
+          <dl className="splash-setting-list">
+            <div>
+              <dt>Appearance</dt>
+              <dd>{theme === "light" ? "Light" : "Dark"}</dd>
+            </div>
+            <div>
+              <dt>Storage</dt>
+              <dd>Browser registry</dd>
+            </div>
+            <div>
+              <dt>File import</dt>
+              <dd>.plot drag and drop</dd>
+            </div>
+          </dl>
+        </div>
+      )}
+
+      {accountOpen && (
+        <div className="splash-popover splash-popover--account" role="dialog" aria-label="Account menu">
+          <div className="splash-account-card">
+            <span className="splash-account-avatar">DR</span>
+            <div>
+              <strong>Dave Robertson</strong>
+              <span>Lighting Designer</span>
+            </div>
+          </div>
+          <button type="button" className="splash-menu-row" onClick={() => setSection("shared")}>Shared libraries</button>
+          <button type="button" className="splash-menu-row" onClick={() => setSection("templates")}>Template plots</button>
+          <button type="button" className="splash-menu-row" onClick={() => setSignedIn(false)}>Sign out</button>
+        </div>
+      )}
+
+      {signInOpen && (
+        <div className="splash-modal" role="dialog" aria-modal="true" aria-labelledby="splash-signin-title">
+          <div className="splash-modal__panel">
+            <div className="splash-popover__head">
+              <div>
+                <p className="mono small splash-kicker">ACCOUNT</p>
+                <h2 id="splash-signin-title">Sign in to PlotForge</h2>
+              </div>
+              <button type="button" className="btn-compact" onClick={closeMenus}>Close</button>
+            </div>
+            <label className="splash-signin-field">
+              <span>Email</span>
+              <input
+                type="email"
+                value={emailDraft}
+                onChange={event => setEmailDraft(event.target.value)}
+                placeholder="dave@example.com"
+              />
+            </label>
+            <div className="splash-modal__actions">
+              <button type="button" className="splash-action splash-action--primary" onClick={signIn}>
+                <span>Continue</span>
+                <small>Prototype account state</small>
+              </button>
+              <button type="button" className="splash-action" onClick={closeMenus}>
+                <span>Stay local</span>
+                <small>Keep working in this browser</small>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>
