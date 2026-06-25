@@ -1,7 +1,7 @@
 // JSON serialization for .plot project files.
 // Forward-compatible: writes DOC_VERSION, reads with a migration table.
 
-import { DOC_VERSION, defaultProjectMetadata } from "./domain/show.js";
+import { DOC_VERSION, defaultProjectMetadata, normalizeLabelSettings } from "./domain/show.js";
 import { normalizeFixtureCircuit } from "./domain/circuiting.js";
 import { normalizeFixtureNotes } from "./domain/fixtureNotes.js";
 import { normalizeFixtureStatus } from "./domain/fixtureStatus.js";
@@ -74,6 +74,11 @@ const migrators = {
     ...doc,
     version: 8,
     oscBridge: normalizeOscBridgeSettings(doc.oscBridge || {}),
+  }),
+  8: (doc) => ({
+    ...doc,
+    version: 9,
+    labelSettings: normalizeLabelSettings(doc.labelSettings || {}),
   }),
 };
 

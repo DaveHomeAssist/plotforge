@@ -13,6 +13,7 @@ import {
   addCommentPin,
   activateRevision,
   updateOscBridge,
+  updateLabelSettings,
   updateShowName,
   updateProjectMetadata,
   updateFixture,
@@ -201,6 +202,10 @@ export default function useShowDoc(seedShow) {
     commit(updateOscBridge(doc, patch));
   }, [doc, commit]);
 
+  const onLabelSettingsChange = useCallback((patch) => {
+    commit(updateLabelSettings(doc, patch));
+  }, [doc, commit]);
+
   const onAddRevision = useCallback(({ name, note }) => {
     const revision = newRevision({ name, note });
     commit(addRevision(doc, revision));
@@ -365,6 +370,7 @@ export default function useShowDoc(seedShow) {
     onShowNameChange,
     onProjectMetadataChange,
     onOscBridgeChange,
+    onLabelSettingsChange,
     onAddRevision,
     onActivateRevision,
     onPositionChange,

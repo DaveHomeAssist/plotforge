@@ -23,24 +23,25 @@ describe("PlotStarterPanel", () => {
       onApplyStarter,
     }));
 
-    expect(screen.getByRole("heading", { name: "AI plot starter" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plot Wizard" })).toBeInTheDocument();
     expect(screen.getByText("Musical theatre")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Brief"), {
-      target: { value: "concert in a 48x28 club with moving lights" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Generate" }));
+    fireEvent.change(screen.getByLabelText("Show type"), { target: { value: "concert" } });
+    fireEvent.change(screen.getByLabelText("Width ft"), { target: { value: "48" } });
+    fireEvent.change(screen.getByLabelText("Depth ft"), { target: { value: "28" } });
+    fireEvent.change(screen.getByLabelText("Package"), { target: { value: "expanded" } });
+    fireEvent.click(screen.getByRole("button", { name: "Preview plan" }));
 
-    expect(screen.getByText("Concert")).toBeInTheDocument();
+    expect(screen.getAllByText("Concert").length).toBeGreaterThan(0);
     expect(screen.getByText("48 ft by 28 ft")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Apply starter" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply plot" }));
 
     expect(onApplyStarter).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/Applied \d+ fixtures on \d+ positions\./)).toBeInTheDocument();
   });
 
-  it("copies the generated AI prompt", async () => {
+  it("copies the generated wizard prompt", async () => {
     render(React.createElement(PlotStarterPanel, {
       doc: seedShow(),
       onApplyStarter: vi.fn(),
@@ -49,7 +50,7 @@ describe("PlotStarterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy prompt" }));
 
     await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1));
-    expect(navigator.clipboard.writeText.mock.calls[0][0]).toContain("Use this PlotForge starter context");
+    expect(navigator.clipboard.writeText.mock.calls[0][0]).toContain("Use this PlotForge wizard context");
     expect(screen.getByText("Prompt copied.")).toBeInTheDocument();
   });
 });

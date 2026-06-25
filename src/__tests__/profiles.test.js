@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   CURATED_GDTF_PROFILE_IDS,
   FIXTURE_PROFILES,
+  LEGACY_PROFILE_IDS,
   getFixtureProfileLibrary,
+  getProfileDetail,
+  getProfileSearchText,
   normalizeOpenFixtureLibraryProfile,
 } from "../domain/profiles.js";
 
@@ -50,6 +53,27 @@ describe("fixture profiles", () => {
       dmxFootprint: 4,
       source: expect.objectContaining({ type: "open-fixture-library" }),
     }));
+  });
+
+  it("includes expanded legacy profiles with readable detail notes", () => {
+    expect(LEGACY_PROFILE_IDS).toContain("led_par_rgbw");
+    expect(LEGACY_PROFILE_IDS).toContain("blinder_2lite");
+
+    const detail = getProfileDetail(FIXTURE_PROFILES.led_bar_rgbw);
+
+    expect(detail.summary).toContain("LED bar");
+    expect(detail.bestFor).toContain("cyc wash");
+    expect(detail.capabilities).toContain("simple and pixel mode placeholders");
+    expect(detail.notes).toContain("Local drafting seed");
+  });
+
+  it("searches profile wiki text", () => {
+    const library = getFixtureProfileLibrary();
+    const matches = library.filter(profile => getProfileSearchText(profile).includes("audience blinder"));
+
+    expect(matches).toEqual([
+      expect.objectContaining({ id: "blinder_2lite" }),
+    ]);
   });
 
   it("rejects non-object OFL imports", () => {

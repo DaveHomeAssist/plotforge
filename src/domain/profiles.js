@@ -17,6 +17,20 @@ function mode(name, dmxFootprint) {
   return { name, dmxFootprint };
 }
 
+function profileInfo({
+  summary,
+  bestFor = [],
+  capabilities = [],
+  notes = [],
+} = {}) {
+  return {
+    summary: summary || "",
+    bestFor,
+    capabilities,
+    notes,
+  };
+}
+
 function gdtfSource({ manufacturerKey, fixtureId, revisionId, revision, revisionDate, gdtfVersion }) {
   const params = new URLSearchParams({ name: manufacturerKey, fixture: String(fixtureId) });
   return {
@@ -42,6 +56,7 @@ function gdtfProfile({
   modes,
   defaultMode,
   source,
+  info,
 }) {
   const selectedMode = modes.find(item => item.name === defaultMode) ?? modes[0];
   return {
@@ -55,6 +70,7 @@ function gdtfProfile({
     color: SYMBOL_COLORS[symbol],
     defaultMode: selectedMode.name,
     modes,
+    info: profileInfo(info),
     libraryTier: "curated-gdtf",
     source: gdtfSource({ manufacturerKey, ...source }),
   };
@@ -66,8 +82,50 @@ function legacyProfile(profile) {
     category: profile.category ?? "legacy",
     defaultMode: profile.defaultMode ?? "Default",
     modes: profile.modes ?? [mode("Default", profile.dmxFootprint)],
+    info: profileInfo(profile.info),
     libraryTier: "legacy",
     source: { type: SOURCE_TYPES.legacy },
+  };
+}
+
+function defaultUseCases(category) {
+  if (category.includes("moving")) return ["moving looks", "position specials", "cue texture"];
+  if (category.includes("wash") || category.includes("par")) return ["color wash", "backlight", "stage texture"];
+  if (category.includes("bar") || category.includes("strip")) return ["cyc color", "scenic edge", "pixel line"];
+  if (category.includes("ellipsoidal")) return ["front wash", "specials", "shutters"];
+  if (category.includes("fresnel")) return ["soft wash", "fill", "area light"];
+  return ["plot placeholder", "library seed", "drafting reference"];
+}
+
+function defaultCapabilities(profile) {
+  return [
+    `${profile.defaultMode || "Default"} mode`,
+    `${profile.dmxFootprint || 1} channel footprint`,
+    `${profile.modes?.length || 1} mode${profile.modes?.length === 1 ? "" : "s"} listed`,
+  ];
+}
+
+function sourceNote(profile) {
+  if (profile.source?.type === SOURCE_TYPES.gdtf) {
+    return `GDTF Share revision ${profile.source.revision || profile.source.revisionId}`;
+  }
+  if (profile.source?.type === SOURCE_TYPES.ofl) {
+    return `Imported from Open Fixture Library${profile.source.fileName ? ` file ${profile.source.fileName}` : ""}`;
+  }
+  return "Local drafting seed";
+}
+
+export function getProfileDetail(profile) {
+  if (!profile) return null;
+  const info = profile.info || {};
+  return {
+    summary: info.summary || `${profile.manufacturer} ${profile.model} ${profile.category} profile.`,
+    bestFor: info.bestFor?.length ? info.bestFor : defaultUseCases(profile.category || ""),
+    capabilities: info.capabilities?.length ? info.capabilities : defaultCapabilities(profile),
+    notes: [
+      ...(info.notes?.length ? info.notes : ["Confirm real world mode, lensing, power, and accessories before final paperwork."]),
+      sourceNote(profile),
+    ],
   };
 }
 
@@ -451,6 +509,56 @@ const LEGACY_PROFILES = {
     radiusMm: 200,
     dmxFootprint: 1,
     color: "#ffb547",
+    info: {
+      summary: "Common ellipsoidal placeholder for front wash and specials.",
+      bestFor: ["front wash", "key light", "hard edged specials"],
+      capabilities: ["26 degree lens placeholder", "1 channel dimmer footprint", "shutterable beam"],
+    },
+  }),
+  s4_19: legacyProfile({
+    id: "s4_19",
+    manufacturer: "ETC",
+    model: "Source Four 19°",
+    symbol: "ellipsoidal",
+    category: "ellipsoidal",
+    radiusMm: 200,
+    dmxFootprint: 1,
+    color: "#ffb547",
+    info: {
+      summary: "Tighter ellipsoidal placeholder for FOH throws and compact specials.",
+      bestFor: ["long throw key light", "tight specials", "balcony positions"],
+      capabilities: ["19 degree lens placeholder", "1 channel dimmer footprint", "shutterable beam"],
+    },
+  }),
+  s4_36: legacyProfile({
+    id: "s4_36",
+    manufacturer: "ETC",
+    model: "Source Four 36°",
+    symbol: "ellipsoidal",
+    category: "ellipsoidal",
+    radiusMm: 200,
+    dmxFootprint: 1,
+    color: "#ffb547",
+    info: {
+      summary: "Wider ellipsoidal placeholder for shorter throws and broader systems.",
+      bestFor: ["short throw wash", "pipe ends", "wide specials"],
+      capabilities: ["36 degree lens placeholder", "1 channel dimmer footprint", "shutterable beam"],
+    },
+  }),
+  s4_50: legacyProfile({
+    id: "s4_50",
+    manufacturer: "ETC",
+    model: "Source Four 50°",
+    symbol: "ellipsoidal",
+    category: "ellipsoidal",
+    radiusMm: 200,
+    dmxFootprint: 1,
+    color: "#ffb547",
+    info: {
+      summary: "Very wide ellipsoidal placeholder for low trim and close positions.",
+      bestFor: ["box booms", "short throw specials", "small rooms"],
+      capabilities: ["50 degree lens placeholder", "1 channel dimmer footprint", "shutterable beam"],
+    },
   }),
   fresnel: legacyProfile({
     id: "fresnel",
@@ -461,6 +569,11 @@ const LEGACY_PROFILES = {
     radiusMm: 220,
     dmxFootprint: 1,
     color: "#ffb547",
+    info: {
+      summary: "Soft edged wash placeholder for area light and fill.",
+      bestFor: ["soft wash", "fill", "rehearsal room plots"],
+      capabilities: ["spot to flood note only", "1 channel dimmer footprint", "soft edge symbol"],
+    },
   }),
   par64: legacyProfile({
     id: "par64",
@@ -471,6 +584,79 @@ const LEGACY_PROFILES = {
     radiusMm: 240,
     dmxFootprint: 1,
     color: "#ffb547",
+    info: {
+      summary: "PAR placeholder for backlight, color washes, and simple concert plots.",
+      bestFor: ["backlight", "color wash", "sidelight"],
+      capabilities: ["lamp and lens not specified", "1 channel dimmer footprint", "round PAR symbol"],
+    },
+  }),
+  led_par_rgbw: legacyProfile({
+    id: "led_par_rgbw",
+    manufacturer: "Generic",
+    model: "LED PAR RGBW",
+    symbol: "par",
+    category: "led-wash",
+    radiusMm: 230,
+    dmxFootprint: 8,
+    color: "#58e896",
+    defaultMode: "RGBW 8ch",
+    modes: [mode("RGBW 4ch", 4), mode("RGBW 8ch", 8)],
+    info: {
+      summary: "Generic LED PAR seed for fast color wash drafting.",
+      bestFor: ["small stage color", "uplight", "backlight"],
+      capabilities: ["RGBW control placeholder", "4 or 8 channel modes", "verify dimmer curve on real fixture"],
+    },
+  }),
+  led_bar_rgbw: legacyProfile({
+    id: "led_bar_rgbw",
+    manufacturer: "Generic",
+    model: "LED Bar RGBW",
+    symbol: "par",
+    category: "led-bar",
+    radiusMm: 250,
+    dmxFootprint: 16,
+    color: "#58e896",
+    defaultMode: "Pixel 16ch",
+    modes: [mode("Simple 4ch", 4), mode("Pixel 16ch", 16), mode("Extended 32ch", 32)],
+    info: {
+      summary: "Generic LED bar seed for cyc, scenic, and pixel line drafting.",
+      bestFor: ["cyc wash", "scenic edge", "pixel looks"],
+      capabilities: ["simple and pixel mode placeholders", "RGBW control", "confirm pixel count before addressing"],
+    },
+  }),
+  cyc_strip: legacyProfile({
+    id: "cyc_strip",
+    manufacturer: "Generic",
+    model: "Cyc Strip",
+    symbol: "par",
+    category: "striplight",
+    radiusMm: 260,
+    dmxFootprint: 4,
+    color: "#58e896",
+    defaultMode: "4 circuit",
+    modes: [mode("3 circuit", 3), mode("4 circuit", 4)],
+    info: {
+      summary: "Striplight placeholder for cyc and backdrop systems.",
+      bestFor: ["cyc wash", "ground row", "backdrop color"],
+      capabilities: ["3 or 4 circuit placeholder", "sectional color", "fixture length must be confirmed"],
+    },
+  }),
+  blinder_2lite: legacyProfile({
+    id: "blinder_2lite",
+    manufacturer: "Generic",
+    model: "2 Lite Blinder",
+    symbol: "fresnel",
+    category: "blinder",
+    radiusMm: 230,
+    dmxFootprint: 2,
+    color: "#ffb547",
+    defaultMode: "2 circuit",
+    modes: [mode("1 circuit", 1), mode("2 circuit", 2)],
+    info: {
+      summary: "Audience blinder placeholder for concert and event plots.",
+      bestFor: ["audience hits", "accent bumps", "energy looks"],
+      capabilities: ["1 or 2 circuit placeholder", "warm tungsten note", "confirm power draw before final paperwork"],
+    },
   }),
   spot_mh: legacyProfile({
     id: "spot_mh",
@@ -481,6 +667,11 @@ const LEGACY_PROFILES = {
     radiusMm: 260,
     dmxFootprint: 24,
     color: "#4cc9ff",
+    info: {
+      summary: "Generic moving spot placeholder for drafting before a real profile is imported.",
+      bestFor: ["moving specials", "texture", "beam looks"],
+      capabilities: ["24 channel placeholder", "pan and tilt implied", "replace with GDTF or OFL profile before final addressing"],
+    },
   }),
 };
 
@@ -517,6 +708,10 @@ export function getProfileSearchText(profile) {
     profile.category,
     profile.defaultMode,
     profile.source?.type,
+    profile.info?.summary,
+    ...(profile.info?.bestFor || []),
+    ...(profile.info?.capabilities || []),
+    ...(profile.info?.notes || []),
   ].filter(Boolean).join(" ").toLowerCase();
 }
 
@@ -588,6 +783,11 @@ export function normalizeOpenFixtureLibraryProfile(oflFixture, options = {}) {
     color: SYMBOL_COLORS[symbol],
     defaultMode: selectedMode.name,
     modes,
+    info: profileInfo({
+      summary: "Imported Open Fixture Library profile.",
+      capabilities: [`${selectedMode.name} default mode`, `${selectedMode.dmxFootprint} channel footprint`],
+      notes: ["Review manufacturer mode chart before final addressing."],
+    }),
     libraryTier: "ofl-import",
     source: {
       type: SOURCE_TYPES.ofl,

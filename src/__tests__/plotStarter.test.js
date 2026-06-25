@@ -14,6 +14,7 @@ describe("plot starter", () => {
     expect(plan.stageType).toBe("black box");
     expect(plan.stage).toEqual({ widthFt: 40, depthFt: 30 });
     expect(plan.positions.map(position => position.key)).toEqual(["foh", "mid", "back", "specials"]);
+    expect(plan.positions[0].name).toBe("WIZARD FOH WASH");
     expect(plan.fixtureGroups.reduce((sum, group) => sum + group.count, 0)).toBeGreaterThan(10);
     expect(plan.fixtureGroups[0]).toEqual(expect.objectContaining({
       role: "Front wash",
@@ -43,7 +44,7 @@ describe("plot starter", () => {
     const plan = buildPlotStarterPlan(doc, "corporate keynote in a 32 by 18 room");
     const prompt = plotStarterPrompt(doc, plan);
 
-    expect(prompt).toContain("Use this PlotForge starter context");
+    expect(prompt).toContain("Use this PlotForge wizard context");
     expect(prompt).toContain("Studio A · Spike");
     expect(prompt).toContain("Corporate");
     expect(prompt).toContain("\"fixtureGroups\"");

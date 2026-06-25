@@ -15,7 +15,59 @@ import { DEFAULT_FIXTURE_STATUS, normalizeFixtureStatus } from "./fixtureStatus.
 import { defaultOscBridgeSettings, normalizeOscBridgeSettings } from "./oscBridge.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 8;
+export const DOC_VERSION = 9;
+
+const LABEL_SIZE_LIMITS = {
+  fixtureUnitSize: [70, 220],
+  fixtureChannelSize: [60, 180],
+  positionLabelSize: [70, 220],
+  commentLabelSize: [70, 220],
+  focusLabelSize: [70, 220],
+};
+
+const LABEL_VISIBILITY_KEYS = new Set([
+  "showFixtureUnit",
+  "showFixtureChannel",
+  "showPositionLabels",
+  "showCommentText",
+  "showFocusLabels",
+]);
+
+function clampNumber(value, fallback, min, max) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(parsed)));
+}
+
+export function defaultLabelSettings() {
+  return {
+    fixtureUnitSize: 120,
+    fixtureChannelSize: 88,
+    positionLabelSize: 120,
+    commentLabelSize: 105,
+    focusLabelSize: 110,
+    showFixtureUnit: true,
+    showFixtureChannel: false,
+    showPositionLabels: true,
+    showCommentText: true,
+    showFocusLabels: true,
+  };
+}
+
+export function normalizeLabelSettings(settings = {}) {
+  const defaults = defaultLabelSettings();
+  const normalized = { ...defaults };
+
+  for (const [key, [min, max]] of Object.entries(LABEL_SIZE_LIMITS)) {
+    normalized[key] = clampNumber(settings[key], defaults[key], min, max);
+  }
+
+  for (const key of LABEL_VISIBILITY_KEYS) {
+    if (Object.hasOwn(settings, key)) normalized[key] = Boolean(settings[key]);
+  }
+
+  return normalized;
+}
 
 export function defaultProjectMetadata() {
   return {
@@ -56,6 +108,7 @@ export function newShow({ name = "Untitled Show" } = {}) {
     commentPins: {},
     commentPinOrder: [],
     oscBridge: defaultOscBridgeSettings(),
+    labelSettings: defaultLabelSettings(),
   };
 }
 
@@ -201,6 +254,14 @@ export function updateOscBridge(doc, patch) {
     ...doc,
     updatedAt: Date.now(),
     oscBridge: normalizeOscBridgeSettings({ ...(doc.oscBridge || {}), ...patch }),
+  };
+}
+
+export function updateLabelSettings(doc, patch) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    labelSettings: normalizeLabelSettings({ ...(doc.labelSettings || {}), ...patch }),
   };
 }
 

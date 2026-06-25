@@ -1,7 +1,7 @@
 import { patchConflicts, channelConflicts } from "./patch.js";
 import { focusBeamRows } from "./focus.js";
 import { getProfile } from "./profiles.js";
-import { commentPinRows } from "./show.js";
+import { commentPinRows, normalizeLabelSettings } from "./show.js";
 import { MM_PER_FOOT, formatImperial } from "./units.js";
 
 export const PRINT_PAPERS = {
@@ -100,40 +100,48 @@ function gridLines(bounds) {
   return lines.join("");
 }
 
-function fixtureSymbol(profile, fixture, position) {
+function fixtureSymbol(profile, fixture, position, labels) {
   if (!profile) return "";
   const radius = profile.radiusMm;
   const stroke = escapeHtml(profile.color || "#ffb547");
-  const unit = fixture.unitNumber == null ? "" : `<text x="0" y="${-radius - 70}" class="unit">${fixture.unitNumber}</text>`;
+  const unit = labels.showFixtureUnit && fixture.unitNumber != null
+    ? `<text x="0" y="${-radius - 70}" class="unit">${fixture.unitNumber}</text>`
+    : "";
+  const channel = labels.showFixtureChannel && fixture.channel != null
+    ? `<text x="0" y="${radius + labels.fixtureChannelSize}" class="fixture-channel">CH ${escapeHtml(fixture.channel)}</text>`
+    : "";
   const transform = `translate(${fixture.xMm} ${position.yMm}) rotate(${fixture.rotation || 0})`;
 
   if (profile.symbol === "fresnel") {
-    return `<g class="fixture" transform="${transform}"><polygon points="${-radius * 0.85},${-radius * 0.55} 0,${-radius} ${radius * 0.85},${-radius * 0.55} ${radius * 0.85},${radius * 0.55} 0,${radius} ${-radius * 0.85},${radius * 0.55}" stroke="${stroke}"/><circle r="${radius * 0.3}" fill="${stroke}"/>${unit}</g>`;
+    return `<g class="fixture" transform="${transform}"><polygon points="${-radius * 0.85},${-radius * 0.55} 0,${-radius} ${radius * 0.85},${-radius * 0.55} ${radius * 0.85},${radius * 0.55} 0,${radius} ${-radius * 0.85},${radius * 0.55}" stroke="${stroke}"/><circle r="${radius * 0.3}" fill="${stroke}"/>${unit}${channel}</g>`;
   }
   if (profile.symbol === "spot") {
-    return `<g class="fixture" transform="${transform}"><rect x="${-radius}" y="${-radius}" width="${radius * 2}" height="${radius * 2}" stroke="${stroke}"/><line x1="${-radius * 0.6}" y1="0" x2="${radius * 0.6}" y2="0" stroke="${stroke}"/>${unit}</g>`;
+    return `<g class="fixture" transform="${transform}"><rect x="${-radius}" y="${-radius}" width="${radius * 2}" height="${radius * 2}" stroke="${stroke}"/><line x1="${-radius * 0.6}" y1="0" x2="${radius * 0.6}" y2="0" stroke="${stroke}"/>${unit}${channel}</g>`;
   }
-  return `<g class="fixture" transform="${transform}"><circle r="${radius}" stroke="${stroke}"/><line x1="${-radius * 0.55}" y1="0" x2="${radius * 0.55}" y2="0" stroke="${stroke}"/>${unit}</g>`;
+  return `<g class="fixture" transform="${transform}"><circle r="${radius}" stroke="${stroke}"/><line x1="${-radius * 0.55}" y1="0" x2="${radius * 0.55}" y2="0" stroke="${stroke}"/>${unit}${channel}</g>`;
 }
 
-function plotSvg(doc, bounds) {
+function plotSvg(doc, bounds, labels) {
   const beams = focusBeamRows(doc).map(row => (
-    `<g class="focus-beam"><line x1="${row.fromX}" y1="${row.fromY}" x2="${row.toX}" y2="${row.toY}"/><circle class="focus-point" cx="${row.toX}" cy="${row.toY}" r="80"/><text x="${row.toX + 120}" y="${row.toY - 90}">F${escapeHtml(row.unitNumber ?? "")}</text></g>`
+    `<g class="focus-beam"><line x1="${row.fromX}" y1="${row.fromY}" x2="${row.toX}" y2="${row.toY}"/><circle class="focus-point" cx="${row.toX}" cy="${row.toY}" r="80"/>${labels.showFocusLabels ? `<text x="${row.toX + 120}" y="${row.toY - 90}">F${escapeHtml(row.unitNumber ?? "")}</text>` : ""}</g>`
   )).join("");
   const comments = commentPinRows(doc).map((row, index) => (
-    `<g class="comment-pin" transform="translate(${row.xMm} ${row.yMm})"><circle r="90"/><text class="comment-number" x="0" y="36">${index + 1}</text><text class="comment-text" x="125" y="-70">${escapeHtml(row.text)}</text></g>`
+    `<g class="comment-pin" transform="translate(${row.xMm} ${row.yMm})"><circle r="90"/><text class="comment-number" x="0" y="36">${index + 1}</text>${labels.showCommentText ? `<text class="comment-text" x="125" y="-70">${escapeHtml(row.text)}</text>` : ""}</g>`
   )).join("");
   const positions = doc.positionOrder.map(id => {
     const position = doc.positions[id];
     if (!position) return "";
     const half = position.lengthMm / 2;
-    return `<g><line x1="${-half}" y1="${position.yMm}" x2="${half}" y2="${position.yMm}" class="position"/><text x="${-half - 120}" y="${position.yMm - 40}" class="position-label">${escapeHtml(position.name)}</text></g>`;
+    const label = labels.showPositionLabels
+      ? `<text x="${-half - 120}" y="${position.yMm - 40}" class="position-label">${escapeHtml(position.name)}</text>`
+      : "";
+    return `<g><line x1="${-half}" y1="${position.yMm}" x2="${half}" y2="${position.yMm}" class="position"/>${label}</g>`;
   }).join("");
   const fixtures = doc.fixtureOrder.map(id => {
     const fixture = doc.fixtures[id];
     const position = fixture ? doc.positions[fixture.positionId] : null;
     if (!fixture || !position) return "";
-    return fixtureSymbol(getProfile(fixture.profileId, doc.fixtureProfiles), fixture, position);
+    return fixtureSymbol(getProfile(fixture.profileId, doc.fixtureProfiles), fixture, position, labels);
   }).join("");
   const scaleX = bounds.x + MM_PER_FOOT;
   const scaleY = bounds.y + bounds.height - MM_PER_FOOT;
@@ -164,6 +172,7 @@ function legendMarkup(doc) {
 export function printSheetHtml(doc, { paperId = "ansi_d", now = new Date() } = {}) {
   const paper = getPrintPaper(paperId);
   const bounds = printWorldBounds(doc);
+  const labels = normalizeLabelSettings(doc.labelSettings || {});
   const metadata = doc.metadata || {};
   const date = now.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" });
   const patchStatus = printPatchStatus(doc);
@@ -191,13 +200,15 @@ svg { display: block; width: 100%; height: 100%; min-height: 6.5in; }
 .fixture line { stroke-width: 18; vector-effect: non-scaling-stroke; }
 .focus-beam line { stroke: #111; stroke-width: 8; stroke-dasharray: 90 42; vector-effect: non-scaling-stroke; }
 .focus-point { fill: none; stroke: #111; stroke-width: 8; vector-effect: non-scaling-stroke; }
-.focus-beam text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 120px; }
+.focus-beam text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.focusLabelSize}px; }
 .comment-pin circle { fill: none; stroke: #111; stroke-width: 10; vector-effect: non-scaling-stroke; }
-.comment-number { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 110px; font-weight: 700; text-anchor: middle; }
-.comment-text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 110px; }
+.comment-number { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.commentLabelSize}px; font-weight: 700; text-anchor: middle; }
+.comment-text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.commentLabelSize}px; }
 .position { stroke: #111; stroke-width: 10; vector-effect: non-scaling-stroke; }
-.position-label, .unit, .scale text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 130px; }
-.unit { text-anchor: middle; font-weight: 700; }
+.position-label { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.positionLabelSize}px; }
+.unit { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.fixtureUnitSize}px; text-anchor: middle; font-weight: 700; }
+.fixture-channel { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.fixtureChannelSize}px; text-anchor: middle; }
+.scale text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 130px; }
 .scale line { stroke: #111; stroke-width: 12; vector-effect: non-scaling-stroke; }
 .sheet-footer { display: grid; grid-template-columns: 1.1fr .9fr; border: 1px solid #111; }
 .title-block, .legend { padding: .12in .16in; }
@@ -215,7 +226,7 @@ th { font-family: ui-monospace, Menlo, monospace; text-transform: uppercase; fon
 </head>
 <body>
 <main class="sheet">
-  <section class="plot-frame">${plotSvg(doc, bounds)}</section>
+  <section class="plot-frame">${plotSvg(doc, bounds, labels)}</section>
   <section class="sheet-footer">
     <div class="title-block">
       <h1>${escapeHtml(doc.name || "Untitled Show")}</h1>

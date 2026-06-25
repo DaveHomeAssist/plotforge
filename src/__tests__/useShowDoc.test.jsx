@@ -137,6 +137,22 @@ describe("useShowDoc", () => {
     expect(result.current.doc.positions[positionId].name).toBe("BALC PIPE");
   });
 
+  it("onLabelSettingsChange persists drawing text controls", () => {
+    const { result } = renderHook(() => useShowDoc(seedShow));
+
+    act(() => {
+      result.current.onLabelSettingsChange({
+        fixtureUnitSize: 160,
+        showFixtureChannel: true,
+      });
+    });
+
+    expect(result.current.doc.labelSettings).toEqual(expect.objectContaining({
+      fixtureUnitSize: 160,
+      showFixtureChannel: true,
+    }));
+  });
+
   it("onPositionDelete removes a position and its attached fixtures", () => {
     const { result } = renderHook(() => useShowDoc(seedShow));
     const positionId = result.current.doc.positionOrder[0];

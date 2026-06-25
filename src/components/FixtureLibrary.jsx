@@ -1,6 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getFixtureProfileLibrary,
+  getProfileDetail,
   getProfileSearchText,
 } from "../domain/profiles.js";
 
@@ -26,6 +27,92 @@ function formatSource(profile) {
   return "Spike seed";
 }
 
+function FixtureProfileDetail({ profile, hasPosition, selectedPositionId, onAddFixture }) {
+  if (!profile) {
+    return (
+      <section className="fixture-profile-detail fixture-profile-detail--empty" aria-label="Fixture profile detail">
+        <p className="empty-note">No matching profile selected.</p>
+      </section>
+    );
+  }
+
+  const detail = getProfileDetail(profile);
+
+  return (
+    <section className="fixture-profile-detail" aria-labelledby="fixture-profile-detail-title">
+      <div className="fixture-profile-detail__head">
+        <div>
+          <span className="mono small">{profile.category}</span>
+          <h3 id="fixture-profile-detail-title">{profile.model}</h3>
+          <p>{profile.manufacturer}</p>
+        </div>
+        <button
+          type="button"
+          className="btn-compact"
+          disabled={!hasPosition}
+          onClick={() => onAddFixture(selectedPositionId, profile.id)}
+        >
+          Add
+        </button>
+      </div>
+
+      <p className="profile-summary">{detail.summary}</p>
+
+      <dl className="profile-detail-grid">
+        <div>
+          <dt>Mode</dt>
+          <dd>{profile.defaultMode}</dd>
+        </div>
+        <div>
+          <dt>Footprint</dt>
+          <dd>{profile.dmxFootprint}ch</dd>
+        </div>
+        <div>
+          <dt>Symbol</dt>
+          <dd>{profile.symbol}</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>{formatSource(profile)}</dd>
+        </div>
+      </dl>
+
+      <div className="profile-info-block">
+        <span className="mono small">BEST FOR</span>
+        <div className="profile-chip-row">
+          {detail.bestFor.map(item => <span key={item}>{item}</span>)}
+        </div>
+      </div>
+
+      <div className="profile-info-block">
+        <span className="mono small">CAPABILITIES</span>
+        <ul>
+          {detail.capabilities.map(item => <li key={item}>{item}</li>)}
+        </ul>
+      </div>
+
+      <div className="profile-info-block">
+        <span className="mono small">NOTES</span>
+        <ul>
+          {detail.notes.map(item => <li key={item}>{item}</li>)}
+        </ul>
+      </div>
+
+      <div className="profile-info-block">
+        <span className="mono small">MODES</span>
+        <div className="profile-mode-list">
+          {profile.modes.map(mode => (
+            <span key={mode.name}>
+              <strong>{mode.name}</strong>
+              <em>{mode.dmxFootprint}ch</em>
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function FixtureLibrary({
   doc,
   selectedPositionId,
@@ -36,6 +123,7 @@ export default function FixtureLibrary({
   const [lane, setLane] = useState("curated-gdtf");
   const [query, setQuery] = useState("");
   const [importState, setImportState] = useState(null);
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
 
   const profiles = useMemo(() => getFixtureProfileLibrary(doc.fixtureProfiles), [doc.fixtureProfiles]);
   const categories = useMemo(() => (
@@ -53,6 +141,20 @@ export default function FixtureLibrary({
       return getProfileSearchText(profile).includes(needle);
     });
   }, [profiles, lane, category, query]);
+
+  const selectedProfile = useMemo(() => (
+    profiles.find(profile => profile.id === selectedProfileId) || visibleProfiles[0] || null
+  ), [profiles, selectedProfileId, visibleProfiles]);
+
+  useEffect(() => {
+    if (!visibleProfiles.length) {
+      if (selectedProfileId !== null) setSelectedProfileId(null);
+      return;
+    }
+    if (!visibleProfiles.some(profile => profile.id === selectedProfileId)) {
+      setSelectedProfileId(visibleProfiles[0].id);
+    }
+  }, [selectedProfileId, visibleProfiles]);
 
   const onImportClick = () => inputRef.current?.click();
 
@@ -141,9 +243,20 @@ export default function FixtureLibrary({
         )}
       </div>
 
+      <FixtureProfileDetail
+        profile={selectedProfile}
+        hasPosition={hasPosition}
+        selectedPositionId={selectedPositionId}
+        onAddFixture={onAddFixture}
+      />
+
       <div className="fixture-profile-list" role="list" aria-label="Fixture profiles">
         {visibleProfiles.map(profile => (
-          <div className="fixture-profile-row" role="listitem" key={profile.id}>
+          <div
+            className={`fixture-profile-row${selectedProfile?.id === profile.id ? " fixture-profile-row--selected" : ""}`}
+            role="listitem"
+            key={profile.id}
+          >
             <span className="fixture-profile-row__main">
               <strong>{profile.model}</strong>
               <em>{profile.manufacturer}</em>
@@ -153,6 +266,14 @@ export default function FixtureLibrary({
               <span className="mono small">{profile.dmxFootprint}ch · {profile.category}</span>
               <span className="mono small muted">{formatSource(profile)}</span>
             </span>
+            <button
+              type="button"
+              className="btn-compact"
+              aria-current={selectedProfile?.id === profile.id ? "true" : undefined}
+              onClick={() => setSelectedProfileId(profile.id)}
+            >
+              Details
+            </button>
             <button
               type="button"
               className="btn-compact"

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import usePanZoom from "../hooks/usePanZoom.js";
 import FixtureSymbol from "./FixtureSymbol.jsx";
-import { commentPinRows, fixturesOnPosition } from "../domain/show.js";
+import { commentPinRows, fixturesOnPosition, normalizeLabelSettings } from "../domain/show.js";
 import { feetToMm, MM_PER_FOOT } from "../domain/units.js";
 import { focusBeamRows, snapFocusPoint } from "../domain/focus.js";
 
@@ -42,6 +42,7 @@ export default function PlotCanvas({
   const [commentActive, setCommentActive] = useState(false);
   const selectedFixture = selectedFixtureId ? doc.fixtures[selectedFixtureId] : null;
   const selectedFixtureSet = useMemo(() => new Set(selectedFixtureIds), [selectedFixtureIds]);
+  const labelSettings = useMemo(() => normalizeLabelSettings(doc.labelSettings || {}), [doc.labelSettings]);
   const focusActive = Boolean(selectedFixtureId && focusFixtureId === selectedFixtureId);
 
   const setFocusAtEvent = useCallback((e) => {
@@ -231,9 +232,11 @@ export default function PlotCanvas({
                 stroke={selected ? "var(--blue)" : "var(--position-stroke)"}
                 strokeWidth={selected ? 16 : 10}
               />
-              <text x={-halfLen - 100} y={p.yMm - 20}
-                fontFamily="ui-monospace, Menlo, monospace" fontSize={120}
-                fill={selected ? "var(--blue)" : "var(--position-label)"} textAnchor="end">{p.name}</text>
+              {labelSettings.showPositionLabels && (
+                <text x={-halfLen - 100} y={p.yMm - 20}
+                  fontFamily="ui-monospace, Menlo, monospace" fontSize={labelSettings.positionLabelSize}
+                  fill={selected ? "var(--blue)" : "var(--position-label)"} textAnchor="end">{p.name}</text>
+              )}
             </g>
           );
         })}
@@ -262,16 +265,18 @@ export default function PlotCanvas({
                   strokeWidth={selected ? 12 : 8}
                   pointerEvents="none"
                 />
-                <text
-                  x={row.toX + 120}
-                  y={row.toY - 90}
-                  fill={selected ? "var(--amber)" : "var(--focus-label)"}
-                  fontFamily="ui-monospace, Menlo, monospace"
-                  fontSize={110}
-                  pointerEvents="none"
-                >
-                  F{row.unitNumber ?? ""}
-                </text>
+                {labelSettings.showFocusLabels && (
+                  <text
+                    x={row.toX + 120}
+                    y={row.toY - 90}
+                    fill={selected ? "var(--amber)" : "var(--focus-label)"}
+                    fontFamily="ui-monospace, Menlo, monospace"
+                    fontSize={labelSettings.focusLabelSize}
+                    pointerEvents="none"
+                  >
+                    F{row.unitNumber ?? ""}
+                  </text>
+                )}
               </g>
             );
           })}
@@ -289,6 +294,7 @@ export default function PlotCanvas({
               position={pos}
               profiles={doc.fixtureProfiles}
               selected={fx.id === selectedFixtureId || selectedFixtureSet.has(fx.id)}
+              labelSettings={labelSettings}
               onPointerDown={onFixturePointerDown}
             />
           );
@@ -308,8 +314,10 @@ export default function PlotCanvas({
                 }}
               >
                 <circle r={selected ? 112 : 92} />
-                <text className="comment-pin__number" x="0" y="38">{index + 1}</text>
-                <text className="comment-pin__text" x="132" y="-88">{commentPin.text}</text>
+                <text className="comment-pin__number" x="0" y="38" fontSize={labelSettings.commentLabelSize}>{index + 1}</text>
+                {labelSettings.showCommentText && (
+                  <text className="comment-pin__text" x="132" y="-88" fontSize={labelSettings.commentLabelSize}>{commentPin.text}</text>
+                )}
               </g>
             );
           })}

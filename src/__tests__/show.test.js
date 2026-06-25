@@ -5,6 +5,7 @@ import {
   newRevision, addRevision, activateRevision,
   newCommentPin, addCommentPin, updateCommentPin, removeCommentPin, commentPinRows,
   updateVenue, updatePosition, removePosition, fixturesOnPosition,
+  defaultLabelSettings, updateLabelSettings,
 } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 import { serialize, deserialize } from "../serialization.js";
@@ -33,6 +34,24 @@ describe("show domain", () => {
 
     expect(fixture.status).toBe("planned");
     expect(fixture.notes).toEqual({ color: "", gobo: "", focus: "", crew: "" });
+  });
+
+  it("creates and updates persisted label settings", () => {
+    let { doc } = seed();
+
+    expect(doc.labelSettings).toEqual(defaultLabelSettings());
+
+    doc = updateLabelSettings(doc, {
+      fixtureUnitSize: 500,
+      showFixtureChannel: true,
+      showCommentText: false,
+    });
+
+    expect(doc.labelSettings).toEqual(expect.objectContaining({
+      fixtureUnitSize: 220,
+      showFixtureChannel: true,
+      showCommentText: false,
+    }));
   });
 
   it("keeps legacy note and layered crew note in sync", () => {

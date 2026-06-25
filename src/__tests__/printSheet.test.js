@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   newShow, newPosition, newFixture,
   addPosition, addFixture, updateFixture, updateProjectMetadata,
-  newCommentPin, addCommentPin,
+  newCommentPin, addCommentPin, updateLabelSettings,
 } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 import { printLegendRows, printPatchStatus, printSheetHtml, printWorldBounds } from "../domain/printSheet.js";
@@ -84,6 +84,26 @@ describe("print sheet", () => {
     expect(html).toContain("class=\"comment-pin\"");
     expect(html).toContain("Check masking");
     expect(bounds.x + bounds.width).toBeGreaterThan(feetToMm(40));
+  });
+
+  it("prints configured label sizes and optional channel labels", () => {
+    let { doc } = seedPrintShow();
+    const fixtureId = doc.fixtureOrder[0];
+    doc = updateFixture(doc, fixtureId, { channel: 77 });
+    doc = updateLabelSettings(doc, {
+      fixtureUnitSize: 180,
+      fixtureChannelSize: 100,
+      positionLabelSize: 150,
+      showFixtureChannel: true,
+      showPositionLabels: false,
+    });
+
+    const html = printSheetHtml(doc);
+
+    expect(html).toContain(".unit { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 180px;");
+    expect(html).toContain(".fixture-channel { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 100px;");
+    expect(html).toContain("CH 77");
+    expect(html).not.toContain("class=\"position-label\">1ST ELEC");
   });
 
   it("summarizes duplicate channel and DMX conflicts", () => {

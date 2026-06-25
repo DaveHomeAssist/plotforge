@@ -166,6 +166,27 @@ describe("serialization", () => {
     }));
   });
 
+  it("migrates older documents with default label settings", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: 8,
+      name: "Legacy Label Plot",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+      oscBridge: {},
+    }));
+
+    expect(parsed.version).toBe(DOC_VERSION);
+    expect(parsed.labelSettings).toEqual(expect.objectContaining({
+      fixtureUnitSize: 120,
+      showFixtureUnit: true,
+      showFixtureChannel: false,
+      showPositionLabels: true,
+    }));
+  });
+
   it("roundtrips named revisions", () => {
     const revision = newRevision({ name: "Rev A", note: "Focus notes", createdAt: 1 });
     const doc = addRevision(newShow({ name: "Revision Test" }), revision);

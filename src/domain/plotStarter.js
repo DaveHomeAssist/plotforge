@@ -161,14 +161,14 @@ export function buildPlotStarterPlan(doc, brief = DEFAULT_BRIEF) {
   const channelStart = Math.max(301, maxExistingChannel(doc) + 1);
 
   const positions = [
-    positionRecipe({ key: "foh", name: "AI FOH WASH", kind: "foh", yFt: 6, trimFt: 28, lengthFt: stage.widthFt }),
-    positionRecipe({ key: "mid", name: "AI MIDSTAGE WASH", kind: "pipe", yFt: -Math.max(6, Math.round(stage.depthFt * 0.35)), trimFt: 22, lengthFt: Math.max(12, stage.widthFt - 6) }),
-    positionRecipe({ key: "back", name: "AI BACKLIGHT", kind: "pipe", yFt: -Math.max(10, Math.round(stage.depthFt * 0.72)), trimFt: 24, lengthFt: Math.max(12, stage.widthFt - 6) }),
-    positionRecipe({ key: "specials", name: "AI SPECIALS", kind: "pipe", yFt: -Math.max(3, Math.round(stage.depthFt * 0.18)), trimFt: 22, lengthFt: Math.max(10, stage.widthFt * 0.45) }),
+    positionRecipe({ key: "foh", name: "WIZARD FOH WASH", kind: "foh", yFt: 6, trimFt: 28, lengthFt: stage.widthFt }),
+    positionRecipe({ key: "mid", name: "WIZARD MIDSTAGE WASH", kind: "pipe", yFt: -Math.max(6, Math.round(stage.depthFt * 0.35)), trimFt: 22, lengthFt: Math.max(12, stage.widthFt - 6) }),
+    positionRecipe({ key: "back", name: "WIZARD BACKLIGHT", kind: "pipe", yFt: -Math.max(10, Math.round(stage.depthFt * 0.72)), trimFt: 24, lengthFt: Math.max(12, stage.widthFt - 6) }),
+    positionRecipe({ key: "specials", name: "WIZARD SPECIALS", kind: "pipe", yFt: -Math.max(3, Math.round(stage.depthFt * 0.18)), trimFt: 22, lengthFt: Math.max(10, stage.widthFt * 0.45) }),
   ];
 
   if (movingCount > 0) {
-    positions.push(positionRecipe({ key: "movers", name: "AI MOVERS", kind: "truss", yFt: -Math.max(4, Math.round(stage.depthFt * 0.5)), trimFt: 26, lengthFt: Math.max(12, stage.widthFt - 4) }));
+    positions.push(positionRecipe({ key: "movers", name: "WIZARD MOVERS", kind: "truss", yFt: -Math.max(4, Math.round(stage.depthFt * 0.5)), trimFt: 26, lengthFt: Math.max(12, stage.widthFt - 4) }));
   }
 
   const fixtureGroups = [
@@ -234,7 +234,7 @@ export function buildPlotStarterPlan(doc, brief = DEFAULT_BRIEF) {
 
   return {
     version: PLOT_STARTER_VERSION,
-    source: "plotforge-local-starter",
+    source: "plotforge-local-wizard",
     generatedAt: new Date().toISOString(),
     brief: normalizedBrief,
     productionType,
@@ -245,14 +245,14 @@ export function buildPlotStarterPlan(doc, brief = DEFAULT_BRIEF) {
     fixtureGroups,
     notes: [
       `Assumption: ${settings.label} starter for a ${stage.widthFt} ft by ${stage.depthFt} ft ${stageType} stage.`,
-      "Local rules generate this first pass. A model provider can refine it from the copied prompt.",
+      "Local wizard rules generate this first pass. The copied prompt can refine it with a model provider.",
     ],
   };
 }
 
 export function plotStarterPrompt(doc, plan) {
   return [
-    "Use this PlotForge starter context to refine a lighting plot.",
+    "Use this PlotForge wizard context to refine a lighting plot.",
     `Show: ${doc.name || "Untitled Show"}`,
     `Brief: ${plan.brief}`,
     `Stage: ${plan.stage.widthFt} ft by ${plan.stage.depthFt} ft ${plan.stageType}`,
@@ -318,7 +318,7 @@ export function applyPlotStarterPlan(doc, plan) {
           crew: `${group.role}. ${group.crew}`,
         },
         status: "planned",
-        circuit: `AI-${group.role.toUpperCase().replace(/[^A-Z0-9]+/g, "-")}-${index + 1}`,
+        circuit: `WIZARD-${group.role.toUpperCase().replace(/[^A-Z0-9]+/g, "-")}-${index + 1}`,
         dimmer: "",
       });
       next = addFixture(next, fixture);

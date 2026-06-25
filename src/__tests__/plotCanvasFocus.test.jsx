@@ -2,7 +2,17 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PlotCanvas from "../components/PlotCanvas.jsx";
-import { newShow, newPosition, newFixture, addPosition, addFixture, updateFixture, newCommentPin, addCommentPin } from "../domain/show.js";
+import {
+  newShow,
+  newPosition,
+  newFixture,
+  addPosition,
+  addFixture,
+  updateFixture,
+  newCommentPin,
+  addCommentPin,
+  updateLabelSettings,
+} from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 
 function seedCanvasDoc({ withFocus = false } = {}) {
@@ -132,5 +142,30 @@ describe("PlotCanvas focus tool", () => {
     fireEvent.pointerDown(pinNode, { button: 0, pointerId: 1 });
 
     expect(onSelectCommentPin).toHaveBeenCalledWith(pin.id);
+  });
+
+  it("renders configurable plot label sizes and visibility", () => {
+    let { doc, fixtureId } = seedCanvasDoc();
+    doc = updateFixture(doc, fixtureId, { channel: 44 });
+    doc = addCommentPin(doc, newCommentPin({
+      xMm: feetToMm(2),
+      yMm: feetToMm(-3),
+      text: "Sightline check",
+    }));
+    doc = updateLabelSettings(doc, {
+      fixtureUnitSize: 180,
+      fixtureChannelSize: 100,
+      positionLabelSize: 150,
+      commentLabelSize: 140,
+      showFixtureChannel: true,
+      showCommentText: false,
+    });
+    const { container } = renderCanvas(doc, fixtureId);
+
+    expect(screen.getByText("CH 44")).toHaveAttribute("font-size", "100");
+    expect(screen.getByText("1ST ELEC")).toHaveAttribute("font-size", "150");
+    expect(container.querySelector(".fx text")).toHaveAttribute("font-size", "180");
+    expect(container.querySelector(".comment-pin__number")).toHaveAttribute("font-size", "140");
+    expect(screen.queryByText("Sightline check")).not.toBeInTheDocument();
   });
 });

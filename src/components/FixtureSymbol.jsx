@@ -1,11 +1,13 @@
 import { getFixtureStatus } from "../domain/fixtureStatus.js";
 import { getProfile } from "../domain/profiles.js";
+import { defaultLabelSettings } from "../domain/show.js";
 
 /**
  * Renders a fixture symbol in world (mm) coordinates centered on (cx, cy).
  * Symbols are deliberately schematic — Phase 2 will swap these for GDTF-imported SVGs.
  */
-export default function FixtureSymbol({ fixture, position, profiles, selected, onPointerDown }) {
+export default function FixtureSymbol({ fixture, position, profiles, selected, labelSettings, onPointerDown }) {
+  const labels = labelSettings || defaultLabelSettings();
   const profile = getProfile(fixture.profileId, profiles);
   if (!profile) return null;
   const r = profile.radiusMm;
@@ -61,17 +63,30 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, o
         stroke="var(--fixture-marker-ring)"
         strokeWidth={18}
       />
-      {fixture.unitNumber != null && (
+      {labels.showFixtureUnit && fixture.unitNumber != null && (
         <text
           x={0} y={-r - 60}
           fontFamily="ui-monospace, Menlo, monospace"
-          fontSize={120}
+          fontSize={labels.fixtureUnitSize}
           textAnchor="middle"
           fill={stroke}
           // Counter-rotate so the unit number stays upright.
           transform={`rotate(${-(fixture.rotation || 0)})`}
         >
           {fixture.unitNumber}
+        </text>
+      )}
+      {labels.showFixtureChannel && fixture.channel != null && (
+        <text
+          x={0}
+          y={r + labels.fixtureChannelSize}
+          fontFamily="ui-monospace, Menlo, monospace"
+          fontSize={labels.fixtureChannelSize}
+          textAnchor="middle"
+          fill={stroke}
+          transform={`rotate(${-(fixture.rotation || 0)})`}
+        >
+          CH {fixture.channel}
         </text>
       )}
     </g>
