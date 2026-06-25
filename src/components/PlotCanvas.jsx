@@ -119,12 +119,12 @@ export default function PlotCanvas({
   for (let x = gridStartX; x <= gridEndX; x += GRID_MM) {
     const major = x % GRID_MAJOR_MM === 0;
     gridLines.push(<line key={`vx${x}`} x1={x} y1={viewBox.y} x2={x} y2={viewBox.y + viewBox.height}
-      stroke={major ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.035)"} strokeWidth={major ? 4 : 2} />);
+      stroke={major ? "var(--grid-major)" : "var(--grid-minor)"} strokeWidth={major ? 4 : 2} />);
   }
   for (let y = gridStartY; y <= gridEndY; y += GRID_MM) {
     const major = y % GRID_MAJOR_MM === 0;
     gridLines.push(<line key={`hy${y}`} x1={viewBox.x} y1={y} x2={viewBox.x + viewBox.width} y2={y}
-      stroke={major ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.035)"} strokeWidth={major ? 4 : 2} />);
+      stroke={major ? "var(--grid-major)" : "var(--grid-minor)"} strokeWidth={major ? 4 : 2} />);
   }
 
   return (
@@ -184,9 +184,9 @@ export default function PlotCanvas({
 
         {/* Center line + plaster line */}
         <line x1={0} y1={viewBox.y} x2={0} y2={viewBox.y + viewBox.height}
-          stroke="rgba(76,201,255,.25)" strokeWidth={4} strokeDasharray="40 40" />
+          stroke="var(--center-line)" strokeWidth={4} strokeDasharray="40 40" />
         <line x1={viewBox.x} y1={0} x2={viewBox.x + viewBox.width} y2={0}
-          stroke="rgba(255,181,71,.4)" strokeWidth={4} strokeDasharray="40 40" />
+          stroke="var(--plaster-line)" strokeWidth={4} strokeDasharray="40 40" />
 
         {/* Stage outline */}
         <rect
@@ -195,7 +195,7 @@ export default function PlotCanvas({
           width={doc.venue.stageWidthMm}
           height={doc.venue.stageDepthMm}
           fill="none"
-          stroke="#1f2630"
+          stroke="var(--stage-stroke)"
           strokeWidth={6}
         />
 
@@ -228,12 +228,12 @@ export default function PlotCanvas({
                 y1={p.yMm}
                 x2={halfLen}
                 y2={p.yMm}
-                stroke={selected ? "#4cc9ff" : "#2a3340"}
+                stroke={selected ? "var(--blue)" : "var(--position-stroke)"}
                 strokeWidth={selected ? 16 : 10}
               />
               <text x={-halfLen - 100} y={p.yMm - 20}
                 fontFamily="ui-monospace, Menlo, monospace" fontSize={120}
-                fill={selected ? "#4cc9ff" : "#5d6878"} textAnchor="end">{p.name}</text>
+                fill={selected ? "var(--blue)" : "var(--position-label)"} textAnchor="end">{p.name}</text>
             </g>
           );
         })}
@@ -248,7 +248,7 @@ export default function PlotCanvas({
                   y1={row.fromY}
                   x2={row.toX}
                   y2={row.toY}
-                  stroke={selected ? "#ffb547" : "rgba(255,181,71,.52)"}
+                  stroke={selected ? "var(--amber)" : "var(--focus-line)"}
                   strokeWidth={selected ? 14 : 9}
                   strokeDasharray="90 42"
                   pointerEvents="none"
@@ -257,15 +257,15 @@ export default function PlotCanvas({
                   cx={row.toX}
                   cy={row.toY}
                   r={selected ? 90 : 70}
-                  fill={selected ? "rgba(255,181,71,.18)" : "rgba(255,181,71,.1)"}
-                  stroke={selected ? "#ffb547" : "rgba(255,181,71,.68)"}
+                  fill={selected ? "var(--focus-fill-selected)" : "var(--focus-fill)"}
+                  stroke={selected ? "var(--amber)" : "var(--focus-ring)"}
                   strokeWidth={selected ? 12 : 8}
                   pointerEvents="none"
                 />
                 <text
                   x={row.toX + 120}
                   y={row.toY - 90}
-                  fill={selected ? "#ffb547" : "rgba(255,181,71,.8)"}
+                  fill={selected ? "var(--amber)" : "var(--focus-label)"}
                   fontFamily="ui-monospace, Menlo, monospace"
                   fontSize={110}
                   pointerEvents="none"

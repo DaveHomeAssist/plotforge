@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import PlotCanvas from "./components/PlotCanvas.jsx";
 import ProjectMetadata from "./components/ProjectMetadata.jsx";
 import RevisionsPanel from "./components/RevisionsPanel.jsx";
@@ -14,6 +14,7 @@ import InteropPanel from "./components/InteropPanel.jsx";
 import OscBridgePanel from "./components/OscBridgePanel.jsx";
 import ShowRegistryPanel from "./components/ShowRegistryPanel.jsx";
 import PlotStarterPanel from "./components/PlotStarterPanel.jsx";
+import SplashScreen from "./components/SplashScreen.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
 import PrintExport from "./components/PrintExport.jsx";
@@ -47,6 +48,30 @@ export function seedShow() {
 export default function PlotForge() {
   const show = useShowDoc(seedShow);
   const onSave = show.onSave;
+  const [showSplash, setShowSplash] = useState(true);
+  const [theme, setTheme] = useState(() => {
+    try {
+      const stored = localStorage.getItem("plotforge-theme");
+      if (stored === "light" || stored === "dark") return stored;
+    } catch {
+      // Ignore storage failures.
+    }
+    return "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      "content",
+      theme === "light" ? "#f4f7fb" : "#0a0d12",
+    );
+    try {
+      localStorage.setItem("plotforge-theme", theme);
+    } catch {
+      // Ignore storage failures.
+    }
+  }, [theme]);
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -59,8 +84,35 @@ export default function PlotForge() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onSave]);
 
+  async function openFromSplash() {
+    const result = await show.onOpen();
+    if (result?.ok) setShowSplash(false);
+    return result;
+  }
+
+  function loadIntoEditor(doc) {
+    show.onLoadShow(doc);
+    setShowSplash(false);
+  }
+
+  if (showSplash) {
+    return (
+      <div className="app app--splash" data-theme={theme}>
+        <SplashScreen
+          doc={show.doc}
+          theme={theme}
+          onToggleTheme={() => setTheme(current => current === "light" ? "dark" : "light")}
+          onStart={() => setShowSplash(false)}
+          onOpen={openFromSplash}
+          onLoadShow={loadIntoEditor}
+          onImportDoc={loadIntoEditor}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="app">
+    <div className="app" data-theme={theme}>
       <header className="topbar">
         <div className="brand">
           <strong>PlotForge</strong>
@@ -69,6 +121,16 @@ export default function PlotForge() {
         <nav className="topbar-actions">
           <button type="button" onClick={() => show.history.undo()} disabled={!show.history.undoN}>Undo</button>
           <button type="button" onClick={() => show.history.redo()} disabled={!show.history.redoN}>Redo</button>
+          <span className="sep" />
+          <button
+            type="button"
+            onClick={() => setTheme(current => current === "light" ? "dark" : "light")}
+            aria-pressed={theme === "light"}
+            className="theme-button"
+          >
+            {theme === "light" ? "Light" : "Dark"}
+          </button>
+          <button type="button" onClick={() => setShowSplash(true)}>Home</button>
           <span className="sep" />
           <SaveStatus status={show.saveStatus} onRetry={show.onSave} />
           <button type="button" onClick={show.onOpen}>Open…</button>

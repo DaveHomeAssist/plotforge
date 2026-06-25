@@ -317,8 +317,10 @@ export default function useShowDoc(seedShow) {
         setSelectedCommentPinId(null);
         onClearFixtureSelection();
       }
+      return r;
     } catch (e) {
       alert("Could not read that file: " + (e?.message || e));
+      return { ok: false, error: e };
     }
   }, [commit, onClearFixtureSelection]);
 

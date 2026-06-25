@@ -12,8 +12,8 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, o
   const cx = fixture.xMm;
   const cy = position.yMm;
 
-  const stroke = selected ? "#4cc9ff" : profile.color;
-  const fill = "#11161f";
+  const stroke = selected ? "var(--fixture-selected)" : profile.color;
+  const fill = "var(--fixture-body)";
   const strokeWidth = selected ? 28 : 18;
   const status = getFixtureStatus(fixture.status);
 
@@ -58,7 +58,7 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, o
         cy={r * 0.82}
         r={Math.max(56, r * 0.18)}
         fill={status.color}
-        stroke="#0a0d12"
+        stroke="var(--fixture-marker-ring)"
         strokeWidth={18}
       />
       {fixture.unitNumber != null && (
