@@ -6,3 +6,11 @@ dist
 .cache
 .env*
 .vercel
+.build
+.swiftpm
+
+# Xcode per-user state (keep shared schemes + project.pbxproj)
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+xcschememanagement.plist
