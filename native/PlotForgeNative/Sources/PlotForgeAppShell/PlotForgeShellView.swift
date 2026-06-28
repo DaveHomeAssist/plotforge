@@ -89,6 +89,7 @@ struct ToolWorkspace: View {
     @Binding var selection: PlotCanvasSelection
     @State private var history = PlotDocumentHistory()
     @State private var dragBaseline: PlotShowDocument?
+    @State private var inspectorCollapsed = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -130,9 +131,10 @@ struct ToolWorkspace: View {
                 InspectorRail(
                     document: document,
                     selection: selection,
+                    isCollapsed: $inspectorCollapsed,
                     onCommitPatch: commitInspectorPatch
                 )
-                .frame(width: 320)
+                .frame(width: inspectorCollapsed ? 48 : 320)
             }
         }
         .onChange(of: document.fixtureOrder) {
@@ -418,15 +420,62 @@ struct SummaryRows: View {
 struct InspectorRail: View {
     let document: PlotShowDocument
     let selection: PlotCanvasSelection
+    @Binding var isCollapsed: Bool
     let onCommitPatch: (_ fixtureId: String, _ patch: FixtureInspectorPatch) -> Void
 
     var body: some View {
+        Group {
+            if isCollapsed {
+                collapsedRail
+            } else {
+                expandedRail
+            }
+        }
+        .background(Color(uiToken: .panel))
+    }
+
+    private var collapsedRail: some View {
+        VStack(spacing: 14) {
+            Button {
+                withAnimation(.snappy(duration: 0.2)) { isCollapsed = false }
+            } label: {
+                Image(systemName: "sidebar.left")
+                    .font(.title3)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("Expand inspector")
+            .help("Expand inspector")
+
+            Text("Inspector")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .fixedSize()
+                .rotationEffect(.degrees(90))
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.top, 16)
+    }
+
+    private var expandedRail: some View {
         let inspectorState = PlotInspectorValidation.state(document: document, selection: selection)
 
-        ScrollView {
+        return ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Label("Inspector", systemImage: "sidebar.right")
-                    .font(.title3.weight(.semibold))
+                HStack(spacing: 8) {
+                    Text("Inspector")
+                        .font(.title3.weight(.semibold))
+                    Spacer()
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { isCollapsed = true }
+                    } label: {
+                        Image(systemName: "sidebar.right")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Collapse inspector")
+                    .help("Collapse inspector")
+                }
 
                 switch inspectorState {
                 case .singleFixture(let fixtureId, _), .multiFixture(let fixtureId, _, _):
@@ -465,7 +514,6 @@ struct InspectorRail: View {
             }
             .padding(18)
         }
-        .background(Color(uiToken: .panel))
     }
 
     private var documentSummary: some View {

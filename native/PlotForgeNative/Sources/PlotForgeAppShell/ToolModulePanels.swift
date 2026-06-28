@@ -73,6 +73,7 @@ struct FixtureLibraryEntryRow: View {
     let entry: FixtureProfileLibraryEntry
     let targetPositionId: String?
     let onAddFixture: (_ profileId: String, _ positionId: String) -> Void
+    @State private var isExpanded = false
 
     private var profileName: String {
         let name = [entry.profile.manufacturer, entry.profile.model]
@@ -87,22 +88,52 @@ struct FixtureLibraryEntryRow: View {
 
     var body: some View {
         ModuleRowShell {
-            HStack(alignment: .top, spacing: 10) {
-                FixtureProfileDetailView(detail: detail, insetPadding: 0)
-
-                Spacer(minLength: 8)
-
-                Button {
-                    if let targetPositionId {
-                        onAddFixture(entry.profile.id, targetPositionId)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 10) {
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) {
+                            isExpanded.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "chevron.right")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(detail.displayName)
+                                    .font(.subheadline.weight(.semibold))
+                                    .lineLimit(1)
+                                Text(detail.sourceLabel)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 8)
+                        }
+                        .contentShape(Rectangle())
                     }
-                } label: {
-                    Label("Add fixture", systemImage: "plus")
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(profileName)
+                    .accessibilityHint(isExpanded ? "Hide profile details" : "Show profile details")
+
+                    Button {
+                        if let targetPositionId {
+                            onAddFixture(entry.profile.id, targetPositionId)
+                        }
+                    } label: {
+                        Label("Add fixture", systemImage: "plus")
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.bordered)
+                    .disabled(targetPositionId == nil)
+                    .accessibilityLabel("Add \(profileName)")
                 }
-                .labelStyle(.iconOnly)
-                .buttonStyle(.bordered)
-                .disabled(targetPositionId == nil)
-                .accessibilityLabel("Add \(profileName)")
+
+                if isExpanded {
+                    FixtureProfileDetailView(detail: detail, insetPadding: 0)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             }
         }
     }
