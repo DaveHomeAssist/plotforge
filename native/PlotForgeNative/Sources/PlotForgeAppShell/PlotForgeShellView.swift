@@ -1006,18 +1006,40 @@ struct PlotCanvasView: View {
 
             let point = metrics.map(xMm: fixture.xMm, yMm: position.yMm)
             let isSelected = selectedIds.contains(fixtureId)
-            let radius = isSelected ? 9.0 : 7.0
-            let rect = CGRect(
-                x: point.x - radius,
-                y: point.y - radius,
-                width: radius * 2,
-                height: radius * 2
-            )
 
-            var marker = Path()
-            marker.addEllipse(in: rect)
-            context.fill(marker, with: .color(isSelected ? .cyan : .yellow))
-            context.stroke(marker, with: .color(.black.opacity(0.55)), lineWidth: isSelected ? 2 : 1)
+            let profile = document.fixtureProfiles[fixture.profileId]
+            let kind = FixtureGlyphKind(symbol: profile?.symbol ?? "generic")
+            let radiusMm = CGFloat(profile?.radiusMm ?? 180)
+            // Real-world scale, clamped so symbols stay legible/tappable at any zoom.
+            let radius = min(max(radiusMm * metrics.pointsPerMm, 7), 80)
+            let glyph = FixtureGlyph.paths(for: kind, radius: radius)
+
+            let strokeColor = isSelected
+                ? Color(red: 0.0, green: 0.48, blue: 0.9)
+                : FixtureGlyph.defaultColor(for: kind)
+            let bodyLine: CGFloat = isSelected ? 2.4 : 1.6
+            let frontLine = bodyLine + 1.4
+
+            if isSelected {
+                let halo = radius * 1.7
+                var ring = Path()
+                ring.addEllipse(in: CGRect(x: point.x - halo, y: point.y - halo, width: 2 * halo, height: 2 * halo))
+                context.fill(ring, with: .color(strokeColor.opacity(0.12)))
+            }
+
+            // Draw the glyph in a rotated, fixture-local space; labels stay upright.
+            var glyphContext = context
+            glyphContext.translateBy(x: point.x, y: point.y)
+            glyphContext.rotate(by: .degrees(fixture.rotation))
+            glyphContext.fill(glyph.body, with: .color(Color(uiToken: .stageFill)))
+            glyphContext.stroke(glyph.body, with: .color(strokeColor), lineWidth: bodyLine)
+            glyphContext.stroke(glyph.detail, with: .color(strokeColor), lineWidth: bodyLine)
+            glyphContext.fill(glyph.solid, with: .color(strokeColor))
+            glyphContext.stroke(
+                glyph.front,
+                with: .color(strokeColor),
+                style: StrokeStyle(lineWidth: frontLine, lineCap: .round, lineJoin: .round)
+            )
 
             if document.labelSettings.showFixtureUnit,
                let unitNumber = fixture.unitNumber {
@@ -1025,7 +1047,7 @@ struct PlotCanvasView: View {
                     Text("\(unitNumber)")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.primary),
-                    at: CGPoint(x: point.x, y: point.y + 18)
+                    at: CGPoint(x: point.x, y: point.y + radius + 12)
                 )
             }
         }
@@ -1072,6 +1094,10 @@ struct PlotCanvasMetrics {
     private var scaleFactor: CGFloat {
         baseScaleFactor * viewport.zoom
     }
+
+    /// Points per real-world millimetre at the current zoom, so the canvas can
+    /// draw fixture symbols at their true `radiusMm` scale.
+    var pointsPerMm: CGFloat { scaleFactor }
 
     private var baseScaleFactor: CGFloat {
         let usableWidth = max(size.width - padding * 2, 1)
