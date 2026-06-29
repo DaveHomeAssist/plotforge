@@ -74,6 +74,28 @@ final class PlotToolModulesTests: XCTestCase {
         XCTAssertEqual(missing, document)
     }
 
+    func testLibraryAddedFixtureResolvesSeededProfileForRendering() throws {
+        let document = makeDocument()
+
+        let updated = PlotToolModules.addFixtureFromLibrary(
+            profileId: "robe_megapointe",
+            to: document,
+            positionId: "pos_front"
+        )
+        let addedId = try XCTUnwrap(updated.fixtureOrder.last)
+        let added = try XCTUnwrap(updated.fixtures[addedId])
+
+        // The seeded profile is NOT copied into the document on add...
+        XCTAssertNil(updated.fixtureProfiles[added.profileId])
+        // ...so the canvas/inspector must resolve it through getProfile. A raw
+        // dictionary lookup would return nil and fall back to the generic glyph.
+        let resolved = try XCTUnwrap(
+            PlotToolModules.getProfile(added.profileId, in: updated.fixtureProfiles)
+        )
+        XCTAssertEqual(resolved.id, "robe_megapointe")
+        XCTAssertFalse(resolved.symbol.isEmpty)
+    }
+
     func testPatchRowsAndChecksReportConflictsAndIncompleteData() throws {
         let document = makeDocument()
 

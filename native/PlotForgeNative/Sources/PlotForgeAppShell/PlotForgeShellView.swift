@@ -653,7 +653,7 @@ struct FixtureInspectorEditor: View {
     }
 
     private var fixtureHeader: some View {
-        let profile = document.fixtureProfiles[fixture.profileId]
+        let profile = PlotToolModules.getProfile(fixture.profileId, in: document.fixtureProfiles)
         return VStack(alignment: .leading, spacing: 10) {
             if case .multiFixture(_, let selectedCount, _) = state {
                 VStack(alignment: .leading, spacing: 4) {
@@ -937,9 +937,13 @@ struct PlotCanvasView: View {
             if let fixture = document.fixtures[fixtureId],
                let position = document.positions[fixture.positionId] {
                 let point = metrics.map(xMm: fixture.xMm, yMm: position.yMm)
+                let profile = PlotToolModules.getProfile(fixture.profileId, in: document.fixtureProfiles)
+                // Cover the drawn glyph (strip/bar extend ~1.6x radius) while
+                // keeping at least the 44pt minimum touch target.
+                let hitDiameter = max(44, fixtureGlyphRadius(for: profile, metrics: metrics) * 3.2)
                 Circle()
                     .fill(Color.clear)
-                    .frame(width: 44, height: 44)
+                    .frame(width: hitDiameter, height: hitDiameter)
                     .contentShape(Circle())
                     .position(point)
                     .simultaneousGesture(
@@ -1045,6 +1049,13 @@ struct PlotCanvasView: View {
         }
     }
 
+    /// On-screen glyph radius for a fixture's profile: real-world `radiusMm`
+    /// scaled to points, clamped so symbols stay legible/tappable at any zoom.
+    private func fixtureGlyphRadius(for profile: FixtureProfile?, metrics: PlotCanvasMetrics) -> CGFloat {
+        let radiusMm = CGFloat(profile?.radiusMm ?? 180)
+        return min(max(radiusMm * metrics.pointsPerMm, 7), 80)
+    }
+
     private func drawFixtures(context: GraphicsContext, metrics: PlotCanvasMetrics) {
         let selectedIds = Set(selection.fixtureIds)
         for fixtureId in document.fixtureOrder {
@@ -1055,11 +1066,11 @@ struct PlotCanvasView: View {
             let point = metrics.map(xMm: fixture.xMm, yMm: position.yMm)
             let isSelected = selectedIds.contains(fixtureId)
 
-            let profile = document.fixtureProfiles[fixture.profileId]
+            // Resolve seeded library profiles too — addFixtureFromLibrary stores
+            // only the profileId, so a raw dictionary lookup misses built-ins.
+            let profile = PlotToolModules.getProfile(fixture.profileId, in: document.fixtureProfiles)
             let kind = FixtureGlyphKind(symbol: profile?.symbol ?? "generic")
-            let radiusMm = CGFloat(profile?.radiusMm ?? 180)
-            // Real-world scale, clamped so symbols stay legible/tappable at any zoom.
-            let radius = min(max(radiusMm * metrics.pointsPerMm, 7), 80)
+            let radius = fixtureGlyphRadius(for: profile, metrics: metrics)
             let glyph = FixtureGlyph.paths(for: kind, radius: radius)
 
             let strokeColor = isSelected
