@@ -89,6 +89,7 @@ struct ToolWorkspace: View {
     @Binding var selection: PlotCanvasSelection
     @State private var history = PlotDocumentHistory()
     @State private var dragBaseline: PlotShowDocument?
+    @State private var inspectorCollapsed = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -130,9 +131,10 @@ struct ToolWorkspace: View {
                 InspectorRail(
                     document: document,
                     selection: selection,
+                    isCollapsed: $inspectorCollapsed,
                     onCommitPatch: commitInspectorPatch
                 )
-                .frame(width: 320)
+                .frame(width: inspectorCollapsed ? 48 : 320)
             }
         }
         .onChange(of: document.fixtureOrder) {
@@ -418,15 +420,62 @@ struct SummaryRows: View {
 struct InspectorRail: View {
     let document: PlotShowDocument
     let selection: PlotCanvasSelection
+    @Binding var isCollapsed: Bool
     let onCommitPatch: (_ fixtureId: String, _ patch: FixtureInspectorPatch) -> Void
 
     var body: some View {
+        Group {
+            if isCollapsed {
+                collapsedRail
+            } else {
+                expandedRail
+            }
+        }
+        .background(Color(uiToken: .panel))
+    }
+
+    private var collapsedRail: some View {
+        VStack(spacing: 14) {
+            Button {
+                withAnimation(.snappy(duration: 0.2)) { isCollapsed = false }
+            } label: {
+                Image(systemName: "sidebar.left")
+                    .font(.title3)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("Expand inspector")
+            .help("Expand inspector")
+
+            Text("Inspector")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .fixedSize()
+                .rotationEffect(.degrees(90))
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.top, 16)
+    }
+
+    private var expandedRail: some View {
         let inspectorState = PlotInspectorValidation.state(document: document, selection: selection)
 
-        ScrollView {
+        return ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Label("Inspector", systemImage: "sidebar.right")
-                    .font(.title3.weight(.semibold))
+                HStack(spacing: 8) {
+                    Text("Inspector")
+                        .font(.title3.weight(.semibold))
+                    Spacer()
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { isCollapsed = true }
+                    } label: {
+                        Image(systemName: "sidebar.right")
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Collapse inspector")
+                    .help("Collapse inspector")
+                }
 
                 switch inspectorState {
                 case .singleFixture(let fixtureId, _), .multiFixture(let fixtureId, _, _):
@@ -465,7 +514,6 @@ struct InspectorRail: View {
             }
             .padding(18)
         }
-        .background(Color(uiToken: .panel))
     }
 
     private var documentSummary: some View {
@@ -609,7 +657,7 @@ struct FixtureInspectorEditor: View {
     }
 
     private var fixtureHeader: some View {
-        let profile = document.fixtureProfiles[fixture.profileId]
+        let profile = PlotToolModules.getProfile(fixture.profileId, in: document.fixtureProfiles)
         return VStack(alignment: .leading, spacing: 10) {
             if case .multiFixture(_, let selectedCount, _) = state {
                 VStack(alignment: .leading, spacing: 4) {
@@ -893,9 +941,13 @@ struct PlotCanvasView: View {
             if let fixture = document.fixtures[fixtureId],
                let position = document.positions[fixture.positionId] {
                 let point = metrics.map(xMm: fixture.xMm, yMm: position.yMm)
+                let profile = PlotToolModules.getProfile(fixture.profileId, in: document.fixtureProfiles)
+                // Cover the drawn glyph (strip/bar extend ~1.6x radius) while
+                // keeping at least the 44pt minimum touch target.
+                let hitDiameter = max(44, fixtureGlyphRadius(for: profile, metrics: metrics) * 3.2)
                 Circle()
                     .fill(Color.clear)
-                    .frame(width: 44, height: 44)
+                    .frame(width: hitDiameter, height: hitDiameter)
                     .contentShape(Circle())
                     .position(point)
                     .simultaneousGesture(
@@ -1001,6 +1053,13 @@ struct PlotCanvasView: View {
         }
     }
 
+    /// On-screen glyph radius for a fixture's profile: real-world `radiusMm`
+    /// scaled to points, clamped so symbols stay legible/tappable at any zoom.
+    private func fixtureGlyphRadius(for profile: FixtureProfile?, metrics: PlotCanvasMetrics) -> CGFloat {
+        let radiusMm = CGFloat(profile?.radiusMm ?? 180)
+        return min(max(radiusMm * metrics.pointsPerMm, 7), 80)
+    }
+
     private func drawFixtures(context: GraphicsContext, metrics: PlotCanvasMetrics) {
         let selectedIds = Set(selection.fixtureIds)
         for fixtureId in document.fixtureOrder {
@@ -1010,18 +1069,40 @@ struct PlotCanvasView: View {
 
             let point = metrics.map(xMm: fixture.xMm, yMm: position.yMm)
             let isSelected = selectedIds.contains(fixtureId)
-            let radius = isSelected ? 9.0 : 7.0
-            let rect = CGRect(
-                x: point.x - radius,
-                y: point.y - radius,
-                width: radius * 2,
-                height: radius * 2
-            )
 
-            var marker = Path()
-            marker.addEllipse(in: rect)
-            context.fill(marker, with: .color(isSelected ? .cyan : .yellow))
-            context.stroke(marker, with: .color(.black.opacity(0.55)), lineWidth: isSelected ? 2 : 1)
+            // Resolve seeded library profiles too — addFixtureFromLibrary stores
+            // only the profileId, so a raw dictionary lookup misses built-ins.
+            let profile = PlotToolModules.getProfile(fixture.profileId, in: document.fixtureProfiles)
+            let kind = FixtureGlyphKind(symbol: profile?.symbol ?? "generic")
+            let radius = fixtureGlyphRadius(for: profile, metrics: metrics)
+            let glyph = FixtureGlyph.paths(for: kind, radius: radius)
+
+            let strokeColor = isSelected
+                ? Color(red: 0.0, green: 0.48, blue: 0.9)
+                : FixtureGlyph.defaultColor(for: kind)
+            let bodyLine: CGFloat = isSelected ? 2.4 : 1.6
+            let frontLine = bodyLine + 1.4
+
+            if isSelected {
+                let halo = radius * 1.7
+                var ring = Path()
+                ring.addEllipse(in: CGRect(x: point.x - halo, y: point.y - halo, width: 2 * halo, height: 2 * halo))
+                context.fill(ring, with: .color(strokeColor.opacity(0.12)))
+            }
+
+            // Draw the glyph in a rotated, fixture-local space; labels stay upright.
+            var glyphContext = context
+            glyphContext.translateBy(x: point.x, y: point.y)
+            glyphContext.rotate(by: .degrees(fixture.rotation))
+            glyphContext.fill(glyph.body, with: .color(Color(uiToken: .stageFill)))
+            glyphContext.stroke(glyph.body, with: .color(strokeColor), lineWidth: bodyLine)
+            glyphContext.stroke(glyph.detail, with: .color(strokeColor), lineWidth: bodyLine)
+            glyphContext.fill(glyph.solid, with: .color(strokeColor))
+            glyphContext.stroke(
+                glyph.front,
+                with: .color(strokeColor),
+                style: StrokeStyle(lineWidth: frontLine, lineCap: .round, lineJoin: .round)
+            )
 
             if document.labelSettings.showFixtureUnit,
                let unitNumber = fixture.unitNumber {
@@ -1029,7 +1110,7 @@ struct PlotCanvasView: View {
                     Text("\(unitNumber)")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.primary),
-                    at: CGPoint(x: point.x, y: point.y + 18)
+                    at: CGPoint(x: point.x, y: point.y + radius + 12)
                 )
             }
         }
@@ -1076,6 +1157,10 @@ struct PlotCanvasMetrics {
     private var scaleFactor: CGFloat {
         baseScaleFactor * viewport.zoom
     }
+
+    /// Points per real-world millimetre at the current zoom, so the canvas can
+    /// draw fixture symbols at their true `radiusMm` scale.
+    var pointsPerMm: CGFloat { scaleFactor }
 
     private var baseScaleFactor: CGFloat {
         let usableWidth = max(size.width - padding * 2, 1)
