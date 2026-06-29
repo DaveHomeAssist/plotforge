@@ -113,6 +113,21 @@ final class PlotInspectorValidationTests: XCTestCase {
         XCTAssertNil(pending.patch)
     }
 
+    func testDmxAddressLimitUsesFixtureFootprint() {
+        let fixture = makeFixture()
+        var draft = PlotInspectorValidation.draft(from: fixture)
+        draft.address = "512"
+
+        let pending = PlotInspectorValidation.buildPendingPatch(
+            fixture: fixture,
+            draft: draft,
+            dmxFootprint: 24
+        )
+
+        XCTAssertEqual(pending.errors[.address], "Address must be 1 to 489.")
+        XCTAssertNil(pending.patch)
+    }
+
     func testClearingUniverseClearsAddress() throws {
         let fixture = makeFixture()
         var draft = PlotInspectorValidation.draft(from: fixture)

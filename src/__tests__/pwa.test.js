@@ -31,9 +31,10 @@ describe("PWA shell", () => {
     const main = readProjectFile("src/main.jsx");
     const worker = readProjectFile("public/sw.js");
 
-    expect(main).toContain("navigator.serviceWorker.register(\"/sw.js\")");
+    expect(main).toContain("navigator.serviceWorker.register(new URL(\"sw.js\", window.location.href), { scope: \"./\" })");
     expect(worker).toContain("plotforge-shell-v1");
-    expect(worker).toContain("\"/manifest.webmanifest\"");
+    expect(worker).toContain("self.registration.scope");
+    expect(worker).toContain("\"./manifest.webmanifest\"");
     expect(worker).toContain("self.addEventListener(\"fetch\"");
   }, 15000);
 });

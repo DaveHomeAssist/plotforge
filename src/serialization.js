@@ -141,17 +141,48 @@ export async function openProjectFile() {
     }
   }
   return new Promise((resolve, reject) => {
+    let settled = false;
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".plot,application/json";
+
+    function cleanup() {
+      window.removeEventListener("focus", onWindowFocus);
+      input.remove();
+    }
+
+    function finish(result) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(result);
+    }
+
+    function fail(error) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    }
+
+    function onWindowFocus() {
+      window.setTimeout(() => {
+        if (!settled && !input.files?.length) finish({ ok: false, aborted: true });
+      }, 300);
+    }
+
+    input.style.display = "none";
     input.onchange = async () => {
       const file = input.files?.[0];
-      if (!file) return resolve({ ok: false, aborted: true });
+      if (!file) return finish({ ok: false, aborted: true });
       try {
         const text = await file.text();
-        resolve({ ok: true, doc: deserialize(text), name: file.name });
-      } catch (e) { reject(e); }
+        finish({ ok: true, doc: deserialize(text), name: file.name });
+      } catch (e) { fail(e); }
     };
+    input.addEventListener("cancel", () => finish({ ok: false, aborted: true }), { once: true });
+    window.addEventListener("focus", onWindowFocus);
+    document.body.appendChild(input);
     input.click();
   });
 }

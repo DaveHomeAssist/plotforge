@@ -96,6 +96,11 @@ public struct PatchDmxConflict: Equatable, Sendable {
     public var b: PatchDmxRange
 }
 
+public struct PatchDmxRangeIssue: Equatable, Sendable {
+    public var range: PatchDmxRange
+    public var reason: String
+}
+
 public struct PatchChannelConflict: Equatable, Sendable {
     public var channel: Int
     public var aFixtureId: String
@@ -592,10 +597,39 @@ public enum PlotToolModules {
             }
             guard ranges.count > 1 else { return [] }
             var conflicts: [PatchDmxConflict] = []
-            for index in 1..<ranges.count where ranges[index].start < ranges[index - 1].endExclusive {
-                conflicts.append(PatchDmxConflict(universe: universe, a: ranges[index - 1], b: ranges[index]))
+            for index in 1..<ranges.count {
+                for priorIndex in 0..<index where ranges[index].start < ranges[priorIndex].endExclusive {
+                    conflicts.append(PatchDmxConflict(universe: universe, a: ranges[priorIndex], b: ranges[index]))
+                }
             }
             return conflicts
+        }
+    }
+
+    public static func invalidDmxRanges(in document: PlotShowDocument) -> [PatchDmxRangeIssue] {
+        document.fixtures.values.compactMap { fixture -> PatchDmxRangeIssue? in
+            guard let universe = fixture.dmx?.universe,
+                  let start = fixture.dmx?.address
+            else {
+                return nil
+            }
+            let footprint = dmxFootprint(for: fixture, in: document)
+            let range = PatchDmxRange(
+                fixtureId: fixture.id,
+                unitNumber: fixture.unitNumber,
+                start: start,
+                endExclusive: start + footprint
+            )
+            guard universe >= 1,
+                  start >= 1,
+                  range.endExclusive <= 513
+            else {
+                let reason = range.endExclusive > 513
+                    ? "DMX range \(range.start)-\(range.endAddress) exceeds 512"
+                    : "DMX universe and address must be positive whole numbers"
+                return PatchDmxRangeIssue(range: range, reason: reason)
+            }
+            return nil
         }
     }
 
@@ -691,6 +725,16 @@ public enum PlotToolModules {
                 fixtureLabels: [fixtureLabel(document, conflict.a.fixtureId), fixtureLabel(document, conflict.b.fixtureId)]
             )
         }
+        let invalidDmxRows = invalidDmxRanges(in: document).map { issue in
+            PlotCheckRow(
+                id: "dmx-invalid-\(issue.range.fixtureId)",
+                kind: .dmx,
+                title: "DMX range invalid",
+                detail: issue.reason,
+                fixtureIds: [issue.range.fixtureId],
+                fixtureLabels: [fixtureLabel(document, issue.range.fixtureId)]
+            )
+        }
         let channelRows = channelConflicts(in: document).map { conflict in
             PlotCheckRow(
                 id: "channel-\(conflict.channel)-\(conflict.aFixtureId)-\(conflict.bFixtureId)",
@@ -731,7 +775,7 @@ public enum PlotToolModules {
             )
         }
 
-        return (dmxRows + channelRows + circuitRows + profileRows)
+        return (dmxRows + invalidDmxRows + channelRows + circuitRows + profileRows)
             .sorted { $0.title == $1.title ? $0.id < $1.id : $0.title < $1.title }
     }
 
@@ -900,7 +944,7 @@ public enum PlotToolModules {
     public static func patchSummary(in document: PlotShowDocument) -> (rows: Int, dmxConflicts: Int, channelConflicts: Int, checks: Int) {
         (
             rows: patchTableRows(in: document).count,
-            dmxConflicts: patchConflicts(in: document).count,
+            dmxConflicts: patchConflicts(in: document).count + invalidDmxRanges(in: document).count,
             channelConflicts: channelConflicts(in: document).count,
             checks: checkRows(in: document).count
         )
@@ -914,6 +958,9 @@ public enum PlotToolModules {
             let label = "DMX U\(conflict.universe)"
             dmx[conflict.a.fixtureId, default: []].append(label)
             dmx[conflict.b.fixtureId, default: []].append(label)
+        }
+        for issue in invalidDmxRanges(in: document) {
+            dmx[issue.range.fixtureId, default: []].append(issue.reason)
         }
         for conflict in channelConflicts(in: document) {
             let label = "channel \(conflict.channel)"

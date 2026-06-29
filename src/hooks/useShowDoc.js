@@ -30,7 +30,7 @@ import { feetToMm } from "../domain/units.js";
 import { getProfile, normalizeOpenFixtureLibraryProfile } from "../domain/profiles.js";
 import { applyPlotStarterPlan } from "../domain/plotStarter.js";
 import { saveProjectFile, openProjectFile } from "../serialization.js";
-import { patchConflicts } from "../domain/patch.js";
+import { invalidDmxRanges, patchConflicts } from "../domain/patch.js";
 import { alignFixtures, distributeFixtures } from "../domain/fixtureLayout.js";
 import { recordDebugEvent } from "../debugEvents.js";
 
@@ -390,7 +390,7 @@ export default function useShowDoc(seedShow) {
     onRestoreDraft,
     onLoadShow,
     onApplyPlotStarterPlan,
-    conflicts: patchConflicts(doc),
+    conflicts: [...patchConflicts(doc), ...invalidDmxRanges(doc)],
     totalFixtures: doc.fixtureOrder.length
   };
 }

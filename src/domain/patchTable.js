@@ -1,4 +1,4 @@
-import { channelConflicts, patchConflicts } from "./patch.js";
+import { channelConflicts, invalidDmxRanges, patchConflicts } from "./patch.js";
 import { circuitDisplay, normalizeFixtureCircuit } from "./circuiting.js";
 import { formatFixtureNotes, normalizeFixtureNotes } from "./fixtureNotes.js";
 import { getFixtureStatus } from "./fixtureStatus.js";
@@ -18,6 +18,10 @@ function buildConflictMaps(doc) {
     const label = `DMX U${conflict.universe}`;
     addConflict(dmx, conflict.a.id, label);
     addConflict(dmx, conflict.b.id, label);
+  });
+
+  invalidDmxRanges(doc).forEach(range => {
+    addConflict(dmx, range.id, range.reason);
   });
 
   channelConflicts(doc).forEach(conflict => {

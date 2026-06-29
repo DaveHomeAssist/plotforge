@@ -108,6 +108,65 @@ final class PlotToolModulesTests: XCTestCase {
         XCTAssertTrue(checks.contains { $0.kind == .profile && $0.fixtureIds == ["fx_missing_profile"] })
     }
 
+    func testPatchConflictsReportLongPriorAndInvalidRanges() throws {
+        let position = Position(id: "pos_dmx", name: "DMX TEST", yMm: 0, lengthMm: 3_000)
+        let fixtures = [
+            Fixture(
+                id: "fx_long",
+                positionId: position.id,
+                profileId: "robe_megapointe",
+                xMm: -500,
+                dmx: DmxAddress(universe: 1, address: 1)
+            ),
+            Fixture(
+                id: "fx_short_a",
+                positionId: position.id,
+                profileId: "s4_26",
+                xMm: 0,
+                dmx: DmxAddress(universe: 1, address: 2)
+            ),
+            Fixture(
+                id: "fx_short_b",
+                positionId: position.id,
+                profileId: "s4_26",
+                xMm: 500,
+                dmx: DmxAddress(universe: 1, address: 10)
+            ),
+            Fixture(
+                id: "fx_invalid",
+                positionId: position.id,
+                profileId: "robe_megapointe",
+                xMm: 1_000,
+                dmx: DmxAddress(universe: 1, address: 500)
+            ),
+        ]
+        let document = PlotShowDocument(
+            id: "show_dmx",
+            name: "DMX",
+            positions: [position.id: position],
+            positionOrder: [position.id],
+            fixtures: Dictionary(uniqueKeysWithValues: fixtures.map { ($0.id, $0) }),
+            fixtureOrder: fixtures.map(\.id)
+        )
+
+        let conflicts = PlotToolModules.patchConflicts(in: document)
+        let invalid = PlotToolModules.invalidDmxRanges(in: document)
+        let rows = PlotToolModules.patchTableRows(in: document)
+        let checks = PlotToolModules.checkRows(in: document)
+        let summary = PlotToolModules.patchSummary(in: document)
+
+        XCTAssertEqual(conflicts.count, 2)
+        XCTAssertEqual(conflicts.map { [$0.a.fixtureId, $0.b.fixtureId] }, [
+            ["fx_long", "fx_short_a"],
+            ["fx_long", "fx_short_b"],
+        ])
+        XCTAssertEqual(invalid.first?.range.fixtureId, "fx_invalid")
+        XCTAssertEqual(invalid.first?.reason, "DMX range 500-538 exceeds 512")
+        XCTAssertTrue(rows.first { $0.id == "fx_invalid" }?.hasDmxConflict == true)
+        XCTAssertTrue(checks.contains { $0.title == "DMX range invalid" && $0.fixtureIds == ["fx_invalid"] })
+        XCTAssertEqual(summary.dmxConflicts, 3)
+    }
+
     func testLabelSummaryReportsVisibilityAndVariableSizes() {
         let summary = PlotToolModules.labelControlSummary(
             LabelSettings(

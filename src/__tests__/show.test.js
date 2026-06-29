@@ -9,7 +9,7 @@ import {
 } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 import { serialize, deserialize } from "../serialization.js";
-import { patchConflicts, channelConflicts } from "../domain/patch.js";
+import { patchConflicts, channelConflicts, invalidDmxRanges } from "../domain/patch.js";
 
 function seed() {
   let doc = newShow({ name: "Test" });
@@ -190,6 +190,41 @@ describe("patch", () => {
     const conflicts = patchConflicts(doc);
     expect(conflicts).toHaveLength(1);
     expect(conflicts[0].universe).toBe(1);
+  });
+
+  it("flags every overlap against a long prior DMX range", () => {
+    let { doc, posId } = seed();
+    doc = addFixture(doc, newFixture({
+      positionId: posId, profileId: "spot_mh", xMm: 0,
+      dmx: { universe: 1, address: 1 },     // occupies 1..24
+    }));
+    doc = addFixture(doc, newFixture({
+      positionId: posId, profileId: "s4_26", xMm: feetToMm(2),
+      dmx: { universe: 1, address: 2 },
+    }));
+    doc = addFixture(doc, newFixture({
+      positionId: posId, profileId: "s4_26", xMm: feetToMm(4),
+      dmx: { universe: 1, address: 10 },
+    }));
+
+    expect(patchConflicts(doc)).toHaveLength(2);
+  });
+
+  it("flags DMX ranges that overrun address 512", () => {
+    let { doc, posId } = seed();
+    doc = addFixture(doc, newFixture({
+      positionId: posId, profileId: "spot_mh", xMm: 0,
+      dmx: { universe: 1, address: 512 },
+    }));
+
+    expect(patchConflicts(doc)).toHaveLength(0);
+    expect(invalidDmxRanges(doc)).toEqual([
+      expect.objectContaining({
+        start: 512,
+        end: 536,
+        reason: "DMX range 512-535 exceeds 512",
+      }),
+    ]);
   });
 
   it("does not flag ranges on different universes", () => {

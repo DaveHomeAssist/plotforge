@@ -1,4 +1,4 @@
-import { patchConflicts, channelConflicts } from "./patch.js";
+import { patchConflicts, channelConflicts, invalidDmxRanges } from "./patch.js";
 import { focusBeamRows } from "./focus.js";
 import { getProfile } from "./profiles.js";
 import { commentPinRows, normalizeLabelSettings } from "./show.js";
@@ -77,7 +77,7 @@ function plural(count, singular) {
 }
 
 export function printPatchStatus(doc) {
-  const dmx = patchConflicts(doc).length;
+  const dmx = patchConflicts(doc).length + invalidDmxRanges(doc).length;
   const channels = channelConflicts(doc).length;
   if (!dmx && !channels) return "Patch clear";
   return [dmx ? plural(dmx, "DMX conflict") : "", channels ? plural(channels, "channel conflict") : ""]

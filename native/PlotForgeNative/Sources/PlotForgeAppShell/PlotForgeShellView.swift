@@ -530,7 +530,11 @@ struct FixtureInspectorEditor: View {
         self.fixture = fixture
         self.state = state
         self.onCommitPatch = onCommitPatch
-        _session = State(initialValue: FixtureInspectorEditingSession(fixture: fixture))
+        let profile = PlotToolModules.getProfile(fixture.profileId, in: document.fixtureProfiles)
+        _session = State(initialValue: FixtureInspectorEditingSession(
+            fixture: fixture,
+            dmxFootprint: profile?.dmxFootprint ?? 1
+        ))
     }
 
     var body: some View {

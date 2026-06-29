@@ -1,7 +1,7 @@
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import Inspector from "../components/Inspector.jsx";
+import Inspector, { buildPendingPatch, draftFromFixture } from "../components/Inspector.jsx";
 import { newShow, newPosition, newFixture, addPosition, addFixture } from "../domain/show.js";
 import { feetToMm } from "../domain/units.js";
 
@@ -150,6 +150,24 @@ describe("Inspector", () => {
 
     expect(screen.getByText("Set universe before address.")).toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("validates DMX address against fixture footprint", () => {
+    const fixture = newFixture({
+      positionId: "pos_1",
+      profileId: "spot_mh",
+      xMm: 0,
+      dmx: { universe: 1, address: 1 },
+    });
+    const draft = {
+      ...draftFromFixture(fixture),
+      address: "512",
+    };
+
+    const pending = buildPendingPatch(fixture, draft, { dmxFootprint: 24 });
+
+    expect(pending.errors.address).toBe("Address must be 1 to 489.");
+    expect(pending.patch).toBeNull();
   });
 
   it("increments numeric fields with arrow keys", () => {

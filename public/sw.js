@@ -1,5 +1,6 @@
 const CACHE_NAME = "plotforge-shell-v1";
-const SHELL_URLS = ["/", "/manifest.webmanifest", "/favicon.svg"];
+const SCOPE_URL = self.registration.scope;
+const SHELL_URLS = ["./", "./manifest.webmanifest", "./favicon.svg"].map(path => new URL(path, SCOPE_URL).toString());
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -26,6 +27,6 @@ self.addEventListener("fetch", event => {
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         return response;
       })
-      .catch(() => caches.match(event.request).then(response => response || caches.match("/"))),
+      .catch(() => caches.match(event.request).then(response => response || caches.match(new URL("./", SCOPE_URL).toString()))),
   );
 });

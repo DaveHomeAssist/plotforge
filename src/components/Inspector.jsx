@@ -28,6 +28,18 @@ const NUMERIC_LIMITS = {
   address: { min: 1, max: 512, label: "Address" },
 };
 
+function addressLimitForFootprint(dmxFootprint = 1) {
+  const footprint = Math.max(1, Number(dmxFootprint) || 1);
+  return Math.max(1, 513 - footprint);
+}
+
+function numericLimitsFor(key, options = {}) {
+  if (key === "address") {
+    return { ...NUMERIC_LIMITS.address, max: addressLimitForFootprint(options.dmxFootprint) };
+  }
+  return NUMERIC_LIMITS[key];
+}
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(value, max));
 }
@@ -68,15 +80,15 @@ function hasPatch(patch) {
   return Object.keys(patch).length > 0;
 }
 
-export function buildPendingPatch(fx, draft) {
+export function buildPendingPatch(fx, draft, options = {}) {
   const committed = draftFromFixture(fx);
   const errors = {};
   const patch = {};
 
   const xMm = parseImperial(draft.x);
-  const channel = parseIntegerDraft(draft.channel, NUMERIC_LIMITS.channel);
-  const universe = parseIntegerDraft(draft.universe, NUMERIC_LIMITS.universe);
-  const address = parseIntegerDraft(draft.address, NUMERIC_LIMITS.address);
+  const channel = parseIntegerDraft(draft.channel, numericLimitsFor("channel", options));
+  const universe = parseIntegerDraft(draft.universe, numericLimitsFor("universe", options));
+  const address = parseIntegerDraft(draft.address, numericLimitsFor("address", options));
 
   if (xMm == null) errors.x = "Use feet and inches, like 2'-6\".";
   if (channel.error) errors.channel = channel.error;
@@ -197,7 +209,10 @@ function FixtureInspector({ doc, fx, selectedFixtureIds, onChange, onDelete, rea
   const timerRef = useRef(null);
   const lastCommitRef = useRef(null);
   const [draft, setDraft] = useState(() => draftFromFixture(fx));
-  const pending = useMemo(() => buildPendingPatch(fx, draft), [fx, draft]);
+  const dmxFootprint = profile?.dmxFootprint ?? 1;
+  const pending = useMemo(() => (
+    buildPendingPatch(fx, draft, { dmxFootprint })
+  ), [fx, draft, dmxFootprint]);
   const latestRef = useRef({ fxId: fx.id, onChange, pending });
   const errorSignature = JSON.stringify(pending.errors);
 
@@ -271,7 +286,7 @@ function FixtureInspector({ doc, fx, selectedFixtureIds, onChange, onDelete, rea
   }
 
   function bumpNumericField(key, direction, step) {
-    const limits = NUMERIC_LIMITS[key];
+    const limits = numericLimitsFor(key, { dmxFootprint });
     if (!limits) return;
     const committed = draftFromFixture(fx);
     const parsedDraft = parseIntegerDraft(draft[key], limits);
@@ -295,7 +310,7 @@ function FixtureInspector({ doc, fx, selectedFixtureIds, onChange, onDelete, rea
       return;
     }
 
-    if ((event.key === "ArrowUp" || event.key === "ArrowDown") && NUMERIC_LIMITS[key]) {
+    if ((event.key === "ArrowUp" || event.key === "ArrowDown") && numericLimitsFor(key, { dmxFootprint })) {
       event.preventDefault();
       const direction = event.key === "ArrowUp" ? 1 : -1;
       bumpNumericField(key, direction, event.shiftKey ? 10 : 1);

@@ -1,4 +1,4 @@
-import { channelConflicts, patchConflicts } from "./patch.js";
+import { channelConflicts, invalidDmxRanges, patchConflicts } from "./patch.js";
 import { getProfile } from "./profiles.js";
 
 function fixtureLabel(doc, fixtureId) {
@@ -26,6 +26,15 @@ export function conflictPanelRows(doc) {
     fixtureLabels: [fixtureLabel(doc, conflict.a.id), fixtureLabel(doc, conflict.b.id)],
   }));
 
+  const invalidDmxRows = invalidDmxRanges(doc).map(range => ({
+    id: `dmx-invalid-${range.universe}-${range.id}`,
+    kind: "dmx",
+    title: `DMX U${range.universe} range invalid`,
+    detail: range.reason,
+    fixtureIds: [range.id],
+    fixtureLabels: [fixtureLabel(doc, range.id)],
+  }));
+
   const channelRows = channelConflicts(doc).map(conflict => ({
     id: `channel-${conflict.channel}-${conflict.a}-${conflict.b}`,
     kind: "channel",
@@ -35,5 +44,6 @@ export function conflictPanelRows(doc) {
     fixtureLabels: [fixtureLabel(doc, conflict.a), fixtureLabel(doc, conflict.b)],
   }));
 
-  return [...dmxRows, ...channelRows].sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id));
+  return [...dmxRows, ...invalidDmxRows, ...channelRows]
+    .sort((a, b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id));
 }

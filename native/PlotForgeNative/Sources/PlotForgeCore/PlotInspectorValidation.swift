@@ -263,11 +263,12 @@ public enum PlotInspectorValidation {
         _ field: FixtureInspectorField,
         direction: Int,
         step: Int = 1,
+        dmxFootprint: Int = 1,
         draft: FixtureInspectorDraft,
         committed: FixtureInspectorDraft
     ) -> FixtureInspectorDraft {
         guard direction != 0,
-              let limits = numericLimits(for: field)
+              let limits = numericLimits(for: field, dmxFootprint: dmxFootprint)
         else {
             return draft
         }
@@ -287,16 +288,17 @@ public enum PlotInspectorValidation {
 
     public static func buildPendingPatch(
         fixture: Fixture,
-        draft: FixtureInspectorDraft
+        draft: FixtureInspectorDraft,
+        dmxFootprint: Int = 1
     ) -> FixtureInspectorPendingPatch {
         let committed = Self.draft(from: fixture)
         var errors: [FixtureInspectorField: String] = [:]
         var patch = FixtureInspectorPatch()
 
         let xMm = parseImperial(draft.x)
-        let channel = parseIntegerDraft(draft.channel, limits: numericLimits(for: .channel)!)
-        let universe = parseIntegerDraft(draft.universe, limits: numericLimits(for: .universe)!)
-        let address = parseIntegerDraft(draft.address, limits: numericLimits(for: .address)!)
+        let channel = parseIntegerDraft(draft.channel, limits: numericLimits(for: .channel, dmxFootprint: dmxFootprint)!)
+        let universe = parseIntegerDraft(draft.universe, limits: numericLimits(for: .universe, dmxFootprint: dmxFootprint)!)
+        let address = parseIntegerDraft(draft.address, limits: numericLimits(for: .address, dmxFootprint: dmxFootprint)!)
 
         if xMm == nil {
             errors[.x] = "Use feet and inches, like 2'-6\"."
@@ -593,14 +595,14 @@ private struct NumericLimits {
     var label: String
 }
 
-private func numericLimits(for field: FixtureInspectorField) -> NumericLimits? {
+private func numericLimits(for field: FixtureInspectorField, dmxFootprint: Int = 1) -> NumericLimits? {
     switch field {
     case .channel:
         NumericLimits(min: 1, max: 9_999, label: "Channel")
     case .universe:
         NumericLimits(min: 1, max: 63, label: "Universe")
     case .address:
-        NumericLimits(min: 1, max: 512, label: "Address")
+        NumericLimits(min: 1, max: max(1, 513 - max(1, dmxFootprint)), label: "Address")
     default:
         nil
     }

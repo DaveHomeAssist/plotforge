@@ -2,12 +2,14 @@ import PlotForgeCore
 
 struct FixtureInspectorEditingSession: Equatable {
     let fixture: Fixture
+    let dmxFootprint: Int
     var draft: FixtureInspectorDraft
     var errors: [FixtureInspectorField: String]
     var lastCommittedPatch: FixtureInspectorPatch?
 
-    init(fixture: Fixture) {
+    init(fixture: Fixture, dmxFootprint: Int = 1) {
         self.fixture = fixture
+        self.dmxFootprint = max(1, dmxFootprint)
         self.draft = PlotInspectorValidation.draft(from: fixture)
         self.errors = [:]
         self.lastCommittedPatch = nil
@@ -88,6 +90,7 @@ struct FixtureInspectorEditingSession: Equatable {
         draft = PlotInspectorValidation.bumpedNumericField(
             field,
             direction: direction,
+            dmxFootprint: dmxFootprint,
             draft: draft,
             committed: PlotInspectorValidation.draft(from: fixture)
         )
@@ -97,7 +100,8 @@ struct FixtureInspectorEditingSession: Equatable {
     private var pending: FixtureInspectorPendingPatch {
         PlotInspectorValidation.buildPendingPatch(
             fixture: fixture,
-            draft: draft
+            draft: draft,
+            dmxFootprint: dmxFootprint
         )
     }
 }

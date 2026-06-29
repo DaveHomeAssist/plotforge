@@ -81,6 +81,17 @@ final class FixtureInspectorEditingSessionTests: XCTestCase {
         XCTAssertEqual(channelPatch?.channel, 12)
     }
 
+    func testAddressValidationUsesFixtureFootprint() {
+        var session = FixtureInspectorEditingSession(fixture: makeFixture(), dmxFootprint: 24)
+        var committed: [FixtureInspectorPatch] = []
+
+        session.setValue("512", for: .address)
+
+        XCTAssertEqual(session.errors[.address], "Address must be 1 to 489.")
+        XCTAssertFalse(session.commitPending { committed.append($0) })
+        XCTAssertTrue(committed.isEmpty)
+    }
+
     private func makeFixture() -> Fixture {
         Fixture(
             id: "fx_1",
