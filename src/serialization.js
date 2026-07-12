@@ -6,11 +6,16 @@ import { normalizeFixtureCircuit } from "./domain/circuiting.js";
 import { normalizeFixtureNotes } from "./domain/fixtureNotes.js";
 import { normalizeFixtureStatus } from "./domain/fixtureStatus.js";
 import { normalizeOscBridgeSettings } from "./domain/oscBridge.js";
+import { normalizeDmxOutputSettings } from "./domain/dmxOutputPreferences.js";
 
 export const PLOT_MIME = "application/x-plotforge+json";
 
 export function serialize(doc) {
-  return JSON.stringify({ ...doc, version: DOC_VERSION }, null, 2);
+  return JSON.stringify({
+    ...doc,
+    version: DOC_VERSION,
+    dmxOutput: normalizeDmxOutputSettings(doc.dmxOutput || {}),
+  }, null, 2);
 }
 
 export function deserialize(text) {
@@ -91,7 +96,7 @@ export function migrate(doc) {
     cur = fn(cur);
     v = cur.version;
   }
-  return cur;
+  return { ...cur, dmxOutput: normalizeDmxOutputSettings(cur.dmxOutput || {}) };
 }
 
 // ---------- File System Access API + download fallback ----------

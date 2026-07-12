@@ -1,0 +1,100 @@
+{
+  "version": 9,
+  "id": "show_dmx_golden",
+  "name": "DMX Golden Test Plot",
+  "metadata": {
+    "drawingTitle": "DMX Golden",
+    "venueName": "Test Stage",
+    "company": "",
+    "designer": "",
+    "draftsperson": "",
+    "showDate": "",
+    "revision": "D1",
+    "scaleLabel": "1/4\" = 1'-0\""
+  },
+  "venue": {
+    "stageWidthMm": 10973,
+    "stageDepthMm": 6706,
+    "proscWidthMm": 9144
+  },
+  "positions": {
+    "pos_stage": {
+      "id": "pos_stage",
+      "name": "1ST ELEC",
+      "kind": "pipe",
+      "yMm": -2438,
+      "lengthMm": 8534,
+      "trimMm": 6706
+    }
+  },
+  "positionOrder": ["pos_stage"],
+  "fixtures": {
+    "fx_s4_one": {
+      "id": "fx_s4_one",
+      "positionId": "pos_stage",
+      "profileId": "s4_26",
+      "xMm": -1829,
+      "rotation": 0,
+      "focus": null,
+      "unitNumber": 1,
+      "channel": 1,
+      "dmx": { "universe": 1, "address": 1 },
+      "color": "R02",
+      "gobo": "",
+      "note": "",
+      "notes": { "color": "", "gobo": "", "focus": "", "crew": "" },
+      "status": "patched",
+      "circuit": "A1",
+      "dimmer": "D1"
+    },
+    "fx_led_one": {
+      "id": "fx_led_one",
+      "positionId": "pos_stage",
+      "profileId": "led_par_rgbw",
+      "xMm": 0,
+      "rotation": 0,
+      "focus": null,
+      "unitNumber": 2,
+      "channel": 2,
+      "dmx": { "universe": 1, "address": 10 },
+      "color": "",
+      "gobo": "",
+      "note": "",
+      "notes": { "color": "", "gobo": "", "focus": "", "crew": "" },
+      "status": "patched",
+      "circuit": "A2",
+      "dimmer": "D2"
+    },
+    "fx_mover_one": {
+      "id": "fx_mover_one",
+      "positionId": "pos_stage",
+      "profileId": "spot_mh",
+      "xMm": 1829,
+      "rotation": 0,
+      "focus": null,
+      "unitNumber": 3,
+      "channel": 3,
+      "dmx": { "universe": 1, "address": 40 },
+      "color": "",
+      "gobo": "",
+      "note": "",
+      "notes": { "color": "", "gobo": "", "focus": "", "crew": "" },
+      "status": "patched",
+      "circuit": "A3",
+      "dimmer": "D3"
+    }
+  },
+  "fixtureOrder": ["fx_s4_one", "fx_led_one", "fx_mover_one"],
+  "fixtureProfiles": {},
+  "revisions": {},
+  "revisionOrder": [],
+  "activeRevisionId": null,
+  "commentPins": {},
+  "commentPinOrder": [],
+  "oscBridge": {
+    "namespace": "/plotforge",
+    "relayUrl": "ws://127.0.0.1:8765",
+    "targetHost": "127.0.0.1",
+    "targetPort": 8000
+  }
+}

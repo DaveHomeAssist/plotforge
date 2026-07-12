@@ -14,6 +14,7 @@ import {
   activateRevision,
   updateOscBridge,
   updateLabelSettings,
+  updateDmxOutputSettings,
   updateShowName,
   updateProjectMetadata,
   updateFixture,
@@ -206,6 +207,10 @@ export default function useShowDoc(seedShow) {
     commit(updateLabelSettings(doc, patch));
   }, [doc, commit]);
 
+  const onDmxOutputChange = useCallback((patch) => {
+    commit(updateDmxOutputSettings(doc, patch));
+  }, [doc, commit]);
+
   const onAddRevision = useCallback(({ name, note }) => {
     const revision = newRevision({ name, note });
     commit(addRevision(doc, revision));
@@ -371,6 +376,7 @@ export default function useShowDoc(seedShow) {
     onProjectMetadataChange,
     onOscBridgeChange,
     onLabelSettingsChange,
+    onDmxOutputChange,
     onAddRevision,
     onActivateRevision,
     onPositionChange,

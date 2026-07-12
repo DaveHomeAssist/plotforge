@@ -51,6 +51,14 @@ describe("fixture profiles", () => {
     expect(library.find(profile => profile.id === "ofl_demo_fixture")).toEqual(expect.objectContaining({
       libraryTier: "ofl-import",
       dmxFootprint: 4,
+      outputMap: expect.objectContaining({
+        id: "ofl_demo_fixture-candidate-output-map",
+        profileIds: ["ofl_demo_fixture"],
+        source: expect.objectContaining({
+          type: "open-fixture-library-candidate",
+          approved: false,
+        }),
+      }),
       source: expect.objectContaining({ type: "open-fixture-library" }),
     }));
   });

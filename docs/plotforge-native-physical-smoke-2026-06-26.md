@@ -25,12 +25,25 @@ Expected files:
 | --- | --- | --- |
 | `device-process.txt` | Yes | CoreDevice process proof |
 | `launch-start-screen-david.json` | Yes for current run | CoreDevice launch proof for the corrected start-screen build |
-| `installed-apps-david.json` | Yes for current run | CoreDevice installed app metadata showing bundle id and version |
-| `display-david.json` | Yes for current run | CoreDevice display metadata showing active iPad display and orientation |
+| `installed-apps.json` or `installed-apps-david.json` | Yes for current run | CoreDevice installed app metadata showing bundle id and version |
+| `display.json` or `display-david.json` | Yes for current run | CoreDevice display metadata showing active iPad display and orientation |
+| `lock-state.json` or `lock-state-david.json` | Yes for current run | CoreDevice lock-state metadata showing the device is usable for launch/smoke |
 | `smoke-recording.mov` or `smoke-screenshots/` | Yes | QuickTime iPad capture or Xcode screenshots |
-| `exported-files/` | Yes for N5 | Exported PDF, CSV, OSC JSON, and interop JSON |
+| `exported-files/` | Yes for N5 | Exported `.plot`, PDF, PDF review JSON, CSVs, OSC JSON, and interop JSON |
 | `/private/tmp/plotforge-native-export-smoke-2026-06-26/` | Reference | CLI-generated export artifact baseline from `PlotForgeExportSmoke` |
 | `notes.md` | Yes | Operator notes, pass/fail rows, defects |
+
+Machine check:
+
+```sh
+PATH=/opt/homebrew/opt/node@22/bin:$PATH npm run native:physical-evidence-check -- --dir /private/tmp/plotforge-native-physical-smoke-2026-06-26
+```
+
+For the D6 DMX output smoke folder, use:
+
+```sh
+PATH=/opt/homebrew/opt/node@22/bin:$PATH npm run native:physical-evidence-check -- --dir /private/tmp/plotforge-native-physical-smoke-2026-06-30-dmx-output
+```
 
 ## Preflight
 
@@ -49,6 +62,9 @@ Known current proof:
 - Corrected start-screen build installed and launched on David's iPad on 2026-06-26.
 - David's iPad listed `PlotForgeNative.app/PlotForgeNative` as process `3514` in `/private/tmp/plotforge-native-physical-smoke-2026-06-26/device-process.txt`.
 - CoreDevice launch JSON for that run is `/private/tmp/plotforge-native-physical-smoke-2026-06-26/launch-start-screen-david.json`.
+- The D6 output smoke launch capture on 2026-06-30 14:35Z succeeded in `/private/tmp/plotforge-native-physical-smoke-2026-06-30-dmx-output/`, with `launch_exit=0` and `PlotForgeNative.app/PlotForgeNative` listed in `device-process.txt`.
+- The D6 output smoke folder also has CoreDevice installed-apps, display, and lock-state JSON evidence showing the PlotForge bundle, active display, and unlocked-since-boot state.
+- The D6 output smoke evidence checker still fails until visual proof, export artifacts, metadata, and passing output gate rows are retained.
 - Ignacio did not list PlotForge as running in the last check.
 
 ## Screen Capture
@@ -73,6 +89,7 @@ Still capture fallback:
 
 | Gate | Action | Pass Evidence | Result |
 | --- | --- | --- | --- |
+| Launch process | Capture CoreDevice launch/process proof | `device-process.txt` lists `PlotForgeNative.app/PlotForgeNative` or the PlotForge bundle id; launch JSON exists when launch was attempted | Pending |
 | Launch choice | Open PlotForge Native from a clean app state | Recording or screenshot shows the PlotForge start screen with New Plot and Open .plot actions; the user is not stranded in the raw Files browser | Pending visual proof; CoreDevice launch proof captured |
 | Launch document | Create a new plot or open an existing `.plot` | Recording or screenshot shows native app frame with sidebar, canvas, and inspector | Pending |
 | N2 canvas | Select fixture, pan or zoom canvas, fit or reset view, drag fixture along position, nudge if keyboard is attached | Fixture selection, movement, snap behavior, and renumbered unit display are visible | Pending |
@@ -82,18 +99,26 @@ Still capture fallback:
 | N4 labels | Change fixture unit, fixture channel, position, comment, and focus label visibility or text size | Canvas label visibility and size changes are visible | Pending |
 | N4 Wizard | Preview and apply Wizard starter, then undo and redo | New positions and fixtures append without clearing existing work; undo and redo recover the expected states | Pending |
 | N4 patch/checks | Open Patch and Reports readiness with conflicts or incomplete circuit data if present | Patch rows and check rows are readable on physical iPad | Pending |
-| N5 exports | Export PDF, patch CSV, gel CSV, circuit CSV, fixture paperwork CSV, OSC JSON, and interop JSON | Files appear under `exported-files/`; filenames are deterministic; basic contents inspect cleanly | Pending |
+| N5 exports | Export `.plot`, PDF, PDF review JSON, patch CSV, gel CSV, circuit CSV, fixture paperwork CSV, OSC JSON, and interop JSON | Files appear under `exported-files/`; filenames are deterministic; basic contents inspect cleanly | Pending |
 | N5 export baseline | Compare platform-exported files against the CLI-generated export smoke folder where applicable | `.plot`, PDF, PDF review JSON, CSV, OSC JSON, and interop JSON names and basic contents align with the baseline | Pending |
+| Output arm | Open the native Output tool, enter a safe unicast Art-Net target, and arm output | Recording or screenshot shows armed state, explicit protocol/host/universe/rate, and no nonzero send before Send Test | Pending |
+| Selected fixture output test | Select one safe dimmer or intensity fixture and send a test frame to the known node/fixture path | Recording plus node/fixture evidence shows only the selected fixture/channel responds; wrong target remains visibly blocked or failed | Pending |
+| Blackout | Tap Blackout after the selected fixture output test | Recording plus node/fixture evidence shows output returns to zero and the app remains recoverable | Pending |
+| Local network permission | Exercise the first local-network permission prompt or denial path on iPadOS | Recording or screenshot shows permission success, or denial produces clear in-app failure copy without pretending output succeeded | Pending |
 | Save/reopen | Save the `.plot`, close or background the app, reopen the saved document | Existing fixtures, labels, inspector data, Wizard additions, and exported state are preserved | Pending |
 
 ## Pass Rules
 
 - A gate is green only when visual proof or exported files show the behavior.
 - CoreDevice process proof alone proves launch, not UI correctness.
+- The Launch process gate may be satisfied by machine evidence when `device-process.txt`, launch JSON, installed-apps JSON, display JSON, and lock-state JSON are all present and the process list includes `PlotForgeNative.app/PlotForgeNative`.
+- `npm run native:physical-evidence-check` must pass against the retained evidence folder before this protocol is called complete. The checker validates the exported `.plot` as version 9 JSON, the PDF as `%PDF-1.4`, the four expected CSV headers, OSC/interop JSON `kind` markers, and the PDF review `physicalSignoff: pending` marker.
 - Any crash, signing error, missing exported file, unreadable panel, layout clipping, data loss, or failed save/reopen keeps the gate open.
 - If a gesture is hard to capture, write the exact operator action in `notes.md` and include before/after screenshots.
 
 ## Notes Template
+
+`scripts/physical-smoke-evidence.sh` auto-fills blank `Date`, `Device`, `Build`, and `Bundle` fields from the CoreDevice capture. `Operator` and every behavior gate remain manual because they require human observation, visual proof, or exported files.
 
 ```md
 # PlotForge Native Physical Smoke Notes
@@ -113,6 +138,7 @@ Operator:
 
 | Gate | Result | Evidence File | Notes |
 | --- | --- | --- | --- |
+| Launch process | Pending | device-process.txt, launch.json if captured | CoreDevice proof only; visual launch choice still requires screenshot or recording |
 | Launch choice | Pending |  |  |
 | Launch document | Pending |  |  |
 | N2 canvas | Pending |  |  |
@@ -124,6 +150,10 @@ Operator:
 | N4 patch/checks | Pending |  |  |
 | N5 exports | Pending |  |  |
 | N5 export baseline | Pending |  |  |
+| Output arm | Pending |  |  |
+| Selected fixture output test | Pending |  |  |
+| Blackout | Pending |  |  |
+| Local network permission | Pending |  |  |
 | Save/reopen | Pending |  |  |
 
 ## Defects

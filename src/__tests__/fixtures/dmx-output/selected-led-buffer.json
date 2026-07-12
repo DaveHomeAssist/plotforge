@@ -1,0 +1,26 @@
+{
+  "name": "selected LED RGBW test buffer",
+  "intent": {
+    "type": "selected-fixture-test",
+    "selectedFixtureId": "fx_led_one",
+    "values": {
+      "intensity": 200,
+      "red": 255,
+      "green": 128,
+      "blue": 64,
+      "white": 32
+    }
+  },
+  "expected": {
+    "universe": 1,
+    "slotCount": 512,
+    "nonZeroSlots": [
+      { "address": 10, "value": 200, "type": "intensity" },
+      { "address": 11, "value": 255, "type": "red" },
+      { "address": 12, "value": 128, "type": "green" },
+      { "address": 13, "value": 64, "type": "blue" },
+      { "address": 14, "value": 32, "type": "white" }
+    ],
+    "zeroAddresses": [1, 15, 16, 17, 40]
+  }
+}

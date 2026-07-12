@@ -27,6 +27,7 @@ enum PlotTool: String, CaseIterable, Identifiable {
     case setup = "Setup"
     case fixtures = "Fixtures"
     case patch = "Patch"
+    case output = "Output"
     case labels = "Labels"
     case wizard = "Wizard"
     case inspector = "Inspector"
@@ -40,6 +41,7 @@ enum PlotTool: String, CaseIterable, Identifiable {
         case .setup: "slider.horizontal.3"
         case .fixtures: "lightbulb"
         case .patch: "point.3.connected.trianglepath.dotted"
+        case .output: "antenna.radiowaves.left.and.right"
         case .labels: "textformat.size"
         case .wizard: "sparkles"
         case .inspector: "sidebar.right"
@@ -370,6 +372,8 @@ struct ToolPanel: View {
                 )
             case .patch:
                 PatchToolPanel(document: document)
+            case .output:
+                DmxOutputToolPanel(document: document)
             case .labels:
                 LabelToolPanel(settings: document.labelSettings, onUpdate: onUpdateLabelSettings)
             case .wizard:

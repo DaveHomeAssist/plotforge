@@ -54,6 +54,20 @@ final class PlotDocumentCodableTests: XCTestCase {
             "nativeShouldKeep": true,
             "nested": ["alpha", 3]
           },
+          "dmxOutput": {
+            "version": 1,
+            "protocol": "artnet",
+            "relayUrl": "ws://127.0.0.1:8766",
+            "targetHost": "127.0.0.1",
+            "targetPort": 6454,
+            "universes": {
+              "1": {
+                "net": 0,
+                "subNet": 1,
+                "universe": 2
+              }
+            }
+          },
           "metadata": {
             "drawingTitle": "Future Field Test",
             "venueName": "Studio A"
@@ -116,6 +130,9 @@ final class PlotDocumentCodableTests: XCTestCase {
         let encoded = try PlotDocumentCodec.encode(document)
         let root = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         let futureRoot = try XCTUnwrap(root["futureRoot"] as? [String: Any])
+        let dmxOutput = try XCTUnwrap(root["dmxOutput"] as? [String: Any])
+        let universes = try XCTUnwrap(dmxOutput["universes"] as? [String: Any])
+        let universeOne = try XCTUnwrap(universes["1"] as? [String: Any])
         let fixtures = try XCTUnwrap(root["fixtures"] as? [String: Any])
         let fixture = try XCTUnwrap(fixtures["fx_1"] as? [String: Any])
         let futureFixture = try XCTUnwrap(fixture["futureFixture"] as? [String: Any])
@@ -125,6 +142,10 @@ final class PlotDocumentCodableTests: XCTestCase {
         let info = try XCTUnwrap(profile["info"] as? [String: Any])
 
         XCTAssertEqual(futureRoot["nativeShouldKeep"] as? Bool, true)
+        XCTAssertEqual(dmxOutput["protocol"] as? String, "artnet")
+        XCTAssertEqual(dmxOutput["targetPort"] as? Int, 6454)
+        XCTAssertEqual(universeOne["subNet"] as? Int, 1)
+        XCTAssertEqual(universeOne["universe"] as? Int, 2)
         XCTAssertEqual(futureFixture["vendorData"] as? String, "keep me")
         XCTAssertEqual(futureProfile["wikiUrl"] as? String, "https://example.test/profile")
         XCTAssertEqual(info["futureInfo"] as? String, "keep info")

@@ -637,7 +637,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .fixture-profile-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(94px, auto) auto auto;
+  grid-template-columns: minmax(0, 1fr) minmax(94px, auto) minmax(92px, auto) auto auto;
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -688,6 +688,23 @@ input, textarea { font: inherit; color: inherit; }
 .fixture-profile-row button:disabled {
   opacity: .45;
   cursor: not-allowed;
+}
+.fixture-output-pill {
+  justify-self: end;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+.fixture-output-pill--output-ready {
+  border-color: color-mix(in srgb, var(--green) 48%, var(--line));
+  color: var(--green);
+}
+.fixture-output-pill--candidate {
+  border-color: color-mix(in srgb, var(--amber) 48%, var(--line));
+  color: var(--amber);
 }
 .fixture-profile-detail {
   display: flex;
@@ -805,6 +822,47 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--blue);
   font-style: normal;
 }
+.profile-output-channel-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  max-height: 150px;
+  overflow: auto;
+}
+.profile-output-channel-list span {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(84px, auto);
+  gap: 6px;
+  align-items: center;
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink-mute);
+  font-size: 11px;
+}
+.profile-output-channel-list strong,
+.profile-output-channel-list em,
+.profile-output-channel-list code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-output-channel-list strong {
+  color: var(--blue);
+  font-family: var(--mono);
+}
+.profile-output-channel-list em {
+  color: var(--ink);
+  font-style: normal;
+}
+.profile-output-channel-list code {
+  color: var(--ink-mute);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-align: right;
+}
 .library-status {
   margin: 0;
   color: var(--green);
@@ -885,7 +943,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 13px;
   text-transform: none; letter-spacing: 0;
 }
-.inspector input:focus, .inspector textarea:focus, .inspector select:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .text-settings-panel input:focus, .print-export-panel select:focus, .osc-bridge-fields input:focus, .wizard-grid input:focus, .wizard-grid select:focus, .plot-starter-brief textarea:focus, .comment-editor textarea:focus, .position-row:focus-visible, .revision-row:focus-visible, .comment-pin-row:focus-visible, .registry-row button:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible, .tool-tab:focus-visible, .mobile-dock button:focus-visible {
+.inspector input:focus, .inspector textarea:focus, .inspector select:focus, .project-metadata input:focus, .revisions-panel input:focus, .revisions-panel textarea:focus, .position-editor input:focus, .position-editor select:focus, .fixture-library input:focus, .fixture-library select:focus, .text-settings-panel input:focus, .print-export-panel select:focus, .osc-bridge-fields input:focus, .dmx-output-controls input:focus, .dmx-output-controls select:focus, .dmx-output-relay input:focus, .dmx-output-relay select:focus, .dmx-output-inspector select:focus, .wizard-grid input:focus, .wizard-grid select:focus, .plot-starter-brief textarea:focus, .comment-editor textarea:focus, .position-row:focus-visible, .revision-row:focus-visible, .comment-pin-row:focus-visible, .registry-row button:focus-visible, .btn-compact:focus-visible, .segmented-control__item:focus-visible, .tool-tab:focus-visible, .mobile-dock button:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -1px;
   border-color: transparent;
@@ -1358,6 +1416,7 @@ input, textarea { font: inherit; color: inherit; }
 /* Print export */
 .interop-panel,
 .osc-bridge-panel,
+.dmx-output-panel,
 .show-registry-panel,
 .plot-starter-panel,
 .handoff-panel,
@@ -1373,6 +1432,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .interop-panel__summary,
 .osc-bridge-panel__summary,
+.dmx-output-panel__summary,
 .show-registry-panel__summary,
 .plot-starter-panel__summary,
 .handoff-panel__summary,
@@ -1506,6 +1566,196 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--blue);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.dmx-output-badge {
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--amber) 12%, var(--bg-2));
+  color: var(--amber);
+  font-size: 10px;
+}
+.dmx-output-badge--armed,
+.dmx-output-badge--sending {
+  border-color: color-mix(in srgb, var(--green) 52%, var(--line));
+  background: color-mix(in srgb, var(--green) 12%, var(--bg-2));
+  color: var(--green);
+}
+.dmx-output-badge--fault {
+  border-color: color-mix(in srgb, var(--red) 56%, var(--line));
+  background: color-mix(in srgb, var(--red) 12%, var(--bg-2));
+  color: var(--red);
+}
+.dmx-output-warning {
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--amber) 48%, var(--line));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--amber) 10%, var(--bg-2));
+  color: var(--amber);
+  font-size: 11px;
+}
+.dmx-output-controls {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: 8px;
+  align-items: end;
+}
+.dmx-output-controls__fixture {
+  grid-column: span 2;
+}
+.dmx-output-controls label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ink-mute);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.dmx-output-controls label > span {
+  font-size: 11px;
+}
+.dmx-output-controls input,
+.dmx-output-controls select,
+.dmx-output-inspector select {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.dmx-output-controls input:disabled {
+  opacity: .55;
+}
+.dmx-output-relay {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-2);
+}
+.dmx-output-relay__fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.dmx-output-relay__fields label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--ink-mute);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.dmx-output-relay__fields label:nth-child(1),
+.dmx-output-relay__fields label:nth-child(2),
+.dmx-output-relay__fields label:nth-child(3),
+.dmx-output-relay__fields label:nth-child(4) {
+  grid-column: span 2;
+}
+.dmx-output-relay__fields label > span {
+  font-size: 11px;
+}
+.dmx-output-relay__fields input,
+.dmx-output-relay__fields select {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.dmx-output-relay__fields input:disabled,
+.dmx-output-relay__fields select:disabled {
+  opacity: .58;
+}
+.dmx-output-relay__actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.dmx-output-blackout {
+  border-color: color-mix(in srgb, var(--red) 45%, var(--line));
+  color: var(--red);
+}
+.dmx-output-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dmx-output-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dmx-output-inspector__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dmx-output-inspector__header strong {
+  font-size: 13px;
+}
+.dmx-output-range-list,
+.dmx-output-slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dmx-output-range-row {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) 78px;
+  gap: 8px;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-2);
+}
+.dmx-output-range-row strong,
+.dmx-output-range-row em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dmx-output-range-row strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.dmx-output-range-row em {
+  color: var(--ink-mute);
+  font-size: 11px;
+  font-style: normal;
+  text-align: right;
+}
+.dmx-output-slot-list {
+  max-height: 108px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-2);
+  color: var(--ink-mute);
+}
+.dmx-output-slot-list span {
+  display: block;
 }
 .registry-actions,
 .registry-row__actions {
@@ -2188,7 +2438,7 @@ input, textarea { font: inherit; color: inherit; }
     left: 10px;
     z-index: 20;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 5px;
     padding: 5px;
     border: 1px solid var(--line);
@@ -2206,6 +2456,28 @@ input, textarea { font: inherit; color: inherit; }
     color: var(--ink-mute);
     font-size: 12px;
     font-weight: 700;
+  }
+  .dmx-output-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dmx-output-relay__fields,
+  .dmx-output-relay__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dmx-output-relay__fields label:nth-child(1),
+  .dmx-output-relay__fields label:nth-child(2),
+  .dmx-output-relay__fields label:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+  .dmx-output-controls__fixture {
+    grid-column: 1 / -1;
+  }
+  .dmx-output-range-row {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+  .dmx-output-range-row em {
+    grid-column: 1 / -1;
+    text-align: left;
   }
   .mobile-dock button:hover,
   .mobile-dock button:focus-visible {

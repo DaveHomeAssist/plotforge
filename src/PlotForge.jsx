@@ -11,6 +11,7 @@ import GelPalette from "./components/GelPalette.jsx";
 import CircuitPanel from "./components/CircuitPanel.jsx";
 import CommentPins from "./components/CommentPins.jsx";
 import InteropPanel from "./components/InteropPanel.jsx";
+import DmxOutputPanel from "./components/DmxOutputPanel.jsx";
 import OscBridgePanel from "./components/OscBridgePanel.jsx";
 import ShowRegistryPanel from "./components/ShowRegistryPanel.jsx";
 import PlotStarterPanel from "./components/PlotStarterPanel.jsx";
@@ -53,6 +54,7 @@ const TOOL_DEFINITIONS = [
   { id: "fixtures", label: "Fixtures", eyebrow: "Library", description: "Fixture profiles, source lanes, and add flow." },
   { id: "setup", label: "Setup", eyebrow: "Show", description: "Title block, revisions, venue, and positions." },
   { id: "patch", label: "Patch", eyebrow: "Paperwork", description: "Patch table, gels, and CSV exports." },
+  { id: "output", label: "Output", eyebrow: "DMX", description: "DMX preview, compiler warnings, and universe slots." },
   { id: "notes", label: "Notes", eyebrow: "Plot notes", description: "Comment pins and handoff notes." },
   { id: "checks", label: "Checks", eyebrow: "Review", description: "Conflicts, circuit health, and issue review." },
   { id: "export", label: "Export", eyebrow: "Output", description: "Print, interop manifest, and OSC outputs." },
@@ -316,6 +318,14 @@ export default function PlotForge() {
             onDelete={show.onCommentPinDelete}
           />
         );
+      case "output":
+        return (
+          <DmxOutputPanel
+            doc={show.doc}
+            selectedFixtureId={show.selectedFixtureId}
+            onSettingsChange={show.onDmxOutputChange}
+          />
+        );
       case "checks":
         return (
           <>
@@ -520,6 +530,7 @@ export default function PlotForge() {
         <button type="button" aria-pressed={activeTool === "inspect"} onClick={() => setActiveTool("inspect")}>Inspect</button>
         <button type="button" aria-pressed={activeTool === "fixtures"} onClick={() => setActiveTool("fixtures")}>Fixtures</button>
         <button type="button" aria-pressed={activeTool === "patch"} onClick={() => setActiveTool("patch")}>Patch</button>
+        <button type="button" aria-pressed={activeTool === "output"} onClick={() => setActiveTool("output")}>Output</button>
         <button type="button" aria-pressed={activeTool === "wizard"} onClick={() => setActiveTool("wizard")}>Wizard</button>
         <button type="button" aria-pressed={activeTool === "files"} onClick={() => setActiveTool("files")}>Files</button>
       </nav>

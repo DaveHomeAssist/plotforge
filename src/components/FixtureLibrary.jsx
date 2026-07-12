@@ -4,6 +4,7 @@ import {
   getProfileDetail,
   getProfileSearchText,
 } from "../domain/profiles.js";
+import { outputProfileStatus } from "../domain/fixtureOutputProfiles.js";
 
 const LANES = [
   ["curated-gdtf", "GDTF"],
@@ -27,7 +28,17 @@ function formatSource(profile) {
   return "Spike seed";
 }
 
-function FixtureProfileDetail({ profile, hasPosition, selectedPositionId, onAddFixture }) {
+function outputStatusCopy(status) {
+  if (status === "output-ready") return "Output ready";
+  if (status === "candidate") return "Candidate map";
+  return "Paperwork only";
+}
+
+function channelStatusLabel(channel) {
+  return channel.unsafe ? `${channel.type} locked` : channel.type;
+}
+
+function FixtureProfileDetail({ profile, customProfiles, hasPosition, selectedPositionId, onAddFixture }) {
   if (!profile) {
     return (
       <section className="fixture-profile-detail fixture-profile-detail--empty" aria-label="Fixture profile detail">
@@ -37,6 +48,9 @@ function FixtureProfileDetail({ profile, hasPosition, selectedPositionId, onAddF
   }
 
   const detail = getProfileDetail(profile);
+  const output = outputProfileStatus(profile.id, customProfiles);
+  const outputChannels = output.profile?.channels || [];
+  const unsafeCount = outputChannels.filter(channel => channel.unsafe).length;
 
   return (
     <section className="fixture-profile-detail" aria-labelledby="fixture-profile-detail-title">
@@ -75,7 +89,39 @@ function FixtureProfileDetail({ profile, hasPosition, selectedPositionId, onAddF
           <dt>Source</dt>
           <dd>{formatSource(profile)}</dd>
         </div>
+        <div>
+          <dt>Output</dt>
+          <dd>{outputStatusCopy(output.status)}</dd>
+        </div>
+        <div>
+          <dt>Mapped</dt>
+          <dd>{outputChannels.length ? `${outputChannels.length} slots` : "None"}</dd>
+        </div>
       </dl>
+
+      <div className="profile-info-block">
+        <span className="mono small">OUTPUT MAP</span>
+        {output.profile ? (
+          <>
+            <div className="profile-chip-row">
+              <span>{output.profile.label}</span>
+              <span>{outputStatusCopy(output.status)}</span>
+              {unsafeCount > 0 && <span>{unsafeCount} unsafe locked</span>}
+            </div>
+            <div className="profile-output-channel-list" aria-label="Output channel map">
+              {outputChannels.map(channel => (
+                <span key={`${output.profile.id}-${channel.slot}`}>
+                  <strong>{channel.slot}</strong>
+                  <em>{channel.label}</em>
+                  <code>{channelStatusLabel(channel)}</code>
+                </span>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="empty-note">No approved output map. This profile stays paperwork-only for live output.</p>
+        )}
+      </div>
 
       <div className="profile-info-block">
         <span className="mono small">BEST FOR</span>
@@ -245,45 +291,52 @@ export default function FixtureLibrary({
 
       <FixtureProfileDetail
         profile={selectedProfile}
+        customProfiles={doc.fixtureProfiles}
         hasPosition={hasPosition}
         selectedPositionId={selectedPositionId}
         onAddFixture={onAddFixture}
       />
 
       <div className="fixture-profile-list" role="list" aria-label="Fixture profiles">
-        {visibleProfiles.map(profile => (
-          <div
-            className={`fixture-profile-row${selectedProfile?.id === profile.id ? " fixture-profile-row--selected" : ""}`}
-            role="listitem"
-            key={profile.id}
-          >
-            <span className="fixture-profile-row__main">
-              <strong>{profile.model}</strong>
-              <em>{profile.manufacturer}</em>
-            </span>
-            <span className="fixture-profile-row__meta">
-              <span className="mono small">{profile.defaultMode}</span>
-              <span className="mono small">{profile.dmxFootprint}ch · {profile.category}</span>
-              <span className="mono small muted">{formatSource(profile)}</span>
-            </span>
-            <button
-              type="button"
-              className="btn-compact"
-              aria-current={selectedProfile?.id === profile.id ? "true" : undefined}
-              onClick={() => setSelectedProfileId(profile.id)}
+        {visibleProfiles.map(profile => {
+          const output = outputProfileStatus(profile.id, doc.fixtureProfiles);
+          return (
+            <div
+              className={`fixture-profile-row${selectedProfile?.id === profile.id ? " fixture-profile-row--selected" : ""}`}
+              role="listitem"
+              key={profile.id}
             >
-              Details
-            </button>
-            <button
-              type="button"
-              className="btn-compact"
-              disabled={!hasPosition}
-              onClick={() => onAddFixture(selectedPositionId, profile.id)}
-            >
-              Add
-            </button>
-          </div>
-        ))}
+              <span className="fixture-profile-row__main">
+                <strong>{profile.model}</strong>
+                <em>{profile.manufacturer}</em>
+              </span>
+              <span className="fixture-profile-row__meta">
+                <span className="mono small">{profile.defaultMode}</span>
+                <span className="mono small">{profile.dmxFootprint}ch · {profile.category}</span>
+                <span className="mono small muted">{formatSource(profile)}</span>
+              </span>
+              <span className={`fixture-output-pill fixture-output-pill--${output.status} mono small`}>
+                {outputStatusCopy(output.status)}
+              </span>
+              <button
+                type="button"
+                className="btn-compact"
+                aria-current={selectedProfile?.id === profile.id ? "true" : undefined}
+                onClick={() => setSelectedProfileId(profile.id)}
+              >
+                Details
+              </button>
+              <button
+                type="button"
+                className="btn-compact"
+                disabled={!hasPosition}
+                onClick={() => onAddFixture(selectedPositionId, profile.id)}
+              >
+                Add
+              </button>
+            </div>
+          );
+        })}
         {visibleProfiles.length === 0 && (
           <p className="empty-note">No profiles in this lane.</p>
         )}

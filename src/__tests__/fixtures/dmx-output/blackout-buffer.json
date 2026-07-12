@@ -1,0 +1,10 @@
+{
+  "name": "blackout buffer",
+  "intent": {
+    "type": "blackout"
+  },
+  "expected": {
+    "slotCount": 512,
+    "nonZeroSlots": []
+  }
+}
