@@ -169,7 +169,9 @@ Current canonical status, reconciled from Notion on 2026-06-22:
 
 ## Audit
 
-`docs/UX_UI_AUDIT.md` defines the UX/UI audit protocol for the editor: seven weighted lenses with pass gates, a ten-scenario task battery drawn from real production workflow, a domain-weighted severity model, the test fixtures to build, and a scorecard with release gates. The protocol is defined but has not been executed; its reconnaissance section lists code-read hypotheses, not audit results.
+`docs/UX_UI_AUDIT.md` defines the UX/UI audit protocol for the editor: seven weighted lenses with pass gates, a ten-scenario task battery drawn from real production workflow, a domain-weighted severity model, the test fixtures to build, and a scorecard with release gates.
+
+`docs/UX_UI_AUDIT_RESULTS_2026-08-07.md` records the first execution of that protocol against `aae4ac0`. Composite 1.9 / 5, no release gate met. No S0 was found — the document model, conflict detection, destructive-delete undo, and save-state indicators all passed. Two S1 findings sit in the input layer: Inspector keystrokes are silently discarded after each debounced commit, and fixture drags are not clamped to their position. The canvas has no keyboard access, which fails the keyboard-only gate outright. Lenses that need a domain reviewer, screen readers, a plotter, other browsers, or macOS were not run and are listed as such.
 
 Documented remaining plan:
 
