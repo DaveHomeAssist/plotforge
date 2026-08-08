@@ -335,3 +335,56 @@ Findings 1, 2, 5, 7 and 14 are individually small. Fixing 1 and 2 alone clears b
 ## Re-run instructions
 
 Harness in `.audit/` (git-ignored). Requires `npm install --no-save playwright axe-core`, a dev server on `:5173`, and Chromium at `/opt/pw-browsers/chromium-1194`. `gen-fixtures.mjs` regenerates the 400/800-fixture files. After remediation, re-run the failed gates plus the full L4 and L5 batteries per §10.
+
+---
+
+# Remediation pass — 2026-08-08
+
+All findings patched and re-verified against the same harness. Application code changed; the protocol and the findings above are unchanged (they are the record of the pre-fix build).
+
+**Baseline after fixes:** `npm run lint` 0 errors · `vitest run` 29 files / **136 tests** passed (7 new regression tests) · `npm run build` clean.
+
+## Gate results, before → after
+
+| Gate | Before | After | |
+|---|---|---|---|
+| G5.1 axe violations (9 panels × 2 themes) | **298** | **0** | ✓ |
+| G5.2 canvas reachable by keyboard | never (160 tab stops) | reached, 10 focusable | ✓ |
+| G5.3 contrast AA | 250 failures | 0 | ✓ |
+| G5.4 focus after selecting a fixture | `BODY` | the fixture | ✓ |
+| G5.5 tablist arrows / roving tabindex | dead / all `null` | works / one `0` | ✓ |
+| G5.6 minimum user-facing type | 8.5px | 12px | ✓ |
+| G2.4 fixture hit target | 19.5 × 26.8px | **26.7 × 26.7px** | ✓ |
+| G7.1 pan p95 @800 | 22 fps | **44 fps** | ✓ |
+| G7.1 worst frame @800 | 191 ms | **30 ms** | ✓ |
+| G3.4 Setup panel depth | 3.31 screens | **1.26 screens** | ✓ |
+| Console errors while zooming | every wheel tick | none | ✓ |
+
+## Per-finding outcome
+
+| ID | Sev | Outcome |
+|---|---|---|
+| PF-UX-001 keystroke loss | S1 | **Fixed.** `Inspector.jsx` keys the editor on `fx.id` alone; external changes reconcile into the draft instead of remounting. Verified 3/3: type → commit → keep typing now yields `73`/`84`/`96` with focus retained. |
+| PF-UX-002 unclamped drag | S1 | **Fixed.** `clampFixtureX()` in the domain layer, applied inside `updateFixture`, so drags *and* typed positions are held to the pipe. A drag that reached −45.1 ft now stops at −14.0 ft. |
+| PF-UX-003 no canvas keyboard | S2 | **Fixed.** Fixtures are focusable with roving tabindex and a labelled `role="button"`. ←/→ nudge 1" (Shift 1'), Home/End jump to the pipe ends, ↑/↓ walk units, Enter selects, Delete removes, Escape cancels. Measured exactly 25.4mm and 304.8mm per step. |
+| PF-UX-004 axe / contrast / type | S2 | **Fixed.** Tokens recomputed for AA on every surface: dark `--ink-dim` `#8794a6`; light `--ink-dim` `#5b6979`, `--ink-mute` `#59687a`, `--amber` `#9a5800`, `--green` `#0f7a4f`, `--blue` `#0a6ea8`. All sub-12px type lifted to 12px. `aria-prohibited-attr`, `label`, `scrollable-region-focusable` and the nested-`main` landmark all resolved. |
+| PF-UX-005 tablist | S2 | **Fixed.** Arrow/Home/End with roving tabindex on the tool rail. |
+| PF-UX-006 modal focus | S2 | **Fixed.** Overlays take focus on open, close on Escape, and return focus to the opener. |
+| PF-UX-007 passive wheel | S2 | **Fixed.** Wheel registered via `addEventListener(..., { passive: false })`. Console is clean while zooming. |
+| PF-UX-008 hit targets | S3 | **Fixed.** Transparent hit circle sized so the target clears 24 CSS px at default zoom. |
+| PF-UX-009 scale tail | S3 | **Fixed.** `FixtureSymbol` memoized and the fixture layer hoisted into `useMemo`, so panning no longer rebuilds every fixture subtree. Checks panel 1714 → 1341 ms. *Caveat:* that figure is against a synthetic file carrying 2,506 simultaneous conflicts; a realistic plot renders far fewer rows. |
+| PF-UX-010 Setup density | S3 | **Fixed.** Positions lead the panel; title block, revisions and plot text are collapsed by default. |
+| PF-UX-011 mobile dock | S3 | **Fixed.** All nine tools reachable via a scrolling dock; targets raised to 44px. |
+| PF-UX-012 splash dead controls | — | **Retracted — false positive.** Templates/Shared/Archive are working section switchers (`SplashScreen.jsx:181-183`) driving real card lists, and the counts (3/1/0) are accurate. The original probe only checked for a `[role="dialog"]`, which a section switch correctly does not create, and an earlier probe had an open modal intercepting the clicks. No code change; the finding was wrong. |
+| PF-UX-013 undo shortcut | S3 | **Fixed.** Ctrl/Cmd+Z undoes, Ctrl/Cmd+Shift+Z and Ctrl+Y redo. Verified `11 → 42 → undo 11 → redo 42`, including while the field is focused. |
+| PF-UX-014 reduced motion | S3 | **Fixed.** `prefers-reduced-motion` and `forced-colors` blocks added; `.tool-tab` transition drops from `all` to `1e-05s` under reduce. |
+
+## Notes on the fixes
+
+**The undo interaction was the subtle part.** Protecting the focused field from being clobbered mid-typing is what makes PF-UX-001 stay fixed — but a naive guard also blocked undo from reverting a focused field, and then blocked redo when it restored a value the field had once held. The guard is therefore one-shot: it ignores only our own commit's immediate echo, so any later external change wins. All three behaviours are covered by regression tests.
+
+**Regression tests added** (`src/__tests__/auditRegressions.test.jsx`, 7 tests): keystroke retention across a commit, external changes reaching the draft, undo reverting a focused field, and four clamping cases including the degenerate zero-length position.
+
+## Still not run
+
+Unchanged from the original run: domain-reviewer severity ratification, card sort, screen readers, dark-room legibility, physical ANSI D print, Safari/Firefox, the native port, and the full timed scenario battery. The keyboard model added here satisfies G5.2 mechanically, but **it has not been driven by a real screen-reader user**, and the announcement quality of the new `aria-label` on each fixture is unverified.

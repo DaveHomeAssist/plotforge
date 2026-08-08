@@ -8,7 +8,7 @@
   --line-strong: #2a3340;
   --ink: #e7ecf2;
   --ink-mute: #8c97a8;
-  --ink-dim: #5d6878;
+  --ink-dim: #8794a6;
   --amber: #ffb547;
   --blue: #4cc9ff;
   --green: #58e896;
@@ -20,7 +20,7 @@
   --plaster-line: rgba(255,181,71,.4);
   --stage-stroke: #1f2630;
   --position-stroke: #2a3340;
-  --position-label: #5d6878;
+  --position-label: #8794a6;
   --fixture-body: #11161f;
   --fixture-selected: #4cc9ff;
   --fixture-marker-ring: #0a0d12;
@@ -49,11 +49,11 @@
   --line: #d7e0ea;
   --line-strong: #aebdcb;
   --ink: #17202b;
-  --ink-mute: #5f6f82;
-  --ink-dim: #8a99aa;
-  --amber: #b96b00;
-  --blue: #0878b9;
-  --green: #16885a;
+  --ink-mute: #59687a;
+  --ink-dim: #5b6979;
+  --amber: #9a5800;
+  --blue: #0a6ea8;
+  --green: #0f7a4f;
   --red: #c43636;
   --canvas-glow: rgba(8,120,185,.07);
   --grid-major: rgba(23,32,43,.16);
@@ -348,7 +348,7 @@ input, textarea { font: inherit; color: inherit; }
   background: var(--bg-2);
   color: var(--ink-mute);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -423,7 +423,7 @@ input, textarea { font: inherit; color: inherit; }
 .tool-tab__meta {
   color: var(--ink-dim);
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -441,7 +441,7 @@ input, textarea { font: inherit; color: inherit; }
   background: var(--amber);
   color: var(--bg);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 }
 .tool-panel {
@@ -580,7 +580,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .position-row em {
   margin-top: 3px;
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
   color: var(--ink-mute);
 }
@@ -671,7 +671,7 @@ input, textarea { font: inherit; color: inherit; }
   line-height: 1.2;
 }
 .fixture-profile-row em {
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
   color: var(--ink-mute);
 }
@@ -746,7 +746,7 @@ input, textarea { font: inherit; color: inherit; }
 .profile-detail-grid dt {
   color: var(--ink-dim);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: .1em;
   text-transform: uppercase;
 }
@@ -791,7 +791,7 @@ input, textarea { font: inherit; color: inherit; }
   border-radius: 999px;
   background: var(--surface);
   color: var(--ink-mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 .profile-mode-list span {
   border-radius: 6px;
@@ -809,7 +809,7 @@ input, textarea { font: inherit; color: inherit; }
   margin: 0;
   color: var(--green);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 .library-status--error {
   color: var(--red);
@@ -849,7 +849,7 @@ input, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 4px;
   font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
 }
-.inspector label > span { font-size: 11px; }
+.inspector label > span { font-size: 12px; }
 .inspector input, .inspector textarea, .inspector select {
   background: var(--bg-2);
   border: 1px solid var(--line);
@@ -866,7 +866,7 @@ input, textarea { font: inherit; color: inherit; }
 .field-error {
   color: var(--red);
   font-family: var(--sans);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0;
   text-transform: none;
 }
@@ -874,7 +874,7 @@ input, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 4px;
   font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
 }
-.position-editor label > span { font-size: 11px; }
+.position-editor label > span { font-size: 12px; }
 .position-editor input, .position-editor select {
   background: var(--bg-2);
   border: 1px solid var(--line);
@@ -896,7 +896,7 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
 }
 .text-settings-panel label > span,
-.project-metadata label > span { font-size: 11px; }
+.project-metadata label > span { font-size: 12px; }
 .text-settings-panel input,
 .project-metadata input {
   background: var(--bg-2);
@@ -965,7 +965,7 @@ input, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 4px;
   font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
 }
-.revisions-panel label > span { font-size: 11px; }
+.revisions-panel label > span { font-size: 12px; }
 .revisions-panel input,
 .revisions-panel textarea {
   background: var(--bg-2);
@@ -1015,14 +1015,14 @@ input, textarea { font: inherit; color: inherit; }
 .revision-row em {
   margin-top: 3px;
   color: var(--ink-mute);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
 }
 .fixture-library label {
   display: flex; flex-direction: column; gap: 4px;
   font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
 }
-.fixture-library label > span { font-size: 11px; }
+.fixture-library label > span { font-size: 12px; }
 .fixture-library input, .fixture-library select {
   background: var(--bg-2);
   border: 1px solid var(--line);
@@ -1037,7 +1037,7 @@ input, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 4px;
   font-size: 12px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .08em;
 }
-.print-export-panel label > span { font-size: 11px; }
+.print-export-panel label > span { font-size: 12px; }
 .print-export-panel select {
   background: var(--bg-2);
   border: 1px solid var(--line);
@@ -1065,7 +1065,7 @@ input, textarea { font: inherit; color: inherit; }
 .osc-bridge-fields label:nth-child(2) {
   grid-column: 1 / -1;
 }
-.osc-bridge-fields label > span { font-size: 11px; }
+.osc-bridge-fields label > span { font-size: 12px; }
 .osc-bridge-fields input {
   min-width: 0;
   background: var(--bg-2);
@@ -1098,7 +1098,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .inspector fieldset legend {
   padding: 0 6px;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--ink-dim);
@@ -1210,7 +1210,7 @@ input, textarea { font: inherit; color: inherit; }
   background: var(--bg-2);
   color: var(--ink-mute);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: .08em;
   text-align: left;
@@ -1250,7 +1250,7 @@ input, textarea { font: inherit; color: inherit; }
 .patch-table em {
   margin-top: 2px;
   color: var(--ink-mute);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
   line-height: 1.25;
 }
@@ -1261,7 +1261,7 @@ input, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   background: var(--bg-2);
-  font-size: 10px !important;
+  font-size: 12px !important;
   line-height: 1.2 !important;
   color: var(--ink-mute) !important;
 }
@@ -1392,7 +1392,7 @@ input, textarea { font: inherit; color: inherit; }
   background: var(--bg-2);
   color: var(--ink-mute);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.45;
   white-space: pre-wrap;
 }
@@ -1412,7 +1412,7 @@ input, textarea { font: inherit; color: inherit; }
   text-transform: uppercase;
 }
 .wizard-grid label > span {
-  font-size: 11px;
+  font-size: 12px;
 }
 .wizard-grid input,
 .wizard-grid select {
@@ -1474,7 +1474,7 @@ input, textarea { font: inherit; color: inherit; }
 .plot-starter-row span {
   margin-top: 3px;
   color: var(--ink-mute);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.25;
 }
 .plot-starter-row > .mono {
@@ -1541,7 +1541,7 @@ input, textarea { font: inherit; color: inherit; }
 .registry-row span {
   margin-top: 3px;
   color: var(--ink-mute);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.25;
 }
 
@@ -1555,7 +1555,7 @@ input, textarea { font: inherit; color: inherit; }
   border-top: 1px solid var(--line);
   background: var(--bg-2);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-mute);
   white-space: nowrap;
 }
@@ -1570,7 +1570,7 @@ input, textarea { font: inherit; color: inherit; }
 
 /* Utility */
 .mono { font-family: var(--mono); }
-.small { font-size: 11px; }
+.small { font-size: 12px; }
 .muted { color: var(--ink-mute); }
 
 /* ErrorBoundary */
@@ -1631,7 +1631,7 @@ input, textarea { font: inherit; color: inherit; }
   border-radius: 4px;
   background: var(--blue);
   color: var(--bg);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .splash-shell {
@@ -1677,7 +1677,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .splash-nav__item span:last-child {
   color: var(--ink-dim);
-  font-size: 10px;
+  font-size: 12px;
 }
 .splash-nav__item:hover,
 .splash-nav__item--active {
@@ -1790,7 +1790,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .splash-action small {
   color: var(--ink-mute);
-  font-size: 11px;
+  font-size: 12px;
 }
 .splash-section-heading {
   display: flex;
@@ -1849,7 +1849,7 @@ input, textarea { font: inherit; color: inherit; }
   border-radius: 5px;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   color: var(--blue);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: .05em;
 }
 .splash-card__body {
@@ -1871,7 +1871,7 @@ input, textarea { font: inherit; color: inherit; }
   overflow: hidden;
   margin: 3px 0 0;
   color: var(--ink-mute);
-  font-size: 11.5px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1880,7 +1880,7 @@ input, textarea { font: inherit; color: inherit; }
   align-items: center;
   gap: 9px;
   color: var(--ink-dim);
-  font-size: 10px;
+  font-size: 12px;
 }
 .splash-card__meta span:first-child {
   color: var(--blue);
@@ -1968,7 +1968,7 @@ input, textarea { font: inherit; color: inherit; }
 .splash-setting-list dd {
   color: var(--ink);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
 }
 .splash-account-card {
   display: grid;
@@ -2099,7 +2099,7 @@ input, textarea { font: inherit; color: inherit; }
     font-size: 14px;
   }
   .console-overview p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .console-overview__stats {
     gap: 4px;
@@ -2107,7 +2107,7 @@ input, textarea { font: inherit; color: inherit; }
   .console-pill {
     min-height: 21px;
     padding: 3px 6px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .tool-workspace {
     grid-template-columns: 72px minmax(0, 1fr);
@@ -2121,7 +2121,7 @@ input, textarea { font: inherit; color: inherit; }
     padding: 6px;
   }
   .tool-tab__label {
-    font-size: 11px;
+    font-size: 12px;
   }
   .tool-tab__meta {
     display: none;
@@ -2131,7 +2131,7 @@ input, textarea { font: inherit; color: inherit; }
     right: 4px;
     min-width: 14px;
     height: 14px;
-    font-size: 8px;
+    font-size: 12px;
   }
   .tool-panel__header {
     padding: 10px 12px;
@@ -2140,7 +2140,7 @@ input, textarea { font: inherit; color: inherit; }
     font-size: 16px;
   }
   .tool-panel__header p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .file-actions-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -2187,18 +2187,22 @@ input, textarea { font: inherit; color: inherit; }
     bottom: 8px;
     left: 10px;
     z-index: 20;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    display: flex;
     gap: 5px;
     padding: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: color-mix(in srgb, var(--surface) 94%, transparent);
     box-shadow: var(--panel-shadow);
   }
+  .mobile-dock::-webkit-scrollbar { display: none; }
   .mobile-dock button {
-    min-width: 0;
-    min-height: 38px;
+    flex: 0 0 auto;
+    min-width: 64px;
+    min-height: 44px;
     padding: 6px;
     border: 0;
     border-radius: 5px;
@@ -2271,4 +2275,121 @@ input, textarea { font: inherit; color: inherit; }
   .topbar-actions button:nth-of-type(3) {
     display: none;
   }
+}
+
+/* ---------------------------------------------------------------
+   Accessibility media preferences
+   --------------------------------------------------------------- */
+
+/* Users who ask for reduced motion get no transitions or animations.
+   Values are near-zero rather than 0 so transitionend still fires. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Windows High Contrast / forced-colors: let the OS palette drive colour and
+   keep focus and selection visible, since our custom tokens are discarded. */
+@media (forced-colors: active) {
+  .tool-tab,
+  .btn-compact,
+  .segmented-control__item,
+  .mobile-dock button {
+    border: 1px solid ButtonBorder;
+  }
+
+  .tool-tab[aria-selected="true"],
+  .mobile-dock button[aria-pressed="true"] {
+    border-color: Highlight;
+    color: Highlight;
+    forced-color-adjust: none;
+  }
+
+  :focus-visible {
+    outline: 3px solid Highlight !important;
+    outline-offset: 1px;
+  }
+
+  .fx:focus-visible .fx__hit,
+  .plot-canvas .fx:focus-visible {
+    forced-color-adjust: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Canvas keyboard affordances
+   --------------------------------------------------------------- */
+
+.fx {
+  outline: none;
+}
+
+.fx:focus-visible {
+  outline: none;
+}
+
+/* Focus ring is drawn on the transparent hit circle so it tracks the symbol
+   rather than the group's rotated bounding box. */
+.fx:focus-visible .fx__hit {
+  stroke: var(--blue);
+  stroke-width: 26;
+  stroke-dasharray: 60 40;
+}
+
+/* ---------------------------------------------------------------
+   Collapsible panel sections
+   --------------------------------------------------------------- */
+
+.collapsible-section {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.collapsible-section__summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: 8px;
+}
+
+.collapsible-section__summary::-webkit-details-marker { display: none; }
+
+.collapsible-section__summary::after {
+  content: "+";
+  color: var(--ink-mute);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.collapsible-section[open] > .collapsible-section__summary::after { content: "–"; }
+
+.collapsible-section__summary:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -1px;
+}
+
+.collapsible-section__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.collapsible-section__hint {
+  color: var(--ink-mute);
+  text-align: right;
+}
+
+.collapsible-section__body {
+  padding: 0 4px 4px;
 }

@@ -259,6 +259,34 @@ export default function SplashScreen({
     setSignInOpen(false);
   }
 
+  const anyOverlayOpen = accountOpen || settingsOpen || signInOpen;
+
+  // Overlays must close on Escape, take focus when they open, and hand focus
+  // back to the control that opened them. Without this a keyboard or screen
+  // reader user is left tabbing through the page behind an open dialog.
+  useEffect(() => {
+    if (!anyOverlayOpen) return undefined;
+    const opener = document.activeElement;
+    const onKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      closeMenus();
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    const frame = window.requestAnimationFrame(() => {
+      const overlay = document.querySelector(".splash-modal, .splash-popover");
+      const target = overlay?.querySelector(
+        'input, button, [href], select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      target?.focus?.();
+    });
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      window.cancelAnimationFrame(frame);
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
+    };
+  }, [anyOverlayOpen]);
+
   return (
     <section
       className={`splash ${dragOver ? "splash--drag" : ""}`}
@@ -352,7 +380,7 @@ export default function SplashScreen({
           </div>
         </aside>
 
-        <main className="splash-main">
+        <div className="splash-main">
           <div className="splash-hero">
             <div>
               <p className="mono small splash-kicker">GOOD TO GO</p>
@@ -417,7 +445,7 @@ export default function SplashScreen({
           )}
           {status && <p className="library-status">{status}</p>}
           {error && <p className="library-status library-status--error">{error}</p>}
-        </main>
+        </div>
       </div>
 
       {dragOver && (

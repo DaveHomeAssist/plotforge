@@ -171,7 +171,7 @@ Current canonical status, reconciled from Notion on 2026-06-22:
 
 `docs/UX_UI_AUDIT.md` defines the UX/UI audit protocol for the editor: seven weighted lenses with pass gates, a ten-scenario task battery drawn from real production workflow, a domain-weighted severity model, the test fixtures to build, and a scorecard with release gates.
 
-`docs/UX_UI_AUDIT_RESULTS_2026-08-07.md` records the first execution of that protocol against `aae4ac0`. Composite 1.9 / 5, no release gate met. No S0 was found — the document model, conflict detection, destructive-delete undo, and save-state indicators all passed. Two S1 findings sit in the input layer: Inspector keystrokes are silently discarded after each debounced commit, and fixture drags are not clamped to their position. The canvas has no keyboard access, which fails the keyboard-only gate outright. Lenses that need a domain reviewer, screen readers, a plotter, other browsers, or macOS were not run and are listed as such.
+`docs/UX_UI_AUDIT_RESULTS_2026-08-07.md` records the first execution of that protocol against `aae4ac0`, followed by a remediation pass. The original run scored 1.9 / 5 with two S1 findings and zero S0. All findings are now patched and re-verified with the same harness: axe violations across nine panels in both themes went 298 to 0, the canvas is operable by keyboard, fixture positions are clamped to their pipe, Inspector edits no longer drop keystrokes, and pan p95 at 800 fixtures went 22 to 44 fps. One finding (PF-UX-012) was retracted as a false positive. Lenses needing a domain reviewer, screen readers, a plotter, other browsers, or macOS remain unrun and are listed as such.
 
 Documented remaining plan:
 

@@ -57,7 +57,7 @@ export default function GelPalette({ doc }) {
       </div>
       {exportError && <p className="library-status library-status--error">{exportError}</p>}
 
-      <div className="patch-table-wrap">
+      <div className="patch-table-wrap" tabIndex={0} role="region" aria-label="Gel rollup, scrollable">
         <table className="patch-table gel-table">
           <thead>
             <tr>
