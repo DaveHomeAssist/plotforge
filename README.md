@@ -167,6 +167,12 @@ Current canonical status, reconciled from Notion on 2026-06-22:
 - P3 tier deploy: shipped on 2026-06-22. Production alias `https://plotforge-beta.vercel.app` serves the P3 AI plot starter build.
 - Inspector UX and validation artifact: shipped in the repo on 2026-06-22. The inspector now keeps valid sibling field commits moving when one field is invalid, reverts invalid fields on blur or Escape, flushes valid drafts before unmount, supports arrow key numeric stepping, shows multi-select primary editing, exposes a topbar save status chip, and writes local debug events only in development.
 
+## Audit
+
+`docs/UX_UI_AUDIT.md` defines the UX/UI audit protocol for the editor: seven weighted lenses with pass gates, a ten-scenario task battery drawn from real production workflow, a domain-weighted severity model, the test fixtures to build, and a scorecard with release gates.
+
+`docs/UX_UI_AUDIT_RESULTS_2026-08-07.md` records the first execution of that protocol against `aae4ac0`, followed by a remediation pass. The original run scored 1.9 / 5 with two S1 findings and zero S0. All findings are now patched and re-verified with the same harness: axe violations across nine panels in both themes went 298 to 0, the canvas is operable by keyboard, fixture positions are clamped to their pipe, Inspector edits no longer drop keystrokes, and pan p95 at 800 fixtures went 22 to 44 fps. One finding (PF-UX-012) was retracted as a false positive. Lenses needing a domain reviewer, screen readers, a plotter, other browsers, or macOS remain unrun and are listed as such.
+
 Documented remaining plan:
 
 1. P0: complete except ANSI D fidelity sign-off parked on plotter access.

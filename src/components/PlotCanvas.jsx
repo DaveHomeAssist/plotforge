@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import usePanZoom from "../hooks/usePanZoom.js";
 import FixtureSymbol from "./FixtureSymbol.jsx";
 import { commentPinRows, fixturesOnPosition, normalizeLabelSettings } from "../domain/show.js";
@@ -18,9 +18,11 @@ export default function PlotCanvas({
   onSelectPosition,
   onSelectCommentPin,
   onMoveFixture,
+  onNudgeFixture,
   onSetFixtureFocus,
   onClearFixtureFocus,
   onAddCommentPin,
+  onDeleteFixture,
 }) {
   const svgRef = useRef(null);
   const dragState = useRef(null);
@@ -36,6 +38,16 @@ export default function PlotCanvas({
 
   const { viewBox, onWheel, beginPan, panTo, endPan, screenToWorld, reset } =
     usePanZoom({ initialWorldRect: initial, viewportSize: { width: 800, height: 600 } });
+
+  // React attaches onWheel passively, so preventDefault() inside it is a no-op
+  // that logs an error on every tick and lets the page scroll while zooming.
+  // Register the listener ourselves with passive: false.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return undefined;
+    svg.addEventListener("wheel", onWheel, { passive: false });
+    return () => svg.removeEventListener("wheel", onWheel);
+  }, [onWheel]);
 
   const [panActive, setPanActive] = useState(false);
   const [focusFixtureId, setFocusFixtureId] = useState(null);
@@ -108,8 +120,97 @@ export default function PlotCanvas({
     dragState.current = { fixtureId: fixture.id, positionId: fixture.positionId };
   }, [commentActive, focusActive, selectedFixtureId, onSelectFixture]);
 
+  // Keyboard model for the plot. Left/Right move the focused unit along its
+  // position (Shift = 1'), Up/Down walk the fixture list, Home/End jump to the
+  // ends of the pipe, Enter/Space select, Delete removes, Escape cancels an
+  // armed tool. Without this the canvas is mouse-only and unusable by keyboard.
+  const NUDGE_MM = 25.4;              // 1"
+  const COARSE_NUDGE_MM = 304.8;      // 1'
+
+  const focusFixtureElement = useCallback((fixtureId) => {
+    const node = svgRef.current?.querySelector(`[data-fixture-id="${CSS.escape(fixtureId)}"]`);
+    node?.focus?.();
+  }, []);
+
+  const onFixtureKeyDown = useCallback((event, fixture) => {
+    const key = event.key;
+    if (key === "Escape") {
+      setFocusFixtureId(null);
+      setCommentActive(false);
+      return;
+    }
+    if (key === "Enter" || key === " " || key === "Spacebar") {
+      event.preventDefault();
+      onSelectFixture(fixture.id, { additive: event.shiftKey });
+      return;
+    }
+    if (key === "Delete" || key === "Backspace") {
+      event.preventDefault();
+      onSelectFixture(fixture.id, {});
+      onDeleteFixture?.(fixture.id);
+      return;
+    }
+    if (key === "ArrowLeft" || key === "ArrowRight") {
+      event.preventDefault();
+      const step = (event.shiftKey ? COARSE_NUDGE_MM : NUDGE_MM) * (key === "ArrowLeft" ? -1 : 1);
+      onSelectFixture(fixture.id, {});
+      onNudgeFixture(fixture.id, fixture.positionId, fixture.xMm + step);
+      window.requestAnimationFrame(() => focusFixtureElement(fixture.id));
+      return;
+    }
+    if (key === "Home" || key === "End") {
+      event.preventDefault();
+      const position = doc.positions[fixture.positionId];
+      const half = (position?.lengthMm ?? 0) / 2;
+      onSelectFixture(fixture.id, {});
+      onNudgeFixture(fixture.id, fixture.positionId, key === "Home" ? -half : half);
+      window.requestAnimationFrame(() => focusFixtureElement(fixture.id));
+      return;
+    }
+    if (key === "ArrowUp" || key === "ArrowDown") {
+      event.preventDefault();
+      const order = doc.fixtureOrder;
+      const index = order.indexOf(fixture.id);
+      if (index < 0) return;
+      const nextId = order[(index + (key === "ArrowDown" ? 1 : -1) + order.length) % order.length];
+      onSelectFixture(nextId, {});
+      window.requestAnimationFrame(() => focusFixtureElement(nextId));
+    }
+  }, [doc.positions, doc.fixtureOrder, onSelectFixture, onNudgeFixture, onDeleteFixture, focusFixtureElement]);
+
+  // Roving tabindex: the fixture layer is a single tab stop.
+  const rovingFixtureId = selectedFixtureId && doc.fixtures[selectedFixtureId]
+    ? selectedFixtureId
+    : doc.fixtureOrder[0];
+
   const focusRows = focusBeamRows(doc);
   const commentRows = commentPinRows(doc);
+
+  // The fixture layer is independent of the viewBox, so build it once per
+  // document/selection change instead of rebuilding 800 elements every pan frame.
+  const fixtureLayer = useMemo(() => doc.fixtureOrder.map(fid => {
+    const fx = doc.fixtures[fid];
+    const pos = doc.positions[fx.positionId];
+    if (!pos) return null;
+    return (
+      <FixtureSymbol
+        key={fx.id}
+        fixture={fx}
+        position={pos}
+        profiles={doc.fixtureProfiles}
+        selected={fx.id === selectedFixtureId || selectedFixtureSet.has(fx.id)}
+        labelSettings={labelSettings}
+        onPointerDown={onFixturePointerDown}
+        onKeyDown={onFixtureKeyDown}
+        tabIndex={fx.id === rovingFixtureId ? 0 : -1}
+        describedBy="plot-canvas-keyboard-help"
+      />
+    );
+  }), [
+    doc.fixtureOrder, doc.fixtures, doc.positions, doc.fixtureProfiles,
+    selectedFixtureId, selectedFixtureSet, labelSettings,
+    onFixturePointerDown, onFixtureKeyDown, rovingFixtureId,
+  ]);
 
   // ---- grid ----
   const gridStartX = Math.floor(viewBox.x / GRID_MM) * GRID_MM;
@@ -130,6 +231,11 @@ export default function PlotCanvas({
 
   return (
     <div className="canvas-wrap">
+      <p id="plot-canvas-keyboard-help" className="visually-hidden">
+        Arrow left and right move the unit along its position, hold shift for one foot.
+        Home and End jump to the ends of the position. Arrow up and down move between units.
+        Enter selects, Delete removes, Escape cancels the active tool.
+      </p>
       <div className="canvas-toolbar">
         <button onClick={reset} type="button">Reset view</button>
         <button
@@ -173,7 +279,6 @@ export default function PlotCanvas({
         className="plot-canvas"
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
         preserveAspectRatio="xMidYMid meet"
-        onWheel={onWheel}
         onPointerDown={onSvgPointerDown}
         onPointerMove={onSvgPointerMove}
         onPointerUp={onSvgPointerUp}
@@ -241,7 +346,7 @@ export default function PlotCanvas({
           );
         })}
 
-        <g className="focus-beams" aria-label="Focus beams">
+        <g className="focus-beams" role="group" aria-label="Focus beams">
           {focusRows.map(row => {
             const selected = row.fixtureId === selectedFixtureId;
             return (
@@ -283,24 +388,9 @@ export default function PlotCanvas({
         </g>
 
         {/* Fixtures */}
-        {doc.fixtureOrder.map(fid => {
-          const fx = doc.fixtures[fid];
-          const pos = doc.positions[fx.positionId];
-          if (!pos) return null;
-          return (
-            <FixtureSymbol
-              key={fx.id}
-              fixture={fx}
-              position={pos}
-              profiles={doc.fixtureProfiles}
-              selected={fx.id === selectedFixtureId || selectedFixtureSet.has(fx.id)}
-              labelSettings={labelSettings}
-              onPointerDown={onFixturePointerDown}
-            />
-          );
-        })}
+        {fixtureLayer}
 
-        <g className="comment-pins" aria-label="Comment pins">
+        <g className="comment-pins" role="group" aria-label="Comment pins">
           {commentRows.map((commentPin, index) => {
             const selected = commentPin.id === selectedCommentPinId;
             return (

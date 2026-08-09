@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { getFixtureStatus } from "../domain/fixtureStatus.js";
 import { getProfile } from "../domain/profiles.js";
 import { defaultLabelSettings } from "../domain/show.js";
@@ -6,7 +7,17 @@ import { defaultLabelSettings } from "../domain/show.js";
  * Renders a fixture symbol in world (mm) coordinates centered on (cx, cy).
  * Symbols are deliberately schematic — Phase 2 will swap these for GDTF-imported SVGs.
  */
-export default function FixtureSymbol({ fixture, position, profiles, selected, labelSettings, onPointerDown }) {
+function FixtureSymbol({
+  fixture,
+  position,
+  profiles,
+  selected,
+  labelSettings,
+  onPointerDown,
+  onKeyDown,
+  tabIndex = -1,
+  describedBy,
+}) {
   const labels = labelSettings || defaultLabelSettings();
   const profile = getProfile(fixture.profileId, profiles);
   if (!profile) return null;
@@ -23,10 +34,26 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, l
     <g
       transform={`translate(${cx} ${cy}) rotate(${fixture.rotation || 0})`}
       onPointerDown={(e) => onPointerDown?.(e, fixture)}
+      onKeyDown={(e) => onKeyDown?.(e, fixture)}
       style={{ cursor: "grab" }}
       className={`fx ${selected ? "fx--selected" : ""}`}
+      role="button"
+      tabIndex={tabIndex}
+      aria-pressed={selected}
+      aria-describedby={describedBy}
+      data-fixture-id={fixture.id}
+      aria-label={[
+        `Unit ${fixture.unitNumber ?? "unnumbered"}`,
+        profile.name || "fixture",
+        position.name ? `on ${position.name}` : null,
+        fixture.channel != null ? `channel ${fixture.channel}` : "unpatched",
+        `${status.label} status`,
+      ].filter(Boolean).join(", ")}
     >
       <title>{status.label} status</title>
+      {/* Transparent hit area — keeps the pointer/focus target at least 24 CSS px
+          (WCAG 2.2 SC 2.5.8) even when the drawn glyph is smaller. */}
+      <circle className="fx__hit" r={Math.max(r * 1.5, 290)} fill="transparent" />
       {profile.symbol === "ellipsoidal" && (
         <>
           <circle r={r} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
@@ -92,3 +119,7 @@ export default function FixtureSymbol({ fixture, position, profiles, selected, l
     </g>
   );
 }
+
+// Panning changes only the viewBox. Without memoization every pan frame
+// re-rendered every fixture subtree, which dominated frame time at plot scale.
+export default memo(FixtureSymbol);

@@ -59,7 +59,7 @@ export default function PatchTable({ doc }) {
       </div>
       {exportError && <p className="library-status library-status--error">{exportError}</p>}
 
-      <div className="patch-table-wrap">
+      <div className="patch-table-wrap" tabIndex={0} role="region" aria-label="Patch table, scrollable">
         <table className="patch-table">
           <thead>
             <tr>

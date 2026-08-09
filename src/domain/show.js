@@ -209,10 +209,28 @@ export function addFixtureProfile(doc, profile) {
   };
 }
 
+/**
+ * Clamp an along-position coordinate to the position's physical extent.
+ * Positions are centered on x = 0, so a fixture may sit anywhere in
+ * [-lengthMm / 2, +lengthMm / 2]. A unit outside that range is not hung on
+ * anything, so drags and typed positions are both held to the pipe.
+ */
+export function clampFixtureX(position, xMm) {
+  if (xMm == null || !Number.isFinite(xMm)) return xMm;
+  const length = Number(position?.lengthMm);
+  if (!Number.isFinite(length) || length <= 0) return xMm;
+  const half = length / 2;
+  return Math.max(-half, Math.min(half, xMm));
+}
+
 export function updateFixture(doc, fixtureId, patch) {
   const fx = doc.fixtures[fixtureId];
   if (!fx) return doc;
   const cleanPatch = normalizeCircuitPatch(patch);
+  if (Object.hasOwn(cleanPatch, "xMm")) {
+    const position = doc.positions[cleanPatch.positionId ?? fx.positionId];
+    cleanPatch.xMm = clampFixtureX(position, cleanPatch.xMm);
+  }
   let nextFixture = { ...fx, ...cleanPatch };
   if (Object.hasOwn(cleanPatch, "note") || Object.hasOwn(cleanPatch, "notes")) {
     const notes = normalizeFixtureNotes(cleanPatch.notes ?? fx.notes, cleanPatch.note ?? fx.note);

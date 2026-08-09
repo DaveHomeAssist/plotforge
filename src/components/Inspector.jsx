@@ -174,23 +174,14 @@ export default function Inspector({
 
   const fx = doc.fixtures[fixtureId];
   if (!fx) return null;
-  const editorKey = [
-    fx.id,
-    fx.xMm,
-    fx.channel ?? "",
-    fx.dmx?.universe ?? "",
-    fx.dmx?.address ?? "",
-    fx.circuit ?? "",
-    fx.dimmer ?? "",
-    fx.color ?? "",
-    JSON.stringify(normalizeFixtureNotes(fx.notes, fx.note)),
-    fx.note ?? "",
-    fx.status ?? "",
-  ].join(":");
 
+  // Key on identity only. Keying on committed values as well would remount the
+  // editor every time a debounced edit committed, destroying the focused input
+  // mid-edit and silently dropping the user's next keystrokes. External changes
+  // are reconciled into the draft by FixtureInspector instead.
   return (
     <FixtureInspector
-      key={editorKey}
+      key={fx.id}
       doc={doc}
       fx={fx}
       selectedFixtureIds={selectedFixtureIds}
@@ -215,10 +206,49 @@ function FixtureInspector({ doc, fx, selectedFixtureIds, onChange, onDelete, rea
   ), [fx, draft, dmxFootprint]);
   const latestRef = useRef({ fxId: fx.id, onChange, pending });
   const errorSignature = JSON.stringify(pending.errors);
+  const committed = useMemo(() => draftFromFixture(fx), [fx]);
+  const previousCommittedRef = useRef(committed);
+
+  // Draft values as of our own last commit, consumed by the next sync pass.
+  // One-shot, so only our commit's immediate echo is ignored — a later external
+  // change (undo/redo, canvas drag) always wins even if it happens to restore a
+  // value we once committed.
+  const pendingEchoRef = useRef(null);
 
   useEffect(() => {
-    latestRef.current = { fxId: fx.id, onChange, pending };
+    latestRef.current = { fxId: fx.id, onChange, pending, draft };
   });
+
+  // Reconcile external document changes (undo/redo, canvas drag, multi-select
+  // edits) into the draft without remounting. Only fields whose committed value
+  // actually moved are overwritten, so an edit the user is still typing into an
+  // untouched field survives a commit landing elsewhere.
+  useEffect(() => {
+    const previous = previousCommittedRef.current;
+    if (previous === committed) return;
+    const changed = Object.keys(committed).filter(key => committed[key] !== previous[key]);
+    previousCommittedRef.current = committed;
+    if (!changed.length) return;
+    // The field under the caret is protected from the echo of our own commit —
+    // otherwise a commit landing while the user keeps typing would reset what
+    // they have typed. A genuinely external change (undo/redo, drag) still wins,
+    // so undo visibly reverts the field even while it is focused.
+    const activeField = sectionRef.current?.contains(document.activeElement)
+      ? document.activeElement?.dataset?.inspectorField
+      : undefined;
+    const echo = pendingEchoRef.current;
+    pendingEchoRef.current = null;
+    setDraft(current => {
+      let next = current;
+      for (const key of changed) {
+        if (key === activeField && echo && committed[key] === echo[key]) continue;
+        if (current[key] === committed[key]) continue;
+        if (next === current) next = { ...current };
+        next[key] = committed[key];
+      }
+      return next;
+    });
+  }, [committed]);
 
   useEffect(() => {
     recordDebugEvent("inspector:select", { fixtureId: fx.id });
@@ -236,6 +266,7 @@ function FixtureInspector({ doc, fx, selectedFixtureIds, onChange, onDelete, rea
     clearTimeout(timerRef.current);
     timerRef.current = null;
     lastCommitRef.current = signature;
+    pendingEchoRef.current = { ...latestRef.current.draft };
     latestRef.current.onChange(latestRef.current.fxId, patch);
     recordDebugEvent("inspector:commit", { fixtureId: latestRef.current.fxId, fields: Object.keys(patch) });
     return true;

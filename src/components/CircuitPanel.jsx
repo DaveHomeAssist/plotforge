@@ -27,7 +27,7 @@ export default function CircuitPanel({ doc }) {
         <span>{summary.sharedCount} shared</span>
       </div>
 
-      <div className="patch-table-wrap">
+      <div className="patch-table-wrap" tabIndex={0} role="region" aria-label="Circuit check, scrollable">
         <table className="patch-table circuit-table">
           <thead>
             <tr>
