@@ -23,6 +23,9 @@ export default function PlotCanvas({
   onClearFixtureFocus,
   onAddCommentPin,
   onDeleteFixture,
+  onSelectFixtures,
+  ghostDiff = null,
+  onCanvasApi = null,
 }) {
   const svgRef = useRef(null);
   const dragState = useRef(null);
@@ -36,8 +39,14 @@ export default function PlotCanvas({
     height: doc.venue.stageDepthMm + margin * 2 + feetToMm(20),
   };
 
-  const { viewBox, onWheel, beginPan, panTo, endPan, screenToWorld, reset } =
+  const { viewBox, onWheel, beginPan, panTo, endPan, screenToWorld, reset, panToWorld } =
     usePanZoom({ initialWorldRect: initial, viewportSize: { width: 800, height: 600 } });
+
+  // Imperative bridge for the command palette: jump the view to a fixture.
+  useEffect(() => {
+    onCanvasApi?.({ panToWorld });
+    return () => onCanvasApi?.(null);
+  }, [onCanvasApi, panToWorld]);
 
   // React attaches onWheel passively, so preventDefault() inside it is a no-op
   // that logs an error on every tick and lets the page scroll while zooming.
@@ -50,6 +59,7 @@ export default function PlotCanvas({
   }, [onWheel]);
 
   const [panActive, setPanActive] = useState(false);
+  const [marquee, setMarquee] = useState(null); // {x1,y1,x2,y2} in world mm
   const [focusFixtureId, setFocusFixtureId] = useState(null);
   const [commentActive, setCommentActive] = useState(false);
   const selectedFixture = selectedFixtureId ? doc.fixtures[selectedFixtureId] : null;
@@ -86,11 +96,22 @@ export default function PlotCanvas({
     if (e.target.closest(".comment-pin")) return; // comment pin handles its own select
     if (e.button !== 0 && e.button !== 1) return;
     e.currentTarget.setPointerCapture(e.pointerId);
+    if (e.shiftKey && e.button === 0) {
+      // Shift+drag on empty canvas = marquee select (matches shift-click additive).
+      const world = screenToWorld(e.clientX, e.clientY, e.currentTarget);
+      setMarquee({ x1: world.x, y1: world.y, x2: world.x, y2: world.y });
+      return;
+    }
     setPanActive(true);
     beginPan(e.clientX, e.clientY);
-  }, [beginPan, setCommentAtEvent, setFocusAtEvent]);
+  }, [beginPan, screenToWorld, setCommentAtEvent, setFocusAtEvent]);
 
   const onSvgPointerMove = useCallback((e) => {
+    if (marquee) {
+      const world = screenToWorld(e.clientX, e.clientY, e.currentTarget);
+      setMarquee(current => current ? { ...current, x2: world.x, y2: world.y } : current);
+      return;
+    }
     if (panActive) panTo(e.clientX, e.clientY, e.currentTarget);
     if (dragState.current) {
       const { fixtureId, positionId } = dragState.current;
@@ -99,16 +120,32 @@ export default function PlotCanvas({
       const xMm = Math.round(world.x / snap) * snap;
       onMoveFixture(fixtureId, positionId, xMm);
     }
-  }, [panActive, panTo, screenToWorld, onMoveFixture]);
+  }, [marquee, panActive, panTo, screenToWorld, onMoveFixture]);
 
   const onSvgPointerUp = useCallback((e) => {
+    if (marquee) {
+      const minX = Math.min(marquee.x1, marquee.x2);
+      const maxX = Math.max(marquee.x1, marquee.x2);
+      const minY = Math.min(marquee.y1, marquee.y2);
+      const maxY = Math.max(marquee.y1, marquee.y2);
+      const hits = doc.fixtureOrder.filter(id => {
+        const fx = doc.fixtures[id];
+        const position = fx ? doc.positions[fx.positionId] : null;
+        if (!fx || !position) return false;
+        return fx.xMm >= minX && fx.xMm <= maxX && position.yMm >= minY && position.yMm <= maxY;
+      });
+      if (hits.length) onSelectFixtures?.(hits, { additive: true });
+      setMarquee(null);
+      try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+      return;
+    }
     if (panActive) {
       endPan();
       setPanActive(false);
       try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
     }
     dragState.current = null;
-  }, [panActive, endPan]);
+  }, [marquee, doc, onSelectFixtures, panActive, endPan]);
 
   const onFixturePointerDown = useCallback((e, fixture) => {
     e.stopPropagation();
@@ -387,6 +424,37 @@ export default function PlotCanvas({
           })}
         </g>
 
+        {/* Revision ghost diff — where the rig stood at the compared revision */}
+        {ghostDiff && (
+          <g className="ghost-diff" role="group" aria-label="Changes since revision" pointerEvents="none">
+            {ghostDiff.moved.map(entry => {
+              const fx = doc.fixtures[entry.fixtureId];
+              const position = fx ? doc.positions[fx.positionId] : null;
+              if (!fx || !position || entry.fromXMm == null) return null;
+              const fromY = entry.fromYMm ?? position.yMm;
+              return (
+                <g key={`gm${entry.fixtureId}`}>
+                  <line x1={entry.fromXMm} y1={fromY} x2={fx.xMm} y2={position.yMm}
+                    className="ghost-move-line" />
+                  <circle cx={entry.fromXMm} cy={fromY} r={170} className="ghost-old" />
+                </g>
+              );
+            })}
+            {ghostDiff.removed.map(entry => entry.yMm == null ? null : (
+              <g key={`gr${entry.fixtureId}`} transform={`translate(${entry.xMm} ${entry.yMm})`}>
+                <line x1={-140} y1={-140} x2={140} y2={140} className="ghost-removed" />
+                <line x1={-140} y1={140} x2={140} y2={-140} className="ghost-removed" />
+              </g>
+            ))}
+            {ghostDiff.added.map(entry => {
+              const fx = doc.fixtures[entry.fixtureId];
+              const position = fx ? doc.positions[fx.positionId] : null;
+              if (!fx || !position) return null;
+              return <circle key={`ga${entry.fixtureId}`} cx={fx.xMm} cy={position.yMm} r={230} className="ghost-added" />;
+            })}
+          </g>
+        )}
+
         {/* Fixtures */}
         {fixtureLayer}
 
@@ -412,6 +480,16 @@ export default function PlotCanvas({
             );
           })}
         </g>
+        {marquee && (
+          <rect
+            className="marquee-rect"
+            x={Math.min(marquee.x1, marquee.x2)}
+            y={Math.min(marquee.y1, marquee.y2)}
+            width={Math.abs(marquee.x2 - marquee.x1)}
+            height={Math.abs(marquee.y2 - marquee.y1)}
+            pointerEvents="none"
+          />
+        )}
       </svg>
     </div>
   );

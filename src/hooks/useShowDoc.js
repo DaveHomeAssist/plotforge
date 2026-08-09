@@ -6,11 +6,16 @@ import {
   newPosition,
   newRevision,
   newCommentPin,
+  newSystem,
   addPosition,
   addFixture,
   addFixtureProfile,
   addRevision,
   addCommentPin,
+  addSystem,
+  removeSystem,
+  systemFixtureIds,
+  attachRevisionSnapshot,
   activateRevision,
   updateOscBridge,
   updateLabelSettings,
@@ -32,6 +37,7 @@ import { applyPlotStarterPlan } from "../domain/plotStarter.js";
 import { saveProjectFile, openProjectFile } from "../serialization.js";
 import { invalidDmxRanges, patchConflicts } from "../domain/patch.js";
 import { alignFixtures, distributeFixtures } from "../domain/fixtureLayout.js";
+import { makeRevisionSnapshot } from "../domain/revisionDiff.js";
 import { recordDebugEvent } from "../debugEvents.js";
 
 function clamp(value, min, max) {
@@ -139,6 +145,39 @@ export default function useShowDoc(seedShow) {
     });
   }, [doc.fixtures, selectedFixtureId]);
 
+  /** Bulk selection (marquee, palette Shift+Enter, systems). */
+  const onSelectFixtures = useCallback((ids, { additive = false } = {}) => {
+    const valid = ids.filter(id => doc.fixtures[id]);
+    if (valid.length === 0) {
+      if (!additive) onClearFixtureSelection();
+      return;
+    }
+    setSelectedCommentPinId(null);
+    setSelectedFixtureIds(current => {
+      const merged = additive ? [...current] : [];
+      for (const id of valid) if (!merged.includes(id)) merged.push(id);
+      const primary = merged[merged.length - 1] ?? null;
+      setSelectedFixtureId(primary);
+      setSelectedPositionId(primary ? doc.fixtures[primary]?.positionId ?? null : null);
+      return merged;
+    });
+  }, [doc.fixtures, onClearFixtureSelection]);
+
+  const onSaveSystem = useCallback((name) => {
+    if (selectedFixtureIds.length === 0) return null;
+    const system = newSystem({ name, fixtureIds: selectedFixtureIds });
+    commit(addSystem(doc, system));
+    return system.id;
+  }, [doc, commit, selectedFixtureIds]);
+
+  const onSelectSystem = useCallback((systemId) => {
+    onSelectFixtures(systemFixtureIds(doc, systemId));
+  }, [doc, onSelectFixtures]);
+
+  const onDeleteSystem = useCallback((systemId) => {
+    commit(removeSystem(doc, systemId));
+  }, [doc, commit]);
+
   const onSelectPosition = useCallback((id) => {
     setSelectedPositionId(id);
     setSelectedCommentPinId(null);
@@ -218,7 +257,10 @@ export default function useShowDoc(seedShow) {
 
   const onAddRevision = useCallback(({ name, note }) => {
     const revision = newRevision({ name, note });
-    commit(addRevision(doc, revision));
+    // Snapshot the rig as it stands at issue time so later edits can be
+    // diffed against this revision ("what changed since Rev B").
+    const withRevision = addRevision(doc, revision);
+    commit(attachRevisionSnapshot(withRevision, revision.id, makeRevisionSnapshot(doc)));
     return revision.id;
   }, [doc, commit]);
 
@@ -372,6 +414,10 @@ export default function useShowDoc(seedShow) {
     onMoveFixture,
     onNudgeFixture,
     onSelectFixture,
+    onSelectFixtures,
+    onSaveSystem,
+    onSelectSystem,
+    onDeleteSystem,
     onSelectPosition,
     onSelectCommentPin,
     onAddPosition,

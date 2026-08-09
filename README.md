@@ -38,6 +38,11 @@ Notion is the canonical phase source for this project. README status was reconci
 - OSC bridge route map with saved relay settings, JSON export, selected fixture send, and a dependency-free local WebSocket-to-UDP relay
 - Multi-show registry with IndexedDB snapshots, load/delete actions, `.plot` share/export, and PWA manifest plus service worker shell caching
 - AI plot starter with brief parsing, local starter plan generation, prompt copy, and one click plan apply
+- Command palette (Cmd/Ctrl+K): find any fixture by channel, unit, DMX pair, gel, instrument, position, or status and jump the canvas to it
+- Marquee select (Shift+drag) plus named Systems: save any selection as a reusable set with one-click reselect
+- Rig Check mode: guided channel-check walk that fires each unit's OSC select route through the relay and records status per unit, fully offline-safe
+- Revision rig diff: every new revision snapshots the rig; compare live doc against any revision with ghost markers on the plot and a copyable change list
+- Focus charts and magic sheet: printable per-position focus paperwork plus gel-grouped magic sheet generated from existing document data
 
 ## What's deliberately missing
 

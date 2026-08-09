@@ -2393,3 +2393,218 @@ input, textarea { font: inherit; color: inherit; }
 .collapsible-section__body {
   padding: 0 4px 4px;
 }
+
+/* ---------------------------------------------------------------
+   Command palette (⌘K)
+   --------------------------------------------------------------- */
+
+.palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.palette {
+  width: min(560px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  box-shadow: var(--panel-shadow);
+  overflow: hidden;
+}
+
+.palette__input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 13px 16px;
+}
+
+.palette__input:focus { outline: 2px solid var(--blue); outline-offset: -2px; }
+
+.palette__results {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.palette__row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.palette__row--active,
+.palette__row:focus-visible { background: var(--surface-2); outline: none; }
+
+.palette__detail { color: var(--ink-mute); white-space: nowrap; }
+
+.palette__empty { padding: 12px 14px; color: var(--ink-mute); font-size: 13px; }
+
+.palette__hint {
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-dim);
+}
+
+/* ---------------------------------------------------------------
+   Marquee + systems
+   --------------------------------------------------------------- */
+
+.marquee-rect {
+  fill: color-mix(in srgb, var(--blue) 12%, transparent);
+  stroke: var(--blue);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.systems-block { display: grid; gap: 8px; margin-top: 12px; }
+
+.systems-save { display: flex; gap: 6px; }
+
+.systems-save input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 12px;
+  padding: 7px 10px;
+}
+
+.systems-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+
+.systems-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.systems-chip__select {
+  border: 0;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 12px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+.systems-chip__select:hover, .systems-chip__select:focus-visible { background: var(--bg-2); outline: none; }
+
+.systems-chip__delete {
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-mute);
+  padding: 0 7px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.systems-chip__delete:hover, .systems-chip__delete:focus-visible { color: var(--red); outline: none; }
+
+.systems-hint { margin: 0; }
+
+/* ---------------------------------------------------------------
+   Rig check
+   --------------------------------------------------------------- */
+
+.rigcheck-progress {
+  height: 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.rigcheck-progress__fill {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  transition: width .18s;
+}
+
+.rigcheck-progress__text { color: var(--ink-mute); margin: 6px 0 10px; }
+
+.rigcheck-current {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  margin-bottom: 8px;
+}
+
+.rigcheck-status-row, .rigcheck-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+/* ---------------------------------------------------------------
+   Revision ghost diff
+   --------------------------------------------------------------- */
+
+.ghost-move-line { stroke: var(--amber); stroke-width: 9; stroke-dasharray: 70 50; }
+.ghost-old { fill: none; stroke: var(--amber); stroke-width: 12; stroke-dasharray: 40 40; opacity: .8; }
+.ghost-removed { stroke: var(--red); stroke-width: 22; opacity: .85; }
+.ghost-added { fill: none; stroke: var(--green); stroke-width: 14; stroke-dasharray: 50 34; opacity: .9; }
+
+.revdiff-select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 12px;
+  padding: 7px 10px;
+  margin-bottom: 8px;
+}
+
+.revdiff-ghost-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-mute); }
+
+.revdiff-counts { display: flex; flex-wrap: wrap; gap: 10px; color: var(--ink-mute); margin-bottom: 8px; }
+
+.revdiff-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  display: grid;
+  gap: 3px;
+  font-size: 12.5px;
+}
+
+.revdiff-list b { font-family: var(--mono); margin-right: 4px; }
+.revdiff-add { color: var(--green); }
+.revdiff-del { color: var(--red); }
+.revdiff-mov { color: var(--amber); }
+
+/* ---------------------------------------------------------------
+   Print export actions
+   --------------------------------------------------------------- */
+
+.print-export-actions { display: flex; gap: 6px; }

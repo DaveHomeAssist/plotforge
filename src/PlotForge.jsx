@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import PlotCanvas from "./components/PlotCanvas.jsx";
 import ProjectMetadata from "./components/ProjectMetadata.jsx";
 import RevisionsPanel from "./components/RevisionsPanel.jsx";
@@ -17,10 +17,14 @@ import PlotStarterPanel from "./components/PlotStarterPanel.jsx";
 import SplashScreen from "./components/SplashScreen.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
+import CommandPalette from "./components/CommandPalette.jsx";
+import RigCheckPanel from "./components/RigCheckPanel.jsx";
+import RevisionDiffPanel from "./components/RevisionDiffPanel.jsx";
 import PrintExport from "./components/PrintExport.jsx";
 import DraftRecoveryBanner from "./components/DraftRecoveryBanner.jsx";
 import TextSettingsPanel from "./components/TextSettingsPanel.jsx";
 import useShowDoc from "./hooks/useShowDoc.js";
+import { diffAgainstSnapshot } from "./domain/revisionDiff.js";
 import { newShow, newPosition, newFixture, addPosition, addFixture } from "./domain/show.js";
 import { feetToMm } from "./domain/units.js";
 import "./PlotForge.css";
@@ -212,6 +216,17 @@ export default function PlotForge() {
   }, [show.recovery.draft]);
 
   const history = show.history;
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [canvasApi, setCanvasApi] = useState(null);
+  const [diffRevisionId, setDiffRevisionId] = useState(null);
+  const [showGhosts, setShowGhosts] = useState(true);
+  const onCanvasApi = useCallback(api => setCanvasApi(api), []);
+
+  const diffSnapshot = diffRevisionId ? show.doc.revisionSnapshots?.[diffRevisionId] : null;
+  const revisionDiff = useMemo(
+    () => (diffSnapshot ? diffAgainstSnapshot(show.doc, diffSnapshot) : null),
+    [show.doc, diffSnapshot],
+  );
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -220,6 +235,11 @@ export default function PlotForge() {
       if (key === "s") {
         event.preventDefault();
         onSave();
+        return;
+      }
+      if (key === "k") {
+        event.preventDefault();
+        setPaletteOpen(open => !open);
         return;
       }
       // Inside a text control, Ctrl+Z belongs to the control: hijacking it would
@@ -272,6 +292,16 @@ export default function PlotForge() {
   function handleSelectFixture(fixtureId, options) {
     show.onSelectFixture(fixtureId, options);
     if (fixtureId) setActiveTool("inspect");
+  }
+
+  function handleJumpToFixture(fixtureId, world) {
+    handleSelectFixture(fixtureId, {});
+    if (world && canvasApi?.panToWorld) canvasApi.panToWorld(world.xMm, world.yMm);
+  }
+
+  function handlePaletteSelectMany(fixtureIds) {
+    show.onSelectFixtures(fixtureIds);
+    if (fixtureIds.length) setActiveTool("inspect");
   }
 
   function handleSelectPosition(positionId) {
@@ -386,6 +416,27 @@ export default function PlotForge() {
       case "checks":
         return (
           <>
+            <RigCheckPanel
+              doc={show.doc}
+              selectedFixtureId={show.selectedFixtureId}
+              onRevealFixture={fixtureId => {
+                const fixture = show.doc.fixtures[fixtureId];
+                const position = fixture ? show.doc.positions[fixture.positionId] : null;
+                show.onSelectFixture(fixtureId, {});
+                if (fixture && position && canvasApi?.panToWorld) {
+                  canvasApi.panToWorld(fixture.xMm, position.yMm);
+                }
+              }}
+              onFixtureChange={show.onFixtureChange}
+            />
+            <RevisionDiffPanel
+              doc={show.doc}
+              diff={revisionDiff}
+              diffRevisionId={diffRevisionId}
+              onPickRevision={setDiffRevisionId}
+              showGhosts={showGhosts}
+              onToggleGhosts={setShowGhosts}
+            />
             <ConflictPanel doc={show.doc} onRevealFixture={handleSelectFixture} />
             <CircuitPanel doc={show.doc} />
           </>
@@ -439,6 +490,9 @@ export default function PlotForge() {
               onAlignSelectedFixtures={show.onAlignSelectedFixtures}
               onDistributeSelectedFixtures={show.onDistributeSelectedFixtures}
               onClearSelection={show.onClearFixtureSelection}
+              onSaveSystem={show.onSaveSystem}
+              onSelectSystem={show.onSelectSystem}
+              onDeleteSystem={show.onDeleteSystem}
             />
             <Inspector
               doc={show.doc}
@@ -511,6 +565,9 @@ export default function PlotForge() {
           onClearFixtureFocus={show.onClearFixtureFocus}
           onAddCommentPin={handleAddCommentPin}
           onDeleteFixture={show.onFixtureDelete}
+          onSelectFixtures={show.onSelectFixtures}
+          ghostDiff={showGhosts ? revisionDiff : null}
+          onCanvasApi={onCanvasApi}
         />
         <aside className="sidepanel">
           <section className="console-overview" aria-label="PlotForge console summary">
@@ -595,6 +652,14 @@ export default function PlotForge() {
       {/* Every tool is reachable on small screens. Exposing only a subset left
           venue setup, notes, conflict review, and printing unreachable on a
           phone with nothing in the UI saying where they went. */}
+      <CommandPalette
+        doc={show.doc}
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onJumpToFixture={handleJumpToFixture}
+        onSelectMany={handlePaletteSelectMany}
+      />
+
       <nav className="mobile-dock" aria-label="Mobile workspace sections">
         {TOOL_DEFINITIONS.map(tool => (
           <button

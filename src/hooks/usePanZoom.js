@@ -107,8 +107,17 @@ export default function usePanZoom({ initialWorldRect, viewportSize }) {
 
   const reset = useCallback(() => setViewBox(initialWorldRect), [initialWorldRect]);
 
+  /** Center the view on a world point without changing zoom. */
+  const panToWorld = useCallback((x, y) => {
+    setViewBox(current => ({
+      ...current,
+      x: x - current.width / 2,
+      y: y - current.height / 2,
+    }));
+  }, []);
+
   // suppress unused warning until we wire keyboard navigation.
   void viewportSize;
 
-  return { viewBox, onWheel, beginPan, panTo, endPan, screenToWorld, zoomAt, reset };
+  return { viewBox, onWheel, beginPan, panTo, endPan, screenToWorld, zoomAt, reset, panToWorld };
 }
