@@ -65,7 +65,14 @@ Requires Node 22+.
 
 ## Verification status
 
-Latest local verification on 2026-06-22 with Node v22.22.1:
+Latest verification on 2026-08-09, on a fresh checkout of `main` at `b34855f` with Node v22.22.1:
+
+- `npm run lint`: 0 errors, 0 warnings.
+- `npm test -- --run`: 31 files passed, 160 tests passed.
+- `npm run build`: Vite production build completed.
+- Production: GitHub deployment `5820228196` (commit `5b326c5`, five-feature drop) then `5820291141` (commit `b34855f`, changelog reconcile); Vercel deployment `dpl_FjsX4xhXxJjqi1K7gVJbsFzUjS7T` is READY and `https://plotforge-beta.vercel.app` returns HTTP 200.
+
+Earlier local verification on 2026-06-22 with Node v22.22.1:
 
 - `PATH=/opt/homebrew/opt/node@22/bin:$PATH ./node_modules/.bin/eslint src/components/Inspector.jsx src/components/SaveStatus.jsx src/hooks/useShowDoc.js src/hooks/useAutosaveRecovery.js src/PlotForge.jsx src/debugEvents.js src/__tests__/inspector.test.jsx src/__tests__/useShowDoc.test.jsx`: 0 errors, 0 warnings.
 - `PATH=/opt/homebrew/opt/node@22/bin:$PATH ./node_modules/.bin/vitest run src/__tests__/inspector.test.jsx src/__tests__/useShowDoc.test.jsx --pool=forks --maxWorkers=1 --no-file-parallelism --reporter=verbose`: 2 files passed, 30 tests passed.
