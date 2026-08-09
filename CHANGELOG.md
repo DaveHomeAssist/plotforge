@@ -2,6 +2,41 @@
 
 All notable changes to PlotForge. Still versioned `0.1.0` throughout (Phase 0 spike) — entries are grouped by date. See `README.md` for the full current feature list.
 
+Reconciled 2026-08-09 from git history, deploy records, and project notes. Entries dated 2026-07-06 onward were appended in that pass; entries before it are preserved from the original file. Undated or unshipped work is excluded.
+
+## [Unreleased]
+### Added
+### Changed
+### Fixed
+
+## 2026-08-09 · Command palette, systems, rig check, revision diff, focus charts
+- Added a command palette (Cmd/Ctrl+K): find any fixture by channel, unit number, DMX universe/address pair, gel, instrument, position, or status, then jump the canvas to it. Shift+Enter selects every match.
+- Added marquee selection (Shift+drag on the plot) and named Systems: save any selection as a reusable set with one-click reselect and delete.
+- Added Rig Check mode: a guided channel-check walk that selects each unit on the plot, fires its OSC select route through the local relay when one is running, and records a status per unit with one tap. Fully usable offline.
+- Added revision rig diff: adding a revision now snapshots the rig, and any snapshot can be compared against the live plot with ghost markers on the canvas (moves, adds, removals) plus a copyable crew change list.
+- Added focus charts and a gel-grouped magic sheet as a printable document generated from existing focus points, layered notes, and gels.
+- Changed the `.plot` document format to version 10 (systems, revision snapshots). Older files migrate automatically.
+
+## 2026-08-09 · Print fidelity fixes
+- Fixed fixture symbols printing as solid black shapes: print stroke widths now scale with the drawing like the on-screen canvas (S4, Fresnel, and moving-head glyphs are distinguishable on paper again). Present since the first print export on 2026-06-21.
+- Fixed position labels clipping under the first unit on the printed sheet ("1ST EL...") by anchoring label text like the canvas does.
+- Added regression tests pinning how legacy off-pipe fixtures are clamped on edit.
+
+## 2026-08-07 — 2026-08-09 · UX/UI audit and remediation
+- Added a repeatable UX/UI audit protocol and the results of its first run (docs/UX_UI_AUDIT.md, docs/UX_UI_AUDIT_RESULTS_2026-08-07.md).
+- Fixed the Inspector silently discarding keystrokes after each debounced commit; focus now stays in the field being edited.
+- Fixed fixture drags escaping their pipe: positions are clamped to the physical extent on drag and typed edits.
+- Added full keyboard access to the canvas: Tab to fixtures, arrows to nudge (Shift for 1'), Home/End to pipe ends, Enter to select, Delete to remove, Escape to cancel tools.
+- Added Ctrl/Cmd+Z undo and Ctrl/Cmd+Shift+Z / Ctrl+Y redo shortcuts that defer to text fields while typing.
+- Fixed 298 accessibility violations across all panels in both themes (contrast tokens recomputed to WCAG AA, minimum user-facing text raised to 12px, tool rail now implements the ARIA tabs pattern, dialogs close on Escape and manage focus, reduced-motion and forced-colors supported).
+- Fixed wheel zoom logging a console error on every tick and scrolling the page under the canvas.
+- Changed fixture hit targets to meet the 24px minimum and made panning fluid at 800 fixtures (worst frame 191ms to 30ms).
+- Changed the Setup panel to lead with positions; title block, revisions, and plot text are collapsible.
+- Changed the mobile dock to reach all nine tools.
+
+## 2026-07-06 · Project documentation
+- Added this changelog, the license, and a user-facing guide (docs/USER_GUIDE.md).
+
 ## 2026-06-28 — 2026-06-29 · Native UI + patch hardening
 - Added a **native SwiftUI port scaffold** with a physical smoke-test protocol (`docs/plotforge-swift-port-plan-2026-06-25.md`, `docs/plotforge-native-physical-smoke-2026-06-26.md`).
 - Native canvas: distinct fixture symbols, a compact fixture list, and a collapsible inspector.
