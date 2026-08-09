@@ -196,20 +196,20 @@ svg { display: block; width: 100%; height: 100%; min-height: 6.5in; }
 .grid { stroke: #d6d9de; stroke-width: 3; }
 .center { stroke: #111; stroke-width: 6; stroke-dasharray: 42 42; }
 .plaster { stroke: #111; stroke-width: 6; }
-.stage, .fixture circle, .fixture rect, .fixture polygon { fill: none; stroke: #111; stroke-width: 18; vector-effect: non-scaling-stroke; }
-.fixture line { stroke-width: 18; vector-effect: non-scaling-stroke; }
-.focus-beam line { stroke: #111; stroke-width: 8; stroke-dasharray: 90 42; vector-effect: non-scaling-stroke; }
-.focus-point { fill: none; stroke: #111; stroke-width: 8; vector-effect: non-scaling-stroke; }
+.stage, .fixture circle, .fixture rect, .fixture polygon { fill: none; stroke: #111; stroke-width: 18; }
+.fixture line { stroke-width: 18; }
+.focus-beam line { stroke: #111; stroke-width: 8; stroke-dasharray: 90 42; }
+.focus-point { fill: none; stroke: #111; stroke-width: 8; }
 .focus-beam text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.focusLabelSize}px; }
-.comment-pin circle { fill: none; stroke: #111; stroke-width: 10; vector-effect: non-scaling-stroke; }
+.comment-pin circle { fill: none; stroke: #111; stroke-width: 10; }
 .comment-number { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.commentLabelSize}px; font-weight: 700; text-anchor: middle; }
 .comment-text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.commentLabelSize}px; }
-.position { stroke: #111; stroke-width: 10; vector-effect: non-scaling-stroke; }
-.position-label { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.positionLabelSize}px; }
+.position { stroke: #111; stroke-width: 10; }
+.position-label { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.positionLabelSize}px; text-anchor: end; }
 .unit { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.fixtureUnitSize}px; text-anchor: middle; font-weight: 700; }
 .fixture-channel { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: ${labels.fixtureChannelSize}px; text-anchor: middle; }
 .scale text { fill: #111; font-family: ui-monospace, Menlo, monospace; font-size: 130px; }
-.scale line { stroke: #111; stroke-width: 12; vector-effect: non-scaling-stroke; }
+.scale line { stroke: #111; stroke-width: 12; }
 .sheet-footer { display: grid; grid-template-columns: 1.1fr .9fr; border: 1px solid #111; }
 .title-block, .legend { padding: .12in .16in; }
 .title-block { border-right: 1px solid #111; }
