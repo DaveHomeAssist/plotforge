@@ -222,6 +222,18 @@ export default function PlotForge() {
         onSave();
         return;
       }
+      // Inside a text control, Ctrl+Z belongs to the control: hijacking it would
+      // suppress the field's native undo and instead revert an older, unrelated
+      // plot edit while leaving the typed text in place.
+      const target = event.target;
+      const editing = target instanceof HTMLElement && (
+        target.isContentEditable
+        || target.tagName === "INPUT"
+        || target.tagName === "TEXTAREA"
+        || target.tagName === "SELECT"
+      );
+      if (editing) return;
+
       // Undo/redo are reflexive muscle memory in a drafting tool; requiring a
       // trip to the topbar made the most-used recovery action mouse-only.
       if (key === "z") {
@@ -494,6 +506,7 @@ export default function PlotForge() {
           onSelectPosition={handleSelectPosition}
           onSelectCommentPin={handleSelectCommentPin}
           onMoveFixture={show.onMoveFixture}
+          onNudgeFixture={show.onNudgeFixture}
           onSetFixtureFocus={show.onSetFixtureFocus}
           onClearFixtureFocus={show.onClearFixtureFocus}
           onAddCommentPin={handleAddCommentPin}

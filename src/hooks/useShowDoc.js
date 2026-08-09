@@ -100,6 +100,16 @@ export default function useShowDoc(seedShow) {
     markUnsaved();
   }, [markUnsaved]);
 
+  /**
+   * Discrete fixture move (keyboard nudge, Home/End). Unlike a drag tick this is
+   * a single deliberate action, so it records an undo entry — otherwise Ctrl+Z
+   * after a nudge would undo an older unrelated edit and leave the unit moved.
+   */
+  const onNudgeFixture = useCallback((fixtureId, positionId, xMm) => {
+    const next = updateFixture(doc, fixtureId, { xMm });
+    commit(positionId == null ? next : renumberPosition(next, positionId));
+  }, [doc, commit]);
+
   const onClearFixtureSelection = useCallback(() => {
     setSelectedFixtureId(null);
     setSelectedFixtureIds([]);
@@ -360,6 +370,7 @@ export default function useShowDoc(seedShow) {
     recovery,
     saveStatus,
     onMoveFixture,
+    onNudgeFixture,
     onSelectFixture,
     onSelectPosition,
     onSelectCommentPin,

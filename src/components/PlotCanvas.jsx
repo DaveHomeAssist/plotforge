@@ -18,6 +18,7 @@ export default function PlotCanvas({
   onSelectPosition,
   onSelectCommentPin,
   onMoveFixture,
+  onNudgeFixture,
   onSetFixtureFocus,
   onClearFixtureFocus,
   onAddCommentPin,
@@ -153,7 +154,7 @@ export default function PlotCanvas({
       event.preventDefault();
       const step = (event.shiftKey ? COARSE_NUDGE_MM : NUDGE_MM) * (key === "ArrowLeft" ? -1 : 1);
       onSelectFixture(fixture.id, {});
-      onMoveFixture(fixture.id, fixture.positionId, fixture.xMm + step);
+      onNudgeFixture(fixture.id, fixture.positionId, fixture.xMm + step);
       window.requestAnimationFrame(() => focusFixtureElement(fixture.id));
       return;
     }
@@ -162,7 +163,7 @@ export default function PlotCanvas({
       const position = doc.positions[fixture.positionId];
       const half = (position?.lengthMm ?? 0) / 2;
       onSelectFixture(fixture.id, {});
-      onMoveFixture(fixture.id, fixture.positionId, key === "Home" ? -half : half);
+      onNudgeFixture(fixture.id, fixture.positionId, key === "Home" ? -half : half);
       window.requestAnimationFrame(() => focusFixtureElement(fixture.id));
       return;
     }
@@ -175,7 +176,7 @@ export default function PlotCanvas({
       onSelectFixture(nextId, {});
       window.requestAnimationFrame(() => focusFixtureElement(nextId));
     }
-  }, [doc.positions, doc.fixtureOrder, onSelectFixture, onMoveFixture, onDeleteFixture, focusFixtureElement]);
+  }, [doc.positions, doc.fixtureOrder, onSelectFixture, onNudgeFixture, onDeleteFixture, focusFixtureElement]);
 
   // Roving tabindex: the fixture layer is a single tab stop.
   const rovingFixtureId = selectedFixtureId && doc.fixtures[selectedFixtureId]

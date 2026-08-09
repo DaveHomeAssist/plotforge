@@ -78,6 +78,40 @@ describe("PF-UX-001 — a committed edit does not steal focus or drop keystrokes
   }, 15000);
 });
 
+describe("Codex review — keyboard nudges are undoable", () => {
+  it("onNudgeFixture records history while onMoveFixture does not", async () => {
+    const { renderHook, act: hookAct } = await import("@testing-library/react");
+    const useShowDoc = (await import("../hooks/useShowDoc.js")).default;
+    const { doc, fixtureId, pipeId } = seedDoc();
+    const { result } = renderHook(() => useShowDoc(() => doc));
+
+    const startX = result.current.doc.fixtures[fixtureId].xMm;
+    expect(result.current.history.undoN).toBe(0);
+
+    // Drag tick: intentionally not undoable.
+    hookAct(() => { result.current.onMoveFixture(fixtureId, pipeId, startX + 25.4); });
+    expect(result.current.history.undoN).toBe(0);
+
+    // Discrete keyboard nudge: must be undoable.
+    const beforeNudge = result.current.doc.fixtures[fixtureId].xMm;
+    hookAct(() => { result.current.onNudgeFixture(fixtureId, pipeId, beforeNudge + 304.8); });
+    expect(result.current.history.undoN).toBe(1);
+    expect(result.current.doc.fixtures[fixtureId].xMm).toBeCloseTo(beforeNudge + 304.8, 3);
+
+    hookAct(() => { result.current.history.undo(); });
+    expect(result.current.doc.fixtures[fixtureId].xMm).toBeCloseTo(beforeNudge, 3);
+  });
+
+  it("clamps a keyboard nudge to the pipe", async () => {
+    const { renderHook, act: hookAct } = await import("@testing-library/react");
+    const useShowDoc = (await import("../hooks/useShowDoc.js")).default;
+    const { doc, fixtureId, pipeId } = seedDoc();
+    const { result } = renderHook(() => useShowDoc(() => doc));
+    hookAct(() => { result.current.onNudgeFixture(fixtureId, pipeId, feetToMm(500)); });
+    expect(result.current.doc.fixtures[fixtureId].xMm).toBe(feetToMm(28) / 2);
+  });
+});
+
 describe("PF-UX-013 — undo reverts a field even while it is focused", () => {
   it("adopts an external value that is not the echo of our own commit", async () => {
     const user = userEvent.setup();
