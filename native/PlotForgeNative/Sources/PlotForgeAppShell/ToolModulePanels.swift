@@ -128,6 +128,7 @@ struct FixtureLibraryEntryRow: View {
                     .buttonStyle(.bordered)
                     .disabled(targetPositionId == nil)
                     .accessibilityLabel("Add \(profileName)")
+                    .accessibilityIdentifier("fixture-add-\(entry.profile.id)")
                 }
 
                 if isExpanded {

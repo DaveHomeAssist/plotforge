@@ -17,7 +17,21 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C0D97E364552410EAF5DA810"
                BuildableName = "PlotForgeNative.app"
-               BlueprintName = "PlotForgeNative"
+               BlueprintName = "PlotForgeNativeApp"
+               ReferencedContainer = "container:PlotForgeNative.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A10700000000000000000000"
+               BuildableName = "PlotForgeNativeUITests.xctest"
+               BlueprintName = "PlotForgeNativeUITests"
                ReferencedContainer = "container:PlotForgeNative.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,7 +43,27 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A10700000000000000000000"
+               BuildableName = "PlotForgeNativeUITests.xctest"
+               BlueprintName = "PlotForgeNativeUITests"
+               ReferencedContainer = "container:PlotForgeNative.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "C0D97E364552410EAF5DA810"
+            BuildableName = "PlotForgeNative.app"
+            BlueprintName = "PlotForgeNativeApp"
+            ReferencedContainer = "container:PlotForgeNative.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -47,7 +81,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C0D97E364552410EAF5DA810"
             BuildableName = "PlotForgeNative.app"
-            BlueprintName = "PlotForgeNative"
+            BlueprintName = "PlotForgeNativeApp"
             ReferencedContainer = "container:PlotForgeNative.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -64,7 +98,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C0D97E364552410EAF5DA810"
             BuildableName = "PlotForgeNative.app"
-            BlueprintName = "PlotForgeNative"
+            BlueprintName = "PlotForgeNativeApp"
             ReferencedContainer = "container:PlotForgeNative.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -9,6 +9,7 @@ final class PlotForgeStandaloneDocumentSessionTests: XCTestCase {
 
         XCTAssertEqual(session.fileState, .new)
         XCTAssertEqual(session.fileStatus, "New plot")
+        XCTAssertFalse(session.hasUnsavedChanges)
         XCTAssertEqual(session.exportFilename, "untitled-show.plot")
 
         let data = try PlotDocumentCodec.encode(
@@ -26,6 +27,7 @@ final class PlotForgeStandaloneDocumentSessionTests: XCTestCase {
         session.updateDocument(edited)
 
         XCTAssertEqual(session.fileState, .edited(filename: "road-show.plot"))
+        XCTAssertTrue(session.hasUnsavedChanges)
         XCTAssertEqual(session.fileStatus, "Unsaved changes to road-show.plot")
         XCTAssertEqual(try PlotDocumentCodec.decode(session.exportData()).metadata.drawingTitle, "Updated Plot")
 
@@ -69,5 +71,73 @@ final class PlotForgeStandaloneDocumentSessionTests: XCTestCase {
         XCTAssertEqual(session.document.show.name, "Protected Draft")
         XCTAssertEqual(session.fileState, .edited(filename: nil))
         XCTAssertEqual(session.fileStatus, "Unsaved new plot")
+    }
+
+    func testCleanNewAndOpenTransitionsProceedWithoutPrompt() {
+        var coordinator = PlotForgeDirtyDocumentTransitionCoordinator()
+
+        XCTAssertEqual(
+            coordinator.request(.newDocument, hasUnsavedChanges: false),
+            .proceed(.newDocument)
+        )
+        XCTAssertEqual(
+            coordinator.request(.openDocument, hasUnsavedChanges: false),
+            .proceed(.openDocument)
+        )
+        XCTAssertNil(coordinator.pendingAction)
+    }
+
+    func testDirtyCancelPreservesPendingDocument() {
+        let session = dirtySession(named: "Cancel Protected")
+        let original = session
+        var coordinator = PlotForgeDirtyDocumentTransitionCoordinator()
+
+        XCTAssertEqual(
+            coordinator.request(.newDocument, hasUnsavedChanges: session.hasUnsavedChanges),
+            .confirmDiscard
+        )
+        XCTAssertEqual(coordinator.resolve(.cancel), .none)
+        XCTAssertNil(coordinator.pendingAction)
+        XCTAssertEqual(session, original)
+    }
+
+    func testDirtyDiscardContinuesNewAndOpenTransitions() {
+        for action in [PlotForgePendingDocumentAction.newDocument, .openDocument] {
+            var coordinator = PlotForgeDirtyDocumentTransitionCoordinator()
+            XCTAssertEqual(coordinator.request(action, hasUnsavedChanges: true), .confirmDiscard)
+            XCTAssertEqual(coordinator.resolve(.discard), .proceed(action))
+            XCTAssertNil(coordinator.pendingAction)
+        }
+    }
+
+    func testDirtySaveContinuesOnlyAfterSuccessfulExport() {
+        for action in [PlotForgePendingDocumentAction.newDocument, .openDocument] {
+            var coordinator = PlotForgeDirtyDocumentTransitionCoordinator()
+            XCTAssertEqual(coordinator.request(action, hasUnsavedChanges: true), .confirmDiscard)
+            XCTAssertEqual(coordinator.resolve(.save), .requestSave)
+            XCTAssertEqual(coordinator.pendingAction, action)
+            XCTAssertEqual(coordinator.finishSave(succeeded: true), .proceed(action))
+            XCTAssertNil(coordinator.pendingAction)
+        }
+    }
+
+    func testFailedExportPreservesDirtyDocumentAndStopsPendingAction() {
+        let session = dirtySession(named: "Export Failure Protected")
+        var coordinator = PlotForgeDirtyDocumentTransitionCoordinator()
+
+        XCTAssertEqual(coordinator.request(.openDocument, hasUnsavedChanges: true), .confirmDiscard)
+        XCTAssertEqual(coordinator.resolve(.save), .requestSave)
+        XCTAssertEqual(coordinator.finishSave(succeeded: false), .none)
+        XCTAssertNil(coordinator.pendingAction)
+        XCTAssertEqual(session.document.show.name, "Export Failure Protected")
+        XCTAssertTrue(session.hasUnsavedChanges)
+    }
+
+    private func dirtySession(named name: String) -> PlotForgeStandaloneDocumentSession {
+        var session = PlotForgeStandaloneDocumentSession()
+        var edited = session.document
+        edited.show.name = name
+        session.updateDocument(edited)
+        return session
     }
 }

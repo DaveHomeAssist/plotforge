@@ -18,6 +18,11 @@ struct PlotForgeStandaloneDocumentSession: Equatable {
         fileState.message
     }
 
+    var hasUnsavedChanges: Bool {
+        if case .edited = fileState { return true }
+        return false
+    }
+
     var exportFilename: String {
         PlotNativeExports.plotDocumentFilename(for: document.show)
     }
@@ -44,6 +49,57 @@ struct PlotForgeStandaloneDocumentSession: Equatable {
 
     func exportData() throws -> Data {
         try document.fileData()
+    }
+}
+
+enum PlotForgePendingDocumentAction: Equatable {
+    case newDocument
+    case openDocument
+}
+
+enum PlotForgeDirtyDocumentChoice: Equatable {
+    case save
+    case discard
+    case cancel
+}
+
+enum PlotForgeDocumentTransitionEffect: Equatable {
+    case none
+    case confirmDiscard
+    case requestSave
+    case proceed(PlotForgePendingDocumentAction)
+}
+
+struct PlotForgeDirtyDocumentTransitionCoordinator: Equatable {
+    private(set) var pendingAction: PlotForgePendingDocumentAction?
+
+    mutating func request(
+        _ action: PlotForgePendingDocumentAction,
+        hasUnsavedChanges: Bool
+    ) -> PlotForgeDocumentTransitionEffect {
+        guard hasUnsavedChanges else { return .proceed(action) }
+        pendingAction = action
+        return .confirmDiscard
+    }
+
+    mutating func resolve(_ choice: PlotForgeDirtyDocumentChoice) -> PlotForgeDocumentTransitionEffect {
+        guard let pendingAction else { return .none }
+        switch choice {
+        case .save:
+            return .requestSave
+        case .discard:
+            self.pendingAction = nil
+            return .proceed(pendingAction)
+        case .cancel:
+            self.pendingAction = nil
+            return .none
+        }
+    }
+
+    mutating func finishSave(succeeded: Bool) -> PlotForgeDocumentTransitionEffect {
+        guard let pendingAction else { return .none }
+        self.pendingAction = nil
+        return succeeded ? .proceed(pendingAction) : .none
     }
 }
 

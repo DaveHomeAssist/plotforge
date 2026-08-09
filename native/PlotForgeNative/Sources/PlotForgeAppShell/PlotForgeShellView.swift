@@ -66,6 +66,7 @@ struct ToolSidebar: View {
                 }
                 .buttonStyle(.plain)
                 .listRowBackground(selectedTool == tool ? Color(uiToken: .control) : Color.clear)
+                .accessibilityIdentifier("tool-\(tool.rawValue.lowercased())")
             }
         }
         .safeAreaInset(edge: .top) {
@@ -293,6 +294,7 @@ struct TopStatusBar: View {
             Spacer()
 
             MetricPill(label: "Fixtures", value: "\(document.fixtureOrder.count)")
+                .accessibilityIdentifier("fixture-count")
             MetricPill(label: "Positions", value: "\(document.positionOrder.count)")
             MetricPill(label: "Schema", value: "v\(document.version)")
 
@@ -303,18 +305,21 @@ struct TopStatusBar: View {
                 Label("Undo", systemImage: "arrow.uturn.backward")
             }
             .disabled(!canUndo)
+            .accessibilityIdentifier("fixture-undo")
             .keyboardShortcut("z", modifiers: .command)
 
             Button(action: onRedo) {
                 Label("Redo", systemImage: "arrow.uturn.forward")
             }
             .disabled(!canRedo)
+            .accessibilityIdentifier("fixture-redo")
             .keyboardShortcut("z", modifiers: [.command, .shift])
 
             Button(action: onDeleteSelection) {
                 Label("Delete Selection", systemImage: "trash")
             }
             .disabled(selection.isEmpty)
+            .accessibilityIdentifier("fixture-delete")
             .keyboardShortcut(.delete, modifiers: [])
         }
         .labelStyle(.iconOnly)
@@ -858,6 +863,7 @@ struct PlotCanvasView: View {
                 Label("Fit View", systemImage: "arrow.up.left.and.arrow.down.right")
             }
             .keyboardShortcut("0", modifiers: .command)
+            .accessibilityIdentifier("fixture-fit-view")
 
             Button {
                 viewport.zoom(by: 1.2)
@@ -881,6 +887,7 @@ struct PlotCanvasView: View {
             }
             .disabled(document.fixtureOrder.isEmpty)
             .keyboardShortcut("[", modifiers: [])
+            .accessibilityIdentifier("fixture-previous")
 
             Button {
                 onSelectAdjacentFixture(1, false)
@@ -889,6 +896,7 @@ struct PlotCanvasView: View {
             }
             .disabled(document.fixtureOrder.isEmpty)
             .keyboardShortcut("]", modifiers: [])
+            .accessibilityIdentifier("fixture-next")
 
             Button {
                 onSelectAllFixtures()
@@ -897,6 +905,7 @@ struct PlotCanvasView: View {
             }
             .disabled(document.fixtureOrder.isEmpty)
             .keyboardShortcut("a", modifiers: .command)
+            .accessibilityIdentifier("fixture-select-all")
 
             Toggle(isOn: $additiveSelectionEnabled) {
                 Label("Add Selection", systemImage: "plus.square.on.square")
@@ -927,12 +936,14 @@ struct PlotCanvasView: View {
             }
             .disabled(selection.isEmpty)
             .keyboardShortcut(.escape, modifiers: [])
+            .accessibilityIdentifier("fixture-clear-selection")
 
             Button(action: onDeleteSelection) {
                 Label("Delete Selection", systemImage: "trash")
             }
             .disabled(selection.isEmpty)
             .keyboardShortcut(.delete, modifiers: [])
+            .accessibilityIdentifier("fixture-canvas-delete")
         }
         .labelStyle(.iconOnly)
         .buttonStyle(.bordered)
@@ -961,6 +972,7 @@ struct PlotCanvasView: View {
                     )
                     .gesture(fixtureDragGesture(fixtureId: fixtureId, metrics: metrics))
                     .accessibilityLabel("Fixture \(fixture.unitNumber.map(String.init) ?? fixture.id)")
+                    .accessibilityIdentifier("fixture-\(fixtureId)")
             }
         }
     }
