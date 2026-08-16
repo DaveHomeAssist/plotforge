@@ -5,9 +5,12 @@ name: iOS Build
 # PlotForgeNative Swift package) for the iOS Simulator. The scheme has UI
 # tests only, so this is build-only.
 #
-# Runner note: the app targets Swift 6 (SWIFT_VERSION = 6.0), which needs
-# Xcode 16+, so this uses macos-15 rather than the macos-14 image the
-# prompt-lab (Swift 5) workflow uses.
+# Runner note: the app targets Swift 6 (SWIFT_VERSION = 6.0). On Xcode 16.4
+# (macos-15 default) the Swift type-checker times out on
+# PlotForgeShellView.swift:544 ("unable to type-check this expression in
+# reasonable time"), while Xcode 26.x compiles it, so this uses macos-26
+# (Xcode 26.6 default) rather than the macos-14/15 images the Swift 5
+# workflows use. First attempt on macos-15: run 31942344241.
 
 on:
   push:
@@ -32,7 +35,7 @@ concurrency:
 jobs:
   native-build:
     name: Native build (iOS Simulator, iPad)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 25
     steps:
       - name: Checkout
