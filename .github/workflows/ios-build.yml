@@ -1,0 +1,50 @@
+name: iOS Build
+
+# Modeled on prompt-lab/.github/workflows/ipad-prototype.yml.
+# Builds the native iPad app (PlotForgeNative scheme, which pulls in the
+# PlotForgeNative Swift package) for the iOS Simulator. The scheme has UI
+# tests only, so this is build-only.
+#
+# Runner note: the app targets Swift 6 (SWIFT_VERSION = 6.0), which needs
+# Xcode 16+, so this uses macos-15 rather than the macos-14 image the
+# prompt-lab (Swift 5) workflow uses.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - native/**
+      - .github/workflows/ios-build.yml
+  pull_request:
+    paths:
+      - native/**
+      - .github/workflows/ios-build.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-build:
+    name: Native build (iOS Simulator, iPad)
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: xcodebuild -version
+
+      - name: Build PlotForgeNative
+        run: >-
+          xcodebuild build
+          -project native/PlotForgeNativeApp/PlotForgeNative.xcodeproj
+          -scheme PlotForgeNative
+          -destination "generic/platform=iOS Simulator"
+          CODE_SIGNING_ALLOWED=NO
