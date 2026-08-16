@@ -259,6 +259,63 @@ export default function SplashScreen({
     setSignInOpen(false);
   }
 
+  const anyOverlayOpen = accountOpen || settingsOpen || signInOpen;
+
+  // Overlays must close on Escape, take focus when they open, and hand focus
+  // back to the control that opened them. Without this a keyboard or screen
+  // reader user is left tabbing through the page behind an open dialog.
+  useEffect(() => {
+    if (!anyOverlayOpen) return undefined;
+    const opener = document.activeElement;
+    const focusablesIn = (overlay) => Array.from(
+      overlay.querySelectorAll('input, button, [href], select, textarea, [tabindex]:not([tabindex="-1"])'),
+    ).filter(el => !el.hasAttribute("disabled") && el.offsetParent !== null);
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        closeMenus();
+        return;
+      }
+      // Contain Tab inside the overlay. aria-modal="true" is a promise the DOM
+      // does not keep on its own — without this, Shift+Tab from the first
+      // control lands on the splash page behind the dialog.
+      if (event.key !== "Tab") return;
+      const overlay = document.querySelector(".splash-modal, .splash-popover");
+      if (!overlay) return;
+      const focusables = focusablesIn(overlay);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (!overlay.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    const frame = window.requestAnimationFrame(() => {
+      const overlay = document.querySelector(".splash-modal, .splash-popover");
+      const target = overlay?.querySelector(
+        'input, button, [href], select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      target?.focus?.();
+    });
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      window.cancelAnimationFrame(frame);
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
+    };
+  }, [anyOverlayOpen]);
+
   return (
     <section
       className={`splash ${dragOver ? "splash--drag" : ""}`}
@@ -352,7 +409,7 @@ export default function SplashScreen({
           </div>
         </aside>
 
-        <main className="splash-main">
+        <div className="splash-main">
           <div className="splash-hero">
             <div>
               <p className="mono small splash-kicker">GOOD TO GO</p>
@@ -417,7 +474,7 @@ export default function SplashScreen({
           )}
           {status && <p className="library-status">{status}</p>}
           {error && <p className="library-status library-status--error">{error}</p>}
-        </main>
+        </div>
       </div>
 
       {dragOver && (

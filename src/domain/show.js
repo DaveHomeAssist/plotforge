@@ -16,7 +16,7 @@ import { defaultOscBridgeSettings, normalizeOscBridgeSettings } from "./oscBridg
 import { defaultDmxOutputSettings, normalizeDmxOutputSettings } from "./dmxOutputPreferences.js";
 import { feetToMm } from "./units.js";
 
-export const DOC_VERSION = 9;
+export const DOC_VERSION = 10;
 
 const LABEL_SIZE_LIMITS = {
   fixtureUnitSize: [70, 220],
@@ -108,9 +108,22 @@ export function newShow({ name = "Untitled Show" } = {}) {
     activeRevisionId: null,
     commentPins: {},
     commentPinOrder: [],
+    systems: {},            // id -> System (named selection set)
+    systemOrder: [],
+    revisionSnapshots: {},  // revisionId -> compact rig snapshot for diffing
     oscBridge: defaultOscBridgeSettings(),
     labelSettings: defaultLabelSettings(),
     dmxOutput: defaultDmxOutputSettings(),
+  };
+}
+
+/** System: a named selection set — how designers think ("Front Wash R02"). */
+export function newSystem({ name, fixtureIds = [] }) {
+  return {
+    id: uid("sys"),
+    name: String(name ?? "").trim() || "System",
+    fixtureIds: [...new Set(fixtureIds)],
+    createdAt: Date.now(),
   };
 }
 
@@ -211,10 +224,28 @@ export function addFixtureProfile(doc, profile) {
   };
 }
 
+/**
+ * Clamp an along-position coordinate to the position's physical extent.
+ * Positions are centered on x = 0, so a fixture may sit anywhere in
+ * [-lengthMm / 2, +lengthMm / 2]. A unit outside that range is not hung on
+ * anything, so drags and typed positions are both held to the pipe.
+ */
+export function clampFixtureX(position, xMm) {
+  if (xMm == null || !Number.isFinite(xMm)) return xMm;
+  const length = Number(position?.lengthMm);
+  if (!Number.isFinite(length) || length <= 0) return xMm;
+  const half = length / 2;
+  return Math.max(-half, Math.min(half, xMm));
+}
+
 export function updateFixture(doc, fixtureId, patch) {
   const fx = doc.fixtures[fixtureId];
   if (!fx) return doc;
   const cleanPatch = normalizeCircuitPatch(patch);
+  if (Object.hasOwn(cleanPatch, "xMm")) {
+    const position = doc.positions[cleanPatch.positionId ?? fx.positionId];
+    cleanPatch.xMm = clampFixtureX(position, cleanPatch.xMm);
+  }
   let nextFixture = { ...fx, ...cleanPatch };
   if (Object.hasOwn(cleanPatch, "note") || Object.hasOwn(cleanPatch, "notes")) {
     const notes = normalizeFixtureNotes(cleanPatch.notes ?? fx.notes, cleanPatch.note ?? fx.note);
@@ -381,8 +412,69 @@ export function removeFixture(doc, fixtureId) {
     updatedAt: Date.now(),
     fixtures: rest,
     fixtureOrder: doc.fixtureOrder.filter(id => id !== fixtureId),
+    systems: stripFixtureFromSystems(doc.systems, fixtureId),
   };
   return renumberPosition(next, fx.positionId);
+}
+
+function stripFixtureFromSystems(systems, fixtureId) {
+  if (!systems) return systems;
+  let changed = false;
+  const next = {};
+  for (const [id, system] of Object.entries(systems)) {
+    if (system.fixtureIds?.includes(fixtureId)) {
+      changed = true;
+      next[id] = { ...system, fixtureIds: system.fixtureIds.filter(fid => fid !== fixtureId) };
+    } else {
+      next[id] = system;
+    }
+  }
+  return changed ? next : systems;
+}
+
+// ---------- systems (named selection sets) ----------
+
+export function addSystem(doc, system) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    systems: { ...(doc.systems || {}), [system.id]: system },
+    systemOrder: [...(doc.systemOrder || []), system.id],
+  };
+}
+
+export function removeSystem(doc, systemId) {
+  if (!doc.systems?.[systemId]) return doc;
+  const systems = { ...(doc.systems || {}) };
+  delete systems[systemId];
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    systems,
+    systemOrder: (doc.systemOrder || []).filter(id => id !== systemId),
+  };
+}
+
+/** Live fixture ids for a system — silently drops fixtures deleted since save. */
+export function systemFixtureIds(doc, systemId) {
+  const system = doc.systems?.[systemId];
+  if (!system) return [];
+  return (system.fixtureIds || []).filter(id => doc.fixtures[id]);
+}
+
+// ---------- revision snapshots ----------
+
+const REVISION_SNAPSHOT_CAP = 8;
+
+export function attachRevisionSnapshot(doc, revisionId, snapshot) {
+  const snapshots = { ...(doc.revisionSnapshots || {}), [revisionId]: snapshot };
+  // Cap storage: keep snapshots for the newest revisions only.
+  const keep = new Set((doc.revisionOrder || []).slice(-REVISION_SNAPSHOT_CAP));
+  keep.add(revisionId);
+  for (const id of Object.keys(snapshots)) {
+    if (!keep.has(id)) delete snapshots[id];
+  }
+  return { ...doc, revisionSnapshots: snapshots };
 }
 
 /**

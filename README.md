@@ -38,6 +38,11 @@ Notion is the canonical phase source for this project. README status was reconci
 - OSC bridge route map with saved relay settings, JSON export, selected fixture send, and a dependency-free local WebSocket-to-UDP relay
 - Multi-show registry with IndexedDB snapshots, load/delete actions, `.plot` share/export, and PWA manifest plus service worker shell caching
 - AI plot starter with brief parsing, local starter plan generation, prompt copy, and one click plan apply
+- Command palette (Cmd/Ctrl+K): find any fixture by channel, unit, DMX pair, gel, instrument, position, or status and jump the canvas to it
+- Marquee select (Shift+drag) plus named Systems: save any selection as a reusable set with one-click reselect
+- Rig Check mode: guided channel-check walk that fires each unit's OSC select route through the relay and records status per unit, fully offline-safe
+- Revision rig diff: every new revision snapshots the rig; compare live doc against any revision with ghost markers on the plot and a copyable change list
+- Focus charts and magic sheet: printable per-position focus paperwork plus gel-grouped magic sheet generated from existing document data
 
 ## What's deliberately missing
 
@@ -60,7 +65,14 @@ Requires Node 22+.
 
 ## Verification status
 
-Latest local verification on 2026-06-22 with Node v22.22.1:
+Latest verification on 2026-08-09, on a fresh checkout of `main` at `b34855f` with Node v22.22.1:
+
+- `npm run lint`: 0 errors, 0 warnings.
+- `npm test -- --run`: 31 files passed, 160 tests passed.
+- `npm run build`: Vite production build completed.
+- Production: GitHub deployment `5820228196` (commit `5b326c5`, five-feature drop) then `5820291141` (commit `b34855f`, changelog reconcile); Vercel deployment `dpl_FjsX4xhXxJjqi1K7gVJbsFzUjS7T` is READY and `https://plotforge-beta.vercel.app` returns HTTP 200.
+
+Earlier local verification on 2026-06-22 with Node v22.22.1:
 
 - `PATH=/opt/homebrew/opt/node@22/bin:$PATH ./node_modules/.bin/eslint src/components/Inspector.jsx src/components/SaveStatus.jsx src/hooks/useShowDoc.js src/hooks/useAutosaveRecovery.js src/PlotForge.jsx src/debugEvents.js src/__tests__/inspector.test.jsx src/__tests__/useShowDoc.test.jsx`: 0 errors, 0 warnings.
 - `PATH=/opt/homebrew/opt/node@22/bin:$PATH ./node_modules/.bin/vitest run src/__tests__/inspector.test.jsx src/__tests__/useShowDoc.test.jsx --pool=forks --maxWorkers=1 --no-file-parallelism --reporter=verbose`: 2 files passed, 30 tests passed.
@@ -166,6 +178,12 @@ Current canonical status, reconciled from Notion on 2026-06-22:
 - P3-4 AI plot starter: shipped in the repo on 2026-06-22. The sidepanel accepts a production brief, generates a local starter plan with positions, fixture groups, colors, channels, DMX starts, and focus notes, applies that plan into the document without clearing existing work, and copies a structured prompt for future provider backed AI refinement.
 - P3 tier deploy: shipped on 2026-06-22. Production alias `https://plotforge-beta.vercel.app` serves the P3 AI plot starter build.
 - Inspector UX and validation artifact: shipped in the repo on 2026-06-22. The inspector now keeps valid sibling field commits moving when one field is invalid, reverts invalid fields on blur or Escape, flushes valid drafts before unmount, supports arrow key numeric stepping, shows multi-select primary editing, exposes a topbar save status chip, and writes local debug events only in development.
+
+## Audit
+
+`docs/UX_UI_AUDIT.md` defines the UX/UI audit protocol for the editor: seven weighted lenses with pass gates, a ten-scenario task battery drawn from real production workflow, a domain-weighted severity model, the test fixtures to build, and a scorecard with release gates.
+
+`docs/UX_UI_AUDIT_RESULTS_2026-08-07.md` records the first execution of that protocol against `aae4ac0`, followed by a remediation pass. The original run scored 1.9 / 5 with two S1 findings and zero S0. All findings are now patched and re-verified with the same harness: axe violations across nine panels in both themes went 298 to 0, the canvas is operable by keyboard, fixture positions are clamped to their pipe, Inspector edits no longer drop keystrokes, and pan p95 at 800 fixtures went 22 to 44 fps. One finding (PF-UX-012) was retracted as a false positive. Lenses needing a domain reviewer, screen readers, a plotter, other browsers, or macOS remain unrun and are listed as such.
 
 Documented remaining plan:
 

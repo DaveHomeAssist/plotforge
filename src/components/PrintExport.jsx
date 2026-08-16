@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { getPrintPaper, PRINT_PAPER_ORDER, PRINT_PAPERS, printSheetHtml } from "../domain/printSheet.js";
+import { focusChartHtml } from "../domain/focusChart.js";
 
-function openPrintSheet(doc, paperId) {
-  const html = printSheetHtml(doc, { paperId });
+function openHtmlDocument(html) {
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const opened = window.open(url, "_blank");
@@ -21,9 +21,18 @@ export default function PrintExport({ doc }) {
   function onPrint() {
     setExportError("");
     try {
-      openPrintSheet(doc, paperId);
+      openHtmlDocument(printSheetHtml(doc, { paperId }));
     } catch (error) {
       setExportError(error instanceof Error ? error.message : "Print export failed");
+    }
+  }
+
+  function onFocusCharts() {
+    setExportError("");
+    try {
+      openHtmlDocument(focusChartHtml(doc));
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Focus chart export failed");
     }
   }
 
@@ -34,7 +43,10 @@ export default function PrintExport({ doc }) {
           <span className="mono small">P0 4</span>
           <h3 id="print-export-title">Print export</h3>
         </div>
-        <button type="button" className="btn-compact" onClick={onPrint}>Print PDF</button>
+        <div className="print-export-actions">
+          <button type="button" className="btn-compact" onClick={onPrint}>Print PDF</button>
+          <button type="button" className="btn-compact" onClick={onFocusCharts}>Focus charts</button>
+        </div>
       </div>
 
       <label>

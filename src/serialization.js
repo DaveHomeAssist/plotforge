@@ -85,6 +85,13 @@ const migrators = {
     version: 9,
     labelSettings: normalizeLabelSettings(doc.labelSettings || {}),
   }),
+  9: (doc) => ({
+    ...doc,
+    version: 10,
+    systems: doc.systems || {},
+    systemOrder: doc.systemOrder || [],
+    revisionSnapshots: doc.revisionSnapshots || {},
+  }),
 };
 
 export function migrate(doc) {

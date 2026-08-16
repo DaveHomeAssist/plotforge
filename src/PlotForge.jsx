@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import PlotCanvas from "./components/PlotCanvas.jsx";
 import ProjectMetadata from "./components/ProjectMetadata.jsx";
 import RevisionsPanel from "./components/RevisionsPanel.jsx";
@@ -18,10 +18,14 @@ import PlotStarterPanel from "./components/PlotStarterPanel.jsx";
 import SplashScreen from "./components/SplashScreen.jsx";
 import ConflictPanel from "./components/ConflictPanel.jsx";
 import SelectionTools from "./components/SelectionTools.jsx";
+import CommandPalette from "./components/CommandPalette.jsx";
+import RigCheckPanel from "./components/RigCheckPanel.jsx";
+import RevisionDiffPanel from "./components/RevisionDiffPanel.jsx";
 import PrintExport from "./components/PrintExport.jsx";
 import DraftRecoveryBanner from "./components/DraftRecoveryBanner.jsx";
 import TextSettingsPanel from "./components/TextSettingsPanel.jsx";
 import useShowDoc from "./hooks/useShowDoc.js";
+import { diffAgainstSnapshot } from "./domain/revisionDiff.js";
 import { newShow, newPosition, newFixture, addPosition, addFixture } from "./domain/show.js";
 import { feetToMm } from "./domain/units.js";
 import "./PlotForge.css";
@@ -142,10 +146,22 @@ function HandoffExport({ doc, conflicts }) {
         <span>{doc.fixtureOrder.length} fixtures</span>
         <span>{conflicts.length ? `${conflicts.length} conflicts` : "DMX clear"}</span>
       </div>
-      <pre className="handoff-preview">{summary}</pre>
+      <pre className="handoff-preview" tabIndex={0} role="region" aria-label="Handoff summary, scrollable">{summary}</pre>
       {status && <p className="library-status">{status}</p>}
       {error && <p className="library-status library-status--error">{error}</p>}
     </section>
+  );
+}
+
+function CollapsibleSection({ title, hint, children, defaultOpen = false }) {
+  return (
+    <details className="collapsible-section" open={defaultOpen}>
+      <summary className="collapsible-section__summary">
+        <span className="collapsible-section__title">{title}</span>
+        {hint && <span className="mono small collapsible-section__hint">{hint}</span>}
+      </summary>
+      <div className="collapsible-section__body">{children}</div>
+    </details>
   );
 }
 
@@ -201,16 +217,62 @@ export default function PlotForge() {
     return () => window.clearTimeout(timer);
   }, [show.recovery.draft]);
 
+  const history = show.history;
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [canvasApi, setCanvasApi] = useState(null);
+  const [diffRevisionId, setDiffRevisionId] = useState(null);
+  const [showGhosts, setShowGhosts] = useState(true);
+  const onCanvasApi = useCallback(api => setCanvasApi(api), []);
+
+  const diffSnapshot = diffRevisionId ? show.doc.revisionSnapshots?.[diffRevisionId] : null;
+  const revisionDiff = useMemo(
+    () => (diffSnapshot ? diffAgainstSnapshot(show.doc, diffSnapshot) : null),
+    [show.doc, diffSnapshot],
+  );
+
   useEffect(() => {
     function handleKeyDown(event) {
-      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "s") return;
-      event.preventDefault();
-      onSave();
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const key = event.key.toLowerCase();
+      if (key === "s") {
+        event.preventDefault();
+        onSave();
+        return;
+      }
+      if (key === "k") {
+        event.preventDefault();
+        setPaletteOpen(open => !open);
+        return;
+      }
+      // Inside a text control, Ctrl+Z belongs to the control: hijacking it would
+      // suppress the field's native undo and instead revert an older, unrelated
+      // plot edit while leaving the typed text in place.
+      const target = event.target;
+      const editing = target instanceof HTMLElement && (
+        target.isContentEditable
+        || target.tagName === "INPUT"
+        || target.tagName === "TEXTAREA"
+        || target.tagName === "SELECT"
+      );
+      if (editing) return;
+
+      // Undo/redo are reflexive muscle memory in a drafting tool; requiring a
+      // trip to the topbar made the most-used recovery action mouse-only.
+      if (key === "z") {
+        event.preventDefault();
+        if (event.shiftKey) history.redo();
+        else history.undo();
+        return;
+      }
+      if (key === "y") {
+        event.preventDefault();
+        history.redo();
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onSave]);
+  }, [onSave, history]);
 
   async function openFromSplash() {
     const result = await show.onOpen();
@@ -234,6 +296,16 @@ export default function PlotForge() {
     if (fixtureId) setActiveTool("inspect");
   }
 
+  function handleJumpToFixture(fixtureId, world) {
+    handleSelectFixture(fixtureId, {});
+    if (world && canvasApi?.panToWorld) canvasApi.panToWorld(world.xMm, world.yMm);
+  }
+
+  function handlePaletteSelectMany(fixtureIds) {
+    show.onSelectFixtures(fixtureIds);
+    if (fixtureIds.length) setActiveTool("inspect");
+  }
+
   function handleSelectPosition(positionId) {
     show.onSelectPosition(positionId);
     if (positionId) setActiveTool("setup");
@@ -252,6 +324,22 @@ export default function PlotForge() {
   function handleLoadShow(doc) {
     show.onLoadShow(doc);
     setActiveTool("files");
+  }
+
+  // ARIA APG tabs pattern: arrow keys and Home/End move between tabs, and the
+  // rail is a single tab stop via roving tabindex.
+  function handleToolRailKeyDown(event) {
+    const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+    const index = TOOL_DEFINITIONS.findIndex(tool => tool.id === activeTool);
+    let nextIndex = null;
+    if (event.key in keys) nextIndex = (index + keys[event.key] + TOOL_DEFINITIONS.length) % TOOL_DEFINITIONS.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = TOOL_DEFINITIONS.length - 1;
+    if (nextIndex == null) return;
+    event.preventDefault();
+    const nextId = TOOL_DEFINITIONS[nextIndex].id;
+    setActiveTool(nextId);
+    window.requestAnimationFrame(() => document.getElementById(`tool-tab-${nextId}`)?.focus());
   }
 
   const activeToolMeta = TOOL_DEFINITIONS.find(tool => tool.id === activeTool) ?? TOOL_DEFINITIONS[0];
@@ -274,22 +362,11 @@ export default function PlotForge() {
           />
         );
       case "setup":
+        // Positions lead: that is the drafting-time reason to open Setup. The
+        // title-block sections are collapsed so reaching position editing no
+        // longer costs two screens of scroll.
         return (
           <>
-            <ProjectMetadata
-              doc={show.doc}
-              onShowNameChange={show.onShowNameChange}
-              onProjectMetadataChange={show.onProjectMetadataChange}
-            />
-            <RevisionsPanel
-              doc={show.doc}
-              onAddRevision={show.onAddRevision}
-              onActivateRevision={show.onActivateRevision}
-            />
-            <TextSettingsPanel
-              doc={show.doc}
-              onChange={show.onLabelSettingsChange}
-            />
             <PositionEditor
               doc={show.doc}
               selectedPositionId={show.selectedPositionId}
@@ -299,6 +376,26 @@ export default function PlotForge() {
               onPositionChange={show.onPositionChange}
               onDeletePosition={show.onPositionDelete}
             />
+            <CollapsibleSection title="Title block" hint="Show, drawing, venue, designer">
+              <ProjectMetadata
+                doc={show.doc}
+                onShowNameChange={show.onShowNameChange}
+                onProjectMetadataChange={show.onProjectMetadataChange}
+              />
+            </CollapsibleSection>
+            <CollapsibleSection title="Revisions" hint="Issue history and active revision">
+              <RevisionsPanel
+                doc={show.doc}
+                onAddRevision={show.onAddRevision}
+                onActivateRevision={show.onActivateRevision}
+              />
+            </CollapsibleSection>
+            <CollapsibleSection title="Plot text" hint="Label visibility and sizes">
+              <TextSettingsPanel
+                doc={show.doc}
+                onChange={show.onLabelSettingsChange}
+              />
+            </CollapsibleSection>
           </>
         );
       case "patch":
@@ -329,6 +426,27 @@ export default function PlotForge() {
       case "checks":
         return (
           <>
+            <RigCheckPanel
+              doc={show.doc}
+              selectedFixtureId={show.selectedFixtureId}
+              onRevealFixture={fixtureId => {
+                const fixture = show.doc.fixtures[fixtureId];
+                const position = fixture ? show.doc.positions[fixture.positionId] : null;
+                show.onSelectFixture(fixtureId, {});
+                if (fixture && position && canvasApi?.panToWorld) {
+                  canvasApi.panToWorld(fixture.xMm, position.yMm);
+                }
+              }}
+              onFixtureChange={show.onFixtureChange}
+            />
+            <RevisionDiffPanel
+              doc={show.doc}
+              diff={revisionDiff}
+              diffRevisionId={diffRevisionId}
+              onPickRevision={setDiffRevisionId}
+              showGhosts={showGhosts}
+              onToggleGhosts={setShowGhosts}
+            />
             <ConflictPanel doc={show.doc} onRevealFixture={handleSelectFixture} />
             <CircuitPanel doc={show.doc} />
           </>
@@ -382,6 +500,9 @@ export default function PlotForge() {
               onAlignSelectedFixtures={show.onAlignSelectedFixtures}
               onDistributeSelectedFixtures={show.onDistributeSelectedFixtures}
               onClearSelection={show.onClearFixtureSelection}
+              onSaveSystem={show.onSaveSystem}
+              onSelectSystem={show.onSelectSystem}
+              onDeleteSystem={show.onDeleteSystem}
             />
             <Inspector
               doc={show.doc}
@@ -449,9 +570,14 @@ export default function PlotForge() {
           onSelectPosition={handleSelectPosition}
           onSelectCommentPin={handleSelectCommentPin}
           onMoveFixture={show.onMoveFixture}
+          onNudgeFixture={show.onNudgeFixture}
           onSetFixtureFocus={show.onSetFixtureFocus}
           onClearFixtureFocus={show.onClearFixtureFocus}
           onAddCommentPin={handleAddCommentPin}
+          onDeleteFixture={show.onFixtureDelete}
+          onSelectFixtures={show.onSelectFixtures}
+          ghostDiff={showGhosts ? revisionDiff : null}
+          onCanvasApi={onCanvasApi}
         />
         <aside className="sidepanel">
           <section className="console-overview" aria-label="PlotForge console summary">
@@ -471,7 +597,13 @@ export default function PlotForge() {
             </div>
           </section>
           <div className="tool-workspace">
-            <nav className="tool-rail" aria-label="Sidebar tools" role="tablist">
+            <nav
+              className="tool-rail"
+              aria-label="Sidebar tools"
+              role="tablist"
+              aria-orientation="vertical"
+              onKeyDown={handleToolRailKeyDown}
+            >
               {TOOL_DEFINITIONS.map(tool => {
                 const selected = activeTool === tool.id;
                 const badge = toolBadges[tool.id];
@@ -483,6 +615,7 @@ export default function PlotForge() {
                     role="tab"
                     aria-selected={selected}
                     aria-controls={`tool-panel-${tool.id}`}
+                    tabIndex={selected ? 0 : -1}
                     className={`tool-tab${selected ? " tool-tab--active" : ""}${badge ? " tool-tab--badged" : ""}`}
                     onClick={() => setActiveTool(tool.id)}
                   >
@@ -526,13 +659,28 @@ export default function PlotForge() {
         <span className="muted small">drag fixtures along their pipe · scroll to zoom · drag empty area to pan</span>
       </footer>
 
+      {/* Every tool is reachable on small screens. Exposing only a subset left
+          venue setup, notes, conflict review, and printing unreachable on a
+          phone with nothing in the UI saying where they went. */}
+      <CommandPalette
+        doc={show.doc}
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onJumpToFixture={handleJumpToFixture}
+        onSelectMany={handlePaletteSelectMany}
+      />
+
       <nav className="mobile-dock" aria-label="Mobile workspace sections">
-        <button type="button" aria-pressed={activeTool === "inspect"} onClick={() => setActiveTool("inspect")}>Inspect</button>
-        <button type="button" aria-pressed={activeTool === "fixtures"} onClick={() => setActiveTool("fixtures")}>Fixtures</button>
-        <button type="button" aria-pressed={activeTool === "patch"} onClick={() => setActiveTool("patch")}>Patch</button>
-        <button type="button" aria-pressed={activeTool === "output"} onClick={() => setActiveTool("output")}>Output</button>
-        <button type="button" aria-pressed={activeTool === "wizard"} onClick={() => setActiveTool("wizard")}>Wizard</button>
-        <button type="button" aria-pressed={activeTool === "files"} onClick={() => setActiveTool("files")}>Files</button>
+        {TOOL_DEFINITIONS.map(tool => (
+          <button
+            key={tool.id}
+            type="button"
+            aria-pressed={activeTool === tool.id}
+            onClick={() => setActiveTool(tool.id)}
+          >
+            {tool.label}
+          </button>
+        ))}
       </nav>
     </div>
   );

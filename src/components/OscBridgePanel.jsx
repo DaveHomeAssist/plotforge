@@ -4,6 +4,7 @@ import {
   oscBridgeManifestJson,
   oscBridgeRoutes,
 } from "../domain/oscBridge.js";
+import { sendOscRoute } from "../oscSend.js";
 
 function safeFileName(value) {
   const base = String(value || "plotforge")
@@ -27,45 +28,6 @@ function downloadJson(filename, json) {
   } finally {
     URL.revokeObjectURL(url);
   }
-}
-
-function sendOscRoute({ relayUrl, route }) {
-  return new Promise((resolve, reject) => {
-    if (!route) {
-      reject(new Error("Select a fixture before sending OSC."));
-      return;
-    }
-    if (!window.WebSocket) {
-      reject(new Error("WebSocket is not available in this browser."));
-      return;
-    }
-
-    const socket = new WebSocket(relayUrl);
-    const timer = window.setTimeout(() => {
-      socket.close();
-      reject(new Error("OSC relay timed out."));
-    }, 2500);
-
-    socket.addEventListener("open", () => {
-      socket.send(JSON.stringify({
-        address: route.address,
-        args: route.args,
-        targetHost: route.targetHost,
-        targetPort: route.targetPort,
-      }));
-    }, { once: true });
-
-    socket.addEventListener("message", (event) => {
-      window.clearTimeout(timer);
-      socket.close();
-      resolve(event.data);
-    }, { once: true });
-
-    socket.addEventListener("error", () => {
-      window.clearTimeout(timer);
-      reject(new Error("OSC relay connection failed."));
-    }, { once: true });
-  });
 }
 
 export default function OscBridgePanel({ doc, selectedFixtureId, onBridgeChange }) {

@@ -242,6 +242,8 @@ export default function FixtureLibrary({
             className="visually-hidden"
             type="file"
             accept=".json,application/json"
+            aria-label="Import an Open Fixture Library JSON profile"
+            tabIndex={-1}
             onChange={onImportFile}
           />
         </div>
