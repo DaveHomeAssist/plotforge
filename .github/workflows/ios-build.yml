@@ -1,0 +1,53 @@
+name: iOS Build
+
+# Modeled on prompt-lab/.github/workflows/ipad-prototype.yml.
+# Builds the native iPad app (PlotForgeNative scheme, which pulls in the
+# PlotForgeNative Swift package) for the iOS Simulator. The scheme has UI
+# tests only, so this is build-only.
+#
+# Runner note: the app targets Swift 6 (SWIFT_VERSION = 6.0). On Xcode 16.4
+# (macos-15 default) the Swift type-checker times out on
+# PlotForgeShellView.swift:544 ("unable to type-check this expression in
+# reasonable time"), while Xcode 26.x compiles it, so this uses macos-26
+# (Xcode 26.6 default) rather than the macos-14/15 images the Swift 5
+# workflows use. First attempt on macos-15: run 31942344241.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - native/**
+      - .github/workflows/ios-build.yml
+  pull_request:
+    paths:
+      - native/**
+      - .github/workflows/ios-build.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-build:
+    name: Native build (iOS Simulator, iPad)
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: xcodebuild -version
+
+      - name: Build PlotForgeNative
+        run: >-
+          xcodebuild build
+          -project native/PlotForgeNativeApp/PlotForgeNative.xcodeproj
+          -scheme PlotForgeNative
+          -destination "generic/platform=iOS Simulator"
+          CODE_SIGNING_ALLOWED=NO
