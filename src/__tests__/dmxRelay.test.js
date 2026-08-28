@@ -468,6 +468,105 @@ describe("DMX relay", () => {
     expect(Array.from(artDmxPacketSummary(packets[1]).payload)).toEqual([0, 0]);
   });
 
+  it("serializes a pending frame before blackout", async () => {
+    const packets = [];
+    let releaseFirstSend;
+    const firstSendGate = new Promise(resolve => {
+      releaseFirstSend = resolve;
+    });
+    const relay = await startRelay({
+      blackoutBurst: 1,
+      sendUdp: async packet => {
+        packets.push(Buffer.from(packet));
+        if (packets.length === 1) await firstSendGate;
+        return packet.length;
+      },
+    });
+    const { client } = await openWebSocket(relay.port);
+    await authenticate(client);
+
+    client.send(frameCommand({ dataBuffer: Buffer.from([33, 44]) }));
+    client.send({ type: "blackout", token: TOKEN });
+    const firstReply = client.next(1000);
+    const secondReply = client.next(1000);
+    let firstReplyResolved = false;
+    void firstReply.then(() => { firstReplyResolved = true; });
+
+    await waitForCondition(() => packets.length === 1);
+    await new Promise(resolve => setTimeout(resolve, 25));
+    expect(firstReplyResolved).toBe(false);
+
+    releaseFirstSend();
+    await expect(firstReply).resolves.toEqual(expect.objectContaining({ type: "frame.ok" }));
+    await expect(secondReply).resolves.toEqual(expect.objectContaining({ type: "blackout.ok", framesSent: 1 }));
+    expect(packets).toHaveLength(2);
+    expect(Array.from(artDmxPacketSummary(packets[0]).payload)).toEqual([33, 44]);
+    expect(Array.from(artDmxPacketSummary(packets[1]).payload)).toEqual([0, 0]);
+    client.close();
+  });
+
+  it("waits for a pending frame before disconnect cleanup", async () => {
+    const packets = [];
+    let releaseFirstSend;
+    const firstSendGate = new Promise(resolve => {
+      releaseFirstSend = resolve;
+    });
+    const relay = await startRelay({
+      blackoutBurst: 1,
+      sendUdp: async packet => {
+        packets.push(Buffer.from(packet));
+        if (packets.length === 1) await firstSendGate;
+        return packet.length;
+      },
+    });
+    const { client, socket } = await openWebSocket(relay.port);
+    await authenticate(client);
+
+    client.send(frameCommand({ dataBuffer: Buffer.from([55, 66]) }));
+    await waitForCondition(() => packets.length === 1);
+    socket.destroy();
+    await new Promise(resolve => setTimeout(resolve, 25));
+    expect(packets).toHaveLength(1);
+
+    releaseFirstSend();
+    await waitForCondition(() => packets.length === 2, 1500);
+    expect(Array.from(artDmxPacketSummary(packets[0]).payload)).toEqual([55, 66]);
+    expect(Array.from(artDmxPacketSummary(packets[1]).payload)).toEqual([0, 0]);
+  });
+
+  it("enforces maxFps per output without blocking a different universe", async () => {
+    const packets = [];
+    const relay = await startRelay({
+      maxFps: 1,
+      sendUdp: async packet => {
+        packets.push(Buffer.from(packet));
+        return packet.length;
+      },
+    });
+    const { client } = await openWebSocket(relay.port);
+    await authenticate(client);
+
+    client.send(frameCommand());
+    await expect(client.next()).resolves.toEqual(expect.objectContaining({ type: "frame.ok" }));
+
+    client.send(frameCommand({ sequence: 8 }));
+    await expect(client.next()).resolves.toEqual(expect.objectContaining({
+      type: "frame.error",
+      reason: "rate-limit",
+    }));
+
+    client.send(frameCommand({
+      portAddress: { net: 0, subNet: 0, universe: 1 },
+      sequence: 9,
+    }));
+    await expect(client.next()).resolves.toEqual(expect.objectContaining({ type: "frame.ok" }));
+
+    expect(packets).toHaveLength(2);
+    expect(artDmxPacketSummary(packets[0]).subUni).toBe(0);
+    expect(artDmxPacketSummary(packets[1]).subUni).toBe(1);
+    client.close();
+  });
+
   it("validates command tokens independently of the WebSocket handshake", () => {
     expect(() => validateFrameCommand(frameCommand({ token: "wrong" }), {
       token: TOKEN,

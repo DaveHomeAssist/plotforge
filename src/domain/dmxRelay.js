@@ -365,24 +365,42 @@ function clearWatchdog(session) {
   session.watchdog = null;
 }
 
+function claimFrameRateSlot(session, outputKey) {
+  const now = Date.now();
+  const nextAllowedAt = session.nextFrameAt.get(outputKey) || 0;
+  if (now < nextAllowedAt) {
+    throw new DmxRelayError(
+      `Frame rate exceeds the configured ${session.config.maxFps} FPS ceiling.`,
+      "rate-limit",
+      `Retry in ${Math.ceil(nextAllowedAt - now)}ms.`,
+    );
+  }
+  session.nextFrameAt.set(outputKey, now + (1000 / session.config.maxFps));
+}
+
 function armWatchdog(session) {
   clearWatchdog(session);
   if (session.activeOutputs.size === 0) return;
-  session.watchdog = setTimeout(async () => {
-    try {
-      await emitBlackoutBurst(session);
-      session.activeOutputs.clear();
-      sendJson(session.socket, { type: "fault", reason: "heartbeat-timeout" });
-    } catch (error) {
-      sendJson(session.socket, {
-        type: "fault",
-        reason: "heartbeat-timeout-blackout-failed",
-        detail: error instanceof Error ? error.message : String(error),
-      });
-    } finally {
-      clearWatchdog(session);
-    }
+  const watchdog = setTimeout(() => {
+    session.commandQueue = session.commandQueue.then(async () => {
+      if (session.closed || session.watchdog !== watchdog) return;
+      try {
+        await emitBlackoutBurst(session);
+        session.activeOutputs.clear();
+        session.nextFrameAt.clear();
+        sendJson(session.socket, { type: "fault", reason: "heartbeat-timeout" });
+      } catch (error) {
+        sendJson(session.socket, {
+          type: "fault",
+          reason: "heartbeat-timeout-blackout-failed",
+          detail: error instanceof Error ? error.message : String(error),
+        });
+      } finally {
+        if (session.watchdog === watchdog) clearWatchdog(session);
+      }
+    });
   }, session.config.heartbeatTimeoutMs);
+  session.watchdog = watchdog;
 }
 
 function handleAuth(session, command) {
@@ -423,6 +441,7 @@ async function handleCommand(session, command) {
   if (command.type === "blackout") {
     const framesSent = await emitBlackoutBurst(session);
     session.activeOutputs.clear();
+    session.nextFrameAt.clear();
     clearWatchdog(session);
     sendJson(session.socket, { type: "blackout.ok", framesSent });
     return;
@@ -434,8 +453,10 @@ async function handleCommand(session, command) {
 
   try {
     const frame = validateFrameCommand(command, session.config);
+    const outputKey = activeOutputKey(frame);
+    claimFrameRateSlot(session, outputKey);
     const bytesSent = await emitFrame(session, frame, frame.data, frame.sequence);
-    session.activeOutputs.set(activeOutputKey(frame), frame);
+    session.activeOutputs.set(outputKey, frame);
     armWatchdog(session);
     sendJson(session.socket, frame.protocol === "sacn"
       ? { type: "frame.ok", protocol: frame.protocol, targetMode: frame.targetMode, universe: frame.universe, target: frame.target, bytesSent }
@@ -514,6 +535,8 @@ export function createDmxRelayServer(options = {}) {
       authenticated: false,
       pending: Buffer.alloc(0),
       activeOutputs: new Map(),
+      nextFrameAt: new Map(),
+      commandQueue: Promise.resolve(),
       watchdog: null,
       closed: false,
     };
@@ -523,6 +546,7 @@ export function createDmxRelayServer(options = {}) {
       if (session.closed) return;
       session.closed = true;
       clearWatchdog(session);
+      await session.commandQueue;
       if (blackout && session.activeOutputs.size > 0) {
         try {
           await emitBlackoutBurst(session);
@@ -531,10 +555,25 @@ export function createDmxRelayServer(options = {}) {
         }
       }
       session.activeOutputs.clear();
+      session.nextFrameAt.clear();
       sessions.delete(session);
     }
 
+    function enqueueCommand(command) {
+      session.commandQueue = session.commandQueue
+        .then(() => handleCommand(session, command))
+        .catch(error => {
+          if (session.closed) return;
+          sendJson(session.socket, {
+            type: "command.error",
+            reason: error instanceof DmxRelayError ? error.code : "command-failed",
+            detail: error instanceof Error ? error.message : String(error),
+          });
+        });
+    }
+
     socket.on("data", buffer => {
+      if (session.closed) return;
       try {
         const decoded = decodeWebSocketFrames(Buffer.concat([session.pending, buffer]));
         session.pending = decoded.remaining;
@@ -543,7 +582,7 @@ export function createDmxRelayServer(options = {}) {
           if (command.type === "auth" && !session.authenticated) {
             handleAuth(session, command);
           } else {
-            void handleCommand(session, command);
+            enqueueCommand(command);
           }
         }
       } catch (error) {
@@ -565,7 +604,9 @@ export function createDmxRelayServer(options = {}) {
 
   async function close() {
     for (const session of sessions) {
+      session.closed = true;
       clearWatchdog(session);
+      await session.commandQueue;
       if (session.activeOutputs.size > 0) {
         try {
           await emitBlackoutBurst(session);
@@ -574,6 +615,7 @@ export function createDmxRelayServer(options = {}) {
         }
       }
       session.activeOutputs.clear();
+      session.nextFrameAt.clear();
       session.socket.destroy();
     }
     await new Promise(resolve => server.close(resolve));

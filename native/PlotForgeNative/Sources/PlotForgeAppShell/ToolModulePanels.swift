@@ -263,8 +263,43 @@ struct PlotCheckCompactRow: View {
     }
 }
 
+struct DmxOutputSafetyState: Equatable {
+    private(set) var isArmed = false
+    private(set) var hasActiveOutput = false
+
+    var requiresBlackoutBeforeDisarm: Bool {
+        isArmed && hasActiveOutput
+    }
+
+    mutating func arm() {
+        isArmed = true
+    }
+
+    mutating func recordOutput(hasNonzeroValues: Bool) {
+        if hasNonzeroValues {
+            hasActiveOutput = true
+        }
+    }
+
+    mutating func recordBlackout() {
+        hasActiveOutput = false
+    }
+
+    mutating func completeDisarm() {
+        isArmed = false
+        hasActiveOutput = false
+    }
+}
+
+private enum DmxOutputSendEffect: Equatable {
+    case preview
+    case blackout
+}
+
 struct DmxOutputToolPanel: View {
     let document: PlotShowDocument
+
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var selectedFixtureId = ""
     @State private var intensity = 255
@@ -277,8 +312,9 @@ struct DmxOutputToolPanel: View {
     @State private var artNetNet = 0
     @State private var artNetSubNet = 0
     @State private var artNetUniverse = 0
-    @State private var isArmed = false
+    @State private var safetyState = DmxOutputSafetyState()
     @State private var isSending = false
+    @State private var isDisarming = false
     @State private var status = "Idle"
     @State private var errorMessage = ""
 
@@ -322,7 +358,7 @@ struct DmxOutputToolPanel: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             SummaryRows(rows: [
-                ("State", isArmed ? "Armed" : "Idle"),
+                ("State", safetyState.isArmed ? "Armed" : "Idle"),
                 ("Universes", "\(preview.universes.count)"),
                 ("Blocks", "\(preview.errors.count)"),
                 ("Warnings", "\(preview.warnings.count)"),
@@ -372,28 +408,28 @@ struct DmxOutputToolPanel: View {
                 } label: {
                     Label("Arm output", systemImage: "lock.open")
                 }
-                .disabled(isArmed || preview.blocked)
+                .disabled(safetyState.isArmed || preview.blocked || isDisarming)
 
                 Button {
                     Task { await sendPreviewFrame() }
                 } label: {
                     Label("Send test", systemImage: "paperplane")
                 }
-                .disabled(!isArmed || preview.blocked || isSending)
+                .disabled(!safetyState.isArmed || preview.blocked || isSending || isDisarming)
 
                 Button {
                     Task { await sendBlackout() }
                 } label: {
                     Label("Blackout", systemImage: "power")
                 }
-                .disabled(!isArmed || isSending)
+                .disabled(!safetyState.isArmed || isSending || isDisarming)
 
                 Button {
-                    disarmOutput()
+                    Task { await disarmOutput() }
                 } label: {
                     Label("Disarm", systemImage: "lock")
                 }
-                .disabled(!isArmed)
+                .disabled(!safetyState.isArmed || isSending || isDisarming)
             }
             .buttonStyle(.bordered)
 
@@ -441,6 +477,14 @@ struct DmxOutputToolPanel: View {
                 selectedFixtureId = fixtureIds.first ?? ""
             }
         }
+        .onChange(of: scenePhase) { _, nextPhase in
+            guard nextPhase != .active, safetyState.isArmed else { return }
+            Task { await disarmOutput(statusMessage: "Output disarmed after the app left the foreground.") }
+        }
+        .onDisappear {
+            guard safetyState.isArmed else { return }
+            Task { await disarmOutput(statusMessage: "Output disarmed after the panel closed.") }
+        }
     }
 
     private func fixtureLabel(_ fixtureId: String) -> String {
@@ -462,45 +506,73 @@ struct DmxOutputToolPanel: View {
             errorMessage = "Resolve DMX output errors before arming."
             return
         }
-        isArmed = true
+        safetyState.arm()
         status = "Output armed. Target \(targetHost):\(targetPort) is visible."
         errorMessage = ""
     }
 
-    private func disarmOutput() {
-        isArmed = false
-        status = "Output disarmed. Send blackout before disconnecting if nonzero values were active."
+    @MainActor
+    private func disarmOutput(statusMessage: String = "Output disarmed after blackout.") async {
+        guard safetyState.isArmed, !isDisarming else { return }
+        isDisarming = true
+        defer { isDisarming = false }
+
+        while isSending {
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+
+        if safetyState.requiresBlackoutBeforeDisarm {
+            guard await sendBlackout() else {
+                status = "Output remains armed because blackout failed."
+                return
+            }
+        }
+
+        safetyState.completeDisarm()
+        status = statusMessage
         errorMessage = ""
     }
 
     @MainActor
     private func sendPreviewFrame() async {
-        await send(compilation: preview, successPrefix: "Sent test frame")
+        _ = await send(compilation: preview, successPrefix: "Sent test frame", effect: .preview)
     }
 
+    @discardableResult
     @MainActor
-    private func sendBlackout() async {
+    private func sendBlackout() async -> Bool {
         let blackout = PlotDmxOutput.compile(document, options: DmxOutputCompileOptions(
             intent: .blackout,
             selectedFixtureId: activeFixtureId,
             values: values
         ))
-        await send(compilation: blackout, successPrefix: "Sent blackout")
+        return await send(
+            compilation: blackout,
+            successPrefix: "Sent blackout",
+            effect: .blackout,
+            repetitions: 3
+        )
     }
 
+    @discardableResult
     @MainActor
-    private func send(compilation: DmxOutputCompilation, successPrefix: String) async {
-        guard isArmed else {
+    private func send(
+        compilation: DmxOutputCompilation,
+        successPrefix: String,
+        effect: DmxOutputSendEffect,
+        repetitions: Int = 1
+    ) async -> Bool {
+        guard safetyState.isArmed else {
             errorMessage = "Arm output before sending."
-            return
+            return false
         }
         guard !compilation.blocked else {
             errorMessage = "Compiler errors block all output."
-            return
+            return false
         }
         guard let target = outputTarget() else {
             errorMessage = "Enter a valid target host and UDP port."
-            return
+            return false
         }
 
         isSending = true
@@ -509,15 +581,27 @@ struct DmxOutputToolPanel: View {
 
         do {
             var totalBytes = 0
-            for universe in compilation.universes {
-                let portAddress = try mappedPortAddress(for: universe.universe)
-                let packet = try PlotDmxOutput.artNetDmxPacket(slots: universe.slots, portAddress: portAddress)
-                totalBytes += try await PlotDmxUdpSender().send(packet, to: target)
+            var totalFrames = 0
+            for _ in 0..<max(1, repetitions) {
+                for universe in compilation.universes {
+                    let portAddress = try mappedPortAddress(for: universe.universe)
+                    let packet = try PlotDmxOutput.artNetDmxPacket(slots: universe.slots, portAddress: portAddress)
+                    totalBytes += try await PlotDmxUdpSender().send(packet, to: target)
+                    totalFrames += 1
+                    if effect == .preview {
+                        safetyState.recordOutput(hasNonzeroValues: !universe.nonZeroSlots.isEmpty)
+                    }
+                }
             }
-            status = "\(successPrefix): \(compilation.universes.count) universe frame(s), \(totalBytes) UDP bytes."
+            if effect == .blackout {
+                safetyState.recordBlackout()
+            }
+            status = "\(successPrefix): \(totalFrames) universe frame(s), \(totalBytes) UDP bytes."
+            return true
         } catch {
             errorMessage = localNetworkFailureMessage(error)
             status = "Output send failed."
+            return false
         }
     }
 
