@@ -1,0 +1,360 @@
+{
+  "kind": "plotforge-dmx-local-smoke",
+  "generatedAt": "2026-07-12T02:32:58.976Z",
+  "relay": {
+    "url": "ws://127.0.0.1:57232",
+    "healthUrl": "http://127.0.0.1:57232/health",
+    "origin": "http://127.0.0.1:5173",
+    "target": "127.0.0.1:58746",
+    "blackoutBurst": 2,
+    "heartbeatTimeoutMs": 150
+  },
+  "checks": [
+    {
+      "name": "health",
+      "status": "pass",
+      "body": {
+        "ok": true,
+        "service": "plotforge-dmx-relay",
+        "relayVersion": "0.1.0",
+        "boundHost": "127.0.0.1",
+        "maxFps": 20,
+        "requireToken": true
+      }
+    },
+    {
+      "name": "bad-origin-no-output",
+      "status": "pass",
+      "packetCount": 0
+    },
+    {
+      "name": "auth-no-output-before-frame",
+      "status": "pass",
+      "packetCount": 0
+    },
+    {
+      "name": "bad-target-no-output",
+      "status": "pass",
+      "reply": {
+        "type": "frame.error",
+        "reason": "public-target",
+        "detail": "203.0.113.10"
+      }
+    },
+    {
+      "name": "selected-fixture-frame",
+      "status": "pass",
+      "reply": {
+        "type": "frame.ok",
+        "protocol": "artnet",
+        "portAddress": {
+          "net": 0,
+          "subNet": 0,
+          "universe": 0
+        },
+        "bytesSent": 530
+      }
+    },
+    {
+      "name": "blackout-burst",
+      "status": "pass",
+      "reply": {
+        "type": "blackout.ok",
+        "framesSent": 2
+      }
+    },
+    {
+      "name": "selected-sacn-frame",
+      "status": "pass",
+      "reply": {
+        "type": "frame.ok",
+        "protocol": "sacn",
+        "targetMode": "unicast",
+        "universe": 1,
+        "target": {
+          "host": "127.0.0.1",
+          "port": 58746
+        },
+        "bytesSent": 638
+      }
+    },
+    {
+      "name": "sacn-blackout-burst",
+      "status": "pass",
+      "reply": {
+        "type": "blackout.ok",
+        "framesSent": 2
+      }
+    },
+    {
+      "name": "heartbeat-timeout-blackout",
+      "status": "pass",
+      "reply": {
+        "type": "fault",
+        "reason": "heartbeat-timeout"
+      }
+    },
+    {
+      "name": "active-client-disconnect-blackout",
+      "status": "pass"
+    },
+    {
+      "name": "relay-shutdown-blackout",
+      "status": "pass"
+    }
+  ],
+  "packets": [
+    {
+      "receivedAt": "2026-07-12T02:32:58.987Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 7,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": [
+          {
+            "address": 1,
+            "value": 255
+          },
+          {
+            "address": 2,
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:58.988Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:58.988Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:58.989Z",
+      "byteLength": 638,
+      "protocol": "sacn",
+      "sacn": {
+        "sourceName": "PlotForge Local Smoke",
+        "priority": 100,
+        "sequence": 11,
+        "universe": 1,
+        "length": 512,
+        "nonZeroSlots": [
+          {
+            "address": 1,
+            "value": 255
+          },
+          {
+            "address": 2,
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:58.989Z",
+      "byteLength": 638,
+      "protocol": "sacn",
+      "sacn": {
+        "sourceName": "PlotForge Local Smoke",
+        "priority": 100,
+        "sequence": 0,
+        "universe": 1,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:58.989Z",
+      "byteLength": 638,
+      "protocol": "sacn",
+      "sacn": {
+        "sourceName": "PlotForge Local Smoke",
+        "priority": 100,
+        "sequence": 0,
+        "universe": 1,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:58.989Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 8,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": [
+          {
+            "address": 1,
+            "value": 255
+          },
+          {
+            "address": 2,
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.142Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.142Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.142Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 9,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": [
+          {
+            "address": 1,
+            "value": 255
+          },
+          {
+            "address": 2,
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.294Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.294Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.298Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 10,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": [
+          {
+            "address": 1,
+            "value": 255
+          },
+          {
+            "address": 2,
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.298Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    },
+    {
+      "receivedAt": "2026-07-12T02:32:59.298Z",
+      "byteLength": 530,
+      "protocol": "artnet",
+      "artnet": {
+        "id": "Art-Net\u0000",
+        "opcode": 20480,
+        "sequence": 0,
+        "net": 0,
+        "subUni": 0,
+        "length": 512,
+        "nonZeroSlots": []
+      }
+    }
+  ]
+}

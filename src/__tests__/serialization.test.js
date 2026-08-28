@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { deserialize, serialize } from "../serialization.js";
 import { DOC_VERSION, newRevision, newShow, addRevision, updateProjectMetadata } from "../domain/show.js";
+import { defaultDmxOutputSettings } from "../domain/dmxOutputPreferences.js";
 
 describe("serialization", () => {
   it("roundtrips project metadata", () => {
@@ -185,6 +186,174 @@ describe("serialization", () => {
       showFixtureChannel: false,
       showPositionLabels: true,
     }));
+  });
+
+  it("migrates older documents with default DMX output preferences", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: 8,
+      name: "Legacy DMX Output Plot",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+      oscBridge: {},
+    }));
+
+    expect(parsed.version).toBe(DOC_VERSION);
+    expect(parsed.dmxOutput).toEqual(defaultDmxOutputSettings());
+  });
+
+  it("normalizes DMX output preferences without persisting session state", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: DOC_VERSION,
+      name: "DMX Preferences",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+      dmxOutput: {
+        version: 99,
+        protocol: "sACN",
+        targetMode: "multicast",
+        relayUrl: " ws://127.0.0.1:8770 ",
+        token: "do-not-save",
+        armed: true,
+        state: "sending",
+        targetHost: "192.168.1.40",
+        targetPort: "5568",
+        maxFps: 999,
+        blackoutOnDisconnect: false,
+        blackoutBurst: 25,
+        blackoutKeepAlive: true,
+        currentValues: { intensity: 255 },
+        universes: {
+          "2": {
+            net: 200,
+            subNet: -5,
+            universe: 9,
+            targetHost: "192.168.1.41",
+          },
+        },
+      },
+    }));
+
+    expect(parsed.dmxOutput).toEqual({
+      version: 1,
+      protocol: "sacn",
+      targetMode: "multicast",
+      relayUrl: "ws://127.0.0.1:8770",
+      targetHost: "192.168.1.40",
+      targetPort: 5568,
+      maxFps: 44,
+      blackoutOnDisconnect: false,
+      blackoutBurst: 20,
+      blackoutKeepAlive: true,
+      universes: {
+        "2": {
+          net: 127,
+          subNet: 0,
+          universe: 9,
+          targetHost: "192.168.1.41",
+        },
+      },
+    });
+    expect(parsed.dmxOutput.token).toBeUndefined();
+    expect(parsed.dmxOutput.armed).toBeUndefined();
+    expect(parsed.dmxOutput.currentValues).toBeUndefined();
+  });
+
+  it("strips DMX output tokens and arm state while serializing", () => {
+    const doc = {
+      ...newShow({ name: "Unsafe DMX Save" }),
+      dmxOutput: {
+        relayUrl: "ws://127.0.0.1:8766",
+        token: "session-secret",
+        armed: true,
+        state: "armed",
+        targetHost: "127.0.0.1",
+        targetPort: 6454,
+        universes: {
+          "1": { net: 0, subNet: 1, universe: 2 },
+        },
+      },
+    };
+
+    const root = JSON.parse(serialize(doc));
+
+    expect(root.dmxOutput).toEqual(expect.objectContaining({
+      version: 1,
+      relayUrl: "ws://127.0.0.1:8766",
+      targetHost: "127.0.0.1",
+      targetPort: 6454,
+      universes: {
+        "1": { net: 0, subNet: 1, universe: 2, targetHost: "" },
+      },
+    }));
+    expect(root.dmxOutput.token).toBeUndefined();
+    expect(root.dmxOutput.armed).toBeUndefined();
+    expect(root.dmxOutput.state).toBeUndefined();
+  });
+
+  it("defaults sACN output preferences to the sACN UDP port", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: DOC_VERSION,
+      name: "sACN Defaults",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+      dmxOutput: {
+        protocol: "sacn",
+      },
+    }));
+
+    expect(parsed.dmxOutput.protocol).toBe("sacn");
+    expect(parsed.dmxOutput.targetMode).toBe("unicast");
+    expect(parsed.dmxOutput.targetPort).toBe(5568);
+    expect(parsed.dmxOutput.universes["1"].universe).toBe(1);
+  });
+
+  it("preserves sACN universe route values above the Art-Net universe range", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: DOC_VERSION,
+      name: "sACN Route",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+      dmxOutput: {
+        protocol: "sacn",
+        universes: {
+          "1": { universe: 4096 },
+        },
+      },
+    }));
+
+    expect(parsed.dmxOutput.protocol).toBe("sacn");
+    expect(parsed.dmxOutput.universes["1"].universe).toBe(4096);
+  });
+
+  it("forces Art-Net output preferences to unicast target mode", () => {
+    const parsed = deserialize(JSON.stringify({
+      version: DOC_VERSION,
+      name: "Art-Net Target Mode",
+      positions: {},
+      positionOrder: [],
+      fixtures: {},
+      fixtureOrder: [],
+      venue: {},
+      dmxOutput: {
+        protocol: "artnet",
+        targetMode: "multicast",
+      },
+    }));
+
+    expect(parsed.dmxOutput.protocol).toBe("artnet");
+    expect(parsed.dmxOutput.targetMode).toBe("unicast");
   });
 
   it("roundtrips named revisions", () => {

@@ -9,9 +9,16 @@ public struct PlotForgeStandaloneWorkspaceView: View {
     @State private var isImporterPresented = false
     @State private var isExporterPresented = false
     @State private var alert: PlotForgeWorkspaceAlert?
+    @State private var transitionCoordinator = PlotForgeDirtyDocumentTransitionCoordinator()
+    @State private var isDirtyTransitionPresented = false
+    private let simulatesFailedOpen: Bool
 
-    public init(document: PlotForgeFileDocument = PlotForgeFileDocument()) {
+    public init(
+        document: PlotForgeFileDocument = PlotForgeFileDocument(),
+        simulatesFailedOpen: Bool = ProcessInfo.processInfo.arguments.contains("-ui-testing-failed-open")
+    ) {
         _session = State(initialValue: PlotForgeStandaloneDocumentSession(document: document))
+        self.simulatesFailedOpen = simulatesFailedOpen
     }
 
     public var body: some View {
@@ -20,7 +27,7 @@ public struct PlotForgeStandaloneWorkspaceView: View {
             case .start:
                 PlotForgeStartScreen(
                     onNew: startNewDocument,
-                    onOpen: { isImporterPresented = true }
+                    onOpen: { requestTransition(.openDocument) }
                 )
             case .workspace:
                 workspace
@@ -49,10 +56,33 @@ public struct PlotForgeStandaloneWorkspaceView: View {
                     dismissButton: .default(Text("OK"))
                 )
             }
+            .confirmationDialog(
+                "Save changes before continuing?",
+                isPresented: $isDirtyTransitionPresented,
+                titleVisibility: .visible
+            ) {
+                Button("Save") {
+                    applyTransitionEffect(transitionCoordinator.resolve(.save))
+                }
+                .accessibilityIdentifier("dirty-save")
+
+                Button("Discard", role: .destructive) {
+                    applyTransitionEffect(transitionCoordinator.resolve(.discard))
+                }
+                .accessibilityIdentifier("dirty-discard")
+
+                Button("Cancel", role: .cancel) {
+                    applyTransitionEffect(transitionCoordinator.resolve(.cancel))
+                }
+                .accessibilityIdentifier("dirty-cancel")
+            } message: {
+                Text("The current plot has unsaved changes. Save, discard, or cancel the pending action.")
+            }
     }
 
     private var workspace: some View {
         PlotForgeShellView(document: documentBinding)
+            .accessibilityIdentifier("plotforge-workspace")
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button {
@@ -60,18 +90,21 @@ public struct PlotForgeStandaloneWorkspaceView: View {
                     } label: {
                         Label("New", systemImage: "doc.badge.plus")
                     }
+                    .accessibilityIdentifier("workspace-new")
 
                     Button {
-                        isImporterPresented = true
+                        requestTransition(.openDocument)
                     } label: {
                         Label("Open", systemImage: "folder")
                     }
+                    .accessibilityIdentifier("workspace-open")
 
                     Button {
                         isExporterPresented = true
                     } label: {
                         Label("Save", systemImage: "square.and.arrow.down")
                     }
+                    .accessibilityIdentifier("workspace-save")
                 }
 
                 ToolbarItem(placement: .status) {
@@ -91,8 +124,7 @@ public struct PlotForgeStandaloneWorkspaceView: View {
     }
 
     private func startNewDocument() {
-        session.newDocument()
-        screen = .workspace
+        requestTransition(.newDocument)
     }
 
     private func handleImport(_ result: Result<[URL], Error>) {
@@ -111,7 +143,9 @@ public struct PlotForgeStandaloneWorkspaceView: View {
         switch result {
         case .success(let url):
             session.noteSaved(filename: url.lastPathComponent)
+            applyTransitionEffect(transitionCoordinator.finishSave(succeeded: true))
         case .failure(let error):
+            _ = transitionCoordinator.finishSave(succeeded: false)
             presentFileError("Save failed", error)
         }
     }
@@ -122,6 +156,44 @@ public struct PlotForgeStandaloneWorkspaceView: View {
             screen = .workspace
         } catch {
             presentFileError("Open failed", error)
+        }
+    }
+
+    private func requestTransition(_ action: PlotForgePendingDocumentAction) {
+        applyTransitionEffect(transitionCoordinator.request(
+            action,
+            hasUnsavedChanges: session.hasUnsavedChanges
+        ))
+    }
+
+    private func applyTransitionEffect(_ effect: PlotForgeDocumentTransitionEffect) {
+        switch effect {
+        case .none:
+            break
+        case .confirmDiscard:
+            isDirtyTransitionPresented = true
+        case .requestSave:
+            isExporterPresented = true
+        case .proceed(let action):
+            perform(action)
+        }
+    }
+
+    private func perform(_ action: PlotForgePendingDocumentAction) {
+        switch action {
+        case .newDocument:
+            session.newDocument()
+            screen = .workspace
+        case .openDocument:
+            if simulatesFailedOpen {
+                do {
+                    try session.openDocument(data: Data("invalid plot".utf8), filename: "invalid.plot")
+                } catch {
+                    presentFileError("Open failed", error)
+                }
+            } else {
+                isImporterPresented = true
+            }
         }
     }
 
@@ -179,6 +251,7 @@ private struct PlotForgeStartScreen: View {
                         )
                     }
                     .buttonStyle(LaunchActionButtonStyle(prominent: true))
+                    .accessibilityIdentifier("start-new-plot")
 
                     Button(action: onOpen) {
                         LaunchActionContent(
@@ -188,6 +261,7 @@ private struct PlotForgeStartScreen: View {
                         )
                     }
                     .buttonStyle(LaunchActionButtonStyle(prominent: false))
+                    .accessibilityIdentifier("start-open-plot")
                 }
 
                 HStack(spacing: 12) {
@@ -200,6 +274,7 @@ private struct PlotForgeStartScreen: View {
             .padding(48)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
+        .accessibilityIdentifier("plotforge-start-screen")
     }
 }
 

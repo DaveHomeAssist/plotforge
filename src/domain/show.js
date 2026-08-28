@@ -13,6 +13,7 @@ import { normalizeCircuitPatch, normalizeFixtureCircuit } from "./circuiting.js"
 import { normalizeFixtureNotes } from "./fixtureNotes.js";
 import { DEFAULT_FIXTURE_STATUS, normalizeFixtureStatus } from "./fixtureStatus.js";
 import { defaultOscBridgeSettings, normalizeOscBridgeSettings } from "./oscBridge.js";
+import { defaultDmxOutputSettings, normalizeDmxOutputSettings } from "./dmxOutputPreferences.js";
 import { feetToMm } from "./units.js";
 
 export const DOC_VERSION = 10;
@@ -112,6 +113,7 @@ export function newShow({ name = "Untitled Show" } = {}) {
     revisionSnapshots: {},  // revisionId -> compact rig snapshot for diffing
     oscBridge: defaultOscBridgeSettings(),
     labelSettings: defaultLabelSettings(),
+    dmxOutput: defaultDmxOutputSettings(),
   };
 }
 
@@ -293,6 +295,14 @@ export function updateLabelSettings(doc, patch) {
     ...doc,
     updatedAt: Date.now(),
     labelSettings: normalizeLabelSettings({ ...(doc.labelSettings || {}), ...patch }),
+  };
+}
+
+export function updateDmxOutputSettings(doc, patch) {
+  return {
+    ...doc,
+    updatedAt: Date.now(),
+    dmxOutput: normalizeDmxOutputSettings({ ...(doc.dmxOutput || {}), ...patch }),
   };
 }
 

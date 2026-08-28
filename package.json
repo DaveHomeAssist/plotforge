@@ -15,7 +15,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "ci": "npm run lint && npm run test && npm run build",
-    "osc:relay": "node scripts/osc-relay.mjs"
+    "osc:relay": "node scripts/osc-relay.mjs",
+    "dmx:relay": "node scripts/dmx-relay.mjs",
+    "dmx:local-smoke": "node scripts/dmx-local-smoke.mjs",
+    "dmx:evidence-check": "node scripts/dmx-hardware-evidence-check.mjs",
+    "native:physical-evidence-check": "node scripts/native-physical-evidence-check.mjs",
+    "physical:evidence-status": "node scripts/physical-evidence-status.mjs"
   },
   "dependencies": {
     "react": "^19.2.5",

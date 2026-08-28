@@ -10,11 +10,24 @@
 		1F6B0D3323E94F3693958FA1 /* PlotForgeNativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F41FB2A86D94181BE643D4D /* PlotForgeNativeApp.swift */; };
 		39CE36979A4B42A88711FC43 /* PlotForgeAppShell in Frameworks */ = {isa = PBXBuildFile; productRef = 877B77FD4EAB46C695C6AD97 /* PlotForgeAppShell */; };
 		42DBE62A6D68496DB51887E0 /* PlotForgeDocumentUI in Frameworks */ = {isa = PBXBuildFile; productRef = 4A4050BC8B8A4354A21C2FE2 /* PlotForgeDocumentUI */; };
+		A10100000000000000000000 /* PlotForgeNativeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000000 /* PlotForgeNativeUITests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A10B00000000000000000000 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F7F58CB7996A45D5B593F290 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C0D97E364552410EAF5DA810;
+			remoteInfo = PlotForgeNativeApp;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		32CB114D430E4439BF4D18A0 /* PlotForgeNative.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlotForgeNative.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5F41FB2A86D94181BE643D4D /* PlotForgeNativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlotForgeNativeApp.swift; sourceTree = "<group>"; };
+		A10000000000000000000000 /* PlotForgeNativeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlotForgeNativeUITests.swift; sourceTree = "<group>"; };
+		A10200000000000000000000 /* PlotForgeNativeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlotForgeNativeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +40,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10500000000000000000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -34,6 +54,7 @@
 			isa = PBXGroup;
 			children = (
 				ABC5F4AC23B3418692D78E42 /* PlotForgeNative */,
+				A10300000000000000000000 /* PlotForgeNativeUITests */,
 				9BB787C2E858447C832B5EBE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -42,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				32CB114D430E4439BF4D18A0 /* PlotForgeNative.app */,
+				A10200000000000000000000 /* PlotForgeNativeUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -52,6 +74,14 @@
 				5F41FB2A86D94181BE643D4D /* PlotForgeNativeApp.swift */,
 			);
 			path = PlotForgeNative;
+			sourceTree = "<group>";
+		};
+		A10300000000000000000000 /* PlotForgeNativeUITests */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000000 /* PlotForgeNativeUITests.swift */,
+			);
+			path = PlotForgeNativeUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -69,7 +99,7 @@
 			);
 			dependencies = (
 			);
-			name = PlotForgeNative;
+			name = PlotForgeNativeApp;
 			packageProductDependencies = (
 				877B77FD4EAB46C695C6AD97 /* PlotForgeAppShell */,
 				4A4050BC8B8A4354A21C2FE2 /* PlotForgeDocumentUI */,
@@ -77,6 +107,26 @@
 			productName = PlotForgeNative;
 			productReference = 32CB114D430E4439BF4D18A0 /* PlotForgeNative.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A10700000000000000000000 /* PlotForgeNativeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10800000000000000000000 /* Build configuration list for PBXNativeTarget "PlotForgeNativeUITests" */;
+			buildPhases = (
+				A10400000000000000000000 /* Sources */,
+				A10500000000000000000000 /* Frameworks */,
+				A10600000000000000000000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A10C00000000000000000000 /* PBXTargetDependency */,
+			);
+			name = PlotForgeNativeUITests;
+			packageProductDependencies = (
+			);
+			productName = PlotForgeNativeUITests;
+			productReference = A10200000000000000000000 /* PlotForgeNativeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -88,6 +138,10 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					A10700000000000000000000 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = C0D97E364552410EAF5DA810;
+					};
 					C0D97E364552410EAF5DA810 = {
 						CreatedOnToolsVersion = 26.5;
 					};
@@ -111,12 +165,20 @@
 			projectRoot = "";
 			targets = (
 				C0D97E364552410EAF5DA810 /* PlotForgeNative */,
+				A10700000000000000000000 /* PlotForgeNativeUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8043B14E12F3426DA4189BC9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10600000000000000000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -134,9 +196,49 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10400000000000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10100000000000000000000 /* PlotForgeNativeUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		A10900000000000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.davehomeassist.plotforge.native.UITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_TARGET_NAME = PlotForgeNativeApp;
+			};
+			name = Debug;
+		};
+		A10A00000000000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.davehomeassist.plotforge.native.UITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_TARGET_NAME = PlotForgeNativeApp;
+			};
+			name = Release;
+		};
 		12127D987E394BE892EB2DEC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -270,6 +372,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = PlotForge;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "PlotForge sends opt-in Art-Net or sACN test frames to local lighting nodes after output is armed.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -297,6 +400,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = PlotForge;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "PlotForge sends opt-in Art-Net or sACN test frames to local lighting nodes after output is armed.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -318,6 +422,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A10800000000000000000000 /* Build configuration list for PBXNativeTarget "PlotForgeNativeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10900000000000000000000 /* Debug */,
+				A10A00000000000000000000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		9FCB97C5351343578161F161 /* Build configuration list for PBXNativeTarget "PlotForgeNative" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -337,6 +450,14 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin PBXTargetDependency section */
+		A10C00000000000000000000 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C0D97E364552410EAF5DA810 /* PlotForgeNative */;
+			targetProxy = A10B00000000000000000000 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCLocalSwiftPackageReference section */
 		3D0F3363BEF74BD2A9D8F343 /* XCLocalSwiftPackageReference "../PlotForgeNative" */ = {

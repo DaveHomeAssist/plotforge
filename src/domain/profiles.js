@@ -1,3 +1,5 @@
+import { inferOutputProfileFromOpenFixtureLibrary } from "./fixtureOutputProfiles.js";
+
 const GDTF_SHARE_BASE = "https://gdtf-share.com";
 
 const SOURCE_TYPES = {
@@ -771,9 +773,16 @@ export function normalizeOpenFixtureLibraryProfile(oflFixture, options = {}) {
   const symbol = inferOflSymbol(category);
   const modes = normalizeOflModes(oflFixture.modes);
   const selectedMode = modes[0];
+  const profileId = `ofl_${slugify(manufacturerKey)}_${slugify(fixtureKey)}`;
+  const outputMap = inferOutputProfileFromOpenFixtureLibrary(oflFixture, {
+    profileId,
+    manufacturerKey,
+    fixtureKey,
+    manufacturerName: manufacturer,
+  });
 
   return {
-    id: `ofl_${slugify(manufacturerKey)}_${slugify(fixtureKey)}`,
+    id: profileId,
     manufacturer,
     model,
     symbol,
@@ -789,6 +798,7 @@ export function normalizeOpenFixtureLibraryProfile(oflFixture, options = {}) {
       notes: ["Review manufacturer mode chart before final addressing."],
     }),
     libraryTier: "ofl-import",
+    ...(outputMap ? { outputMap } : {}),
     source: {
       type: SOURCE_TYPES.ofl,
       manufacturerKey,
