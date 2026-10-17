@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## Equipment compatibility
+
+For equipment definitions, model/symbol/profile reuse or interoperability, read
+the pinned [ECP-1.0 contract](docs/EQUIPMENT_PLATFORM_CONTRACT.md) and
+[PlotForge adapter guidance](docs/EQUIPMENT_PLATFORM_ADAPTER.md).
+Inspect current web and native codecs independently; shared file extensions do
+not establish schema parity. Preserve each runtime's data and output authority.
+
 ## Status naming
 
 Name work with one string everywhere (chat status title, session title, Notion
