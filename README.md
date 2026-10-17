@@ -5,6 +5,15 @@ Lighting plot generator. Vector-only SVG drafting surface, structured document m
 This started as the **Phase 0 spike** that validates the chassis ported from PixelForge.
 Notion is the canonical phase source for this project. README status was reconciled against `SFT | PlotForge` on 2026-06-21.
 
+## Equipment compatibility
+
+Equipment/model interoperability follows the pinned
+[ECP-1.0 contract](docs/EQUIPMENT_PLATFORM_CONTRACT.md) and
+[adapter guidance and next proof](docs/EQUIPMENT_PLATFORM_ADAPTER.md).
+This instruction adoption does not establish web/native schema parity or add
+an integration. The adapter records the inspected version boundary separately
+from the retained phase documentation.
+
 ## What works in this spike
 
 - Hardcoded venue (36' × 22') seeded with 1ST ELEC, 2ND ELEC, FOH TRUSS positions
